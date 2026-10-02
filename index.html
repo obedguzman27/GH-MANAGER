@@ -885,12 +885,12 @@
           <button class="gc-type-btn" data-i18n="ajuste" data-type="ajuste">± Ajuste</button>
         </div>
         <div id="ajuste-direccion-row" style="display:none;margin-bottom:14px;">
-          <div class="gc-field"><label>Tipo de ajuste a <span class="socio-bonus">CRA HVAC</span></label>
+          <div class="gc-field"><label>Tipo de ajuste a <span class="socio-mitad">GUZMAN HVAC</span></label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
               <button type="button" class="gc-type-btn ajuste-dir-btn active" data-i18n="sumar" data-dir="sumar" style="grid-template-columns:none;">+ Sumar</button>
               <button type="button" class="gc-type-btn ajuste-dir-btn" data-i18n="restar" data-dir="restar">− Restar</button>
             </div>
-            <p style="font-size:11.5px;color:var(--muted);margin-top:8px;">Al sumar/restar dinero a <span class="socio-bonus">CRA HVAC</span>, también genera tax si ese socio tiene tax activado (igual que con su mitad normal, sale de las taxas). Ej: el socio pagó a un trabajador, compró algo, o le debe algo al otro.</p>
+            <p style="font-size:11.5px;color:var(--muted);margin-top:8px;">Al sumar/restar dinero a <span class="socio-mitad">GUZMAN HVAC</span>, también genera tax si ese socio tiene tax activado (igual que con su mitad normal, sale de las taxas). Ej: el socio pagó a un trabajador, compró algo, o le debe algo al otro.</p>
           </div>
         </div>
         <div id="ingreso-semana-row" style="display:none;margin-bottom:14px;">
@@ -2310,7 +2310,7 @@
   // cfgSocios: lista de socios, cada uno { id, nombre, bonoPct }. El reparto
   // de cada semana se divide en partes iguales entre todos los que haya en
   // la lista (1, 2 o más); el ajuste manual (Movimientos → Ajuste) siempre
-  // es del PRIMER socio de la lista. bonoPct = porcentaje de bono (0-100),
+  // es del SEGUNDO socio de la lista. bonoPct = porcentaje de bono (0-100),
   // 0 significa que ese socio no recibe bono.
   const CFG_KEY = 'kontaly-config';
   let cfgSocios = [
@@ -2324,7 +2324,7 @@
   let cfgSocioMitad = 'GUZMAN HVAC';
   function actualizarAliasSocios() {
     cfgSocioBonus = (cfgSocios[0] && cfgSocios[0].nombre) || 'Socio 1';
-    cfgSocioMitad = cfgFacturaNombre || (cfgSocios[0] && cfgSocios[0].nombre) || 'Empresa';
+    cfgSocioMitad = (cfgSocios[1] && cfgSocios[1].nombre) || cfgFacturaNombre || 'Socio 2';
   }
   let cfgFacturaNombre = 'GUZMAN HVAC';
   let cfgFacturaDireccion = '';
@@ -2765,7 +2765,8 @@
     saveMov();
     renderMovimientos();
     renderReparto();
-    toast(esAjuste ? 'Ajuste a CRA guardado ✓' : 'Movimiento guardado ✓', 'success');
+    const nombreSocio2 = (cfgSocios && cfgSocios[1]) ? cfgSocios[1].nombre : 'segundo socio';
+    toast(esAjuste ? `Ajuste a ${nombreSocio2} guardado ✓` : 'Movimiento guardado ✓', 'success');
   });
 
   // ---- Hoja de movimientos agrupada por semana ----
@@ -3222,16 +3223,16 @@
       const taxas = g.ingresos * TASA_TAXAS;
       const gastosTotales = g.gastos + taxas;
       const neto = g.ingresos - gastosTotales;
-      const ajuste = g.ajusteGuzman; // + o −, siempre del primer socio de la lista
+      const ajuste = g.ajusteGuzman; // + o −, siempre del segundo socio de la lista
 
       // Reparto en partes iguales entre TODOS los socios de la lista (1, 2 o
       // más). Si solo hay uno, "su parte" es el 100% — sale solo, sin caso
-      // especial. El ajuste manual siempre es del primer socio; el bono de
+      // especial. El ajuste manual siempre es del segundo socio; el bono de
       // cada quien es su propio porcentaje sobre (su parte + su ajuste).
-      // La EMPRESA siempre entra en el reparto y va primero (recibe los
-      // ajustes manuales). Los socios son opcionales: sin ninguno, la
-      // empresa se lleva todo; con socios, la semana se divide en partes
-      // iguales entre la empresa y ellos, y cada socio suma su porcentaje.
+      // La EMPRESA siempre entra en el reparto y va primero. Los socios son
+      // opcionales: sin ninguno, la empresa se lleva todo; con socios, la
+      // semana se divide en partes iguales entre la empresa y ellos, y cada
+      // socio suma su porcentaje (el segundo socio recibe los ajustes manuales).
       const nombreEmpresa = (cfgFacturaNombre || 'Empresa').trim();
       const claveEmpresa = nombreEmpresa.toLowerCase();
       const lista = [
@@ -3243,7 +3244,7 @@
       ];
       const base = neto / lista.length;
       const pagos = lista.map((s, i) => {
-        const ajusteSocio = i === 0 ? ajuste : 0;
+        const ajusteSocio = i === 1 ? ajuste : 0;
         const baseConAjuste = base + ajusteSocio;
         const pct = Number(s.bonoPct) || 0;
         const bono = baseConAjuste > 0 ? baseConAjuste * (pct / 100) : 0;
@@ -3256,10 +3257,10 @@
       const mitad = base;
       const pagoCra = pagos[0] ? pagos[0].total : 0;
       const pagoGuzman = pagos[1] ? pagos[1].total : 0;
-      // Desglose del bono del primer socio en "de su mitad" vs "de su ajuste" (solo para mostrarlo detallado en la factura/recibo)
-      const pct0 = pagos[0] ? pagos[0].bonoPct : 0;
-      const bonoBase = base > 0 ? base * (pct0 / 100) : 0;
-      const bonoAjuste = ajuste * (pct0 / 100);
+      // Desglose del bono del segundo socio en "de su mitad" vs "de su ajuste" (solo para mostrarlo detallado en la factura/recibo)
+      const pct1 = pagos[1] ? pagos[1].bonoPct : 0;
+      const bonoBase = base > 0 ? base * (pct1 / 100) : 0;
+      const bonoAjuste = ajuste * (pct1 / 100);
 
       const gastoItems = [...g.gastoItems].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
       resultado.push({ key, label: g.label, ingresos: g.ingresos, gastos: g.gastos, gastoItems, ajusteGuzman: ajuste, ajusteItems: g.ajusteItems, taxas, gastosTotales, neto, mitad, bonoBase, bonoAjuste, bonoCra, pagoCra, pagoGuzman, taxGuzman, pagos });
