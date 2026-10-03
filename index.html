@@ -2224,7 +2224,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v102 · 3 oct';
+  const APP_VERSION = 'v103 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -7207,7 +7207,7 @@
   }
 
   // Desde Nueva Factura (botón 📋 de una línea): pone esa subdivisión (y la
-  // fecha, si la línea tiene) en Rough-In y Pull Sheet. Trim-Out no se toca.
+  // fecha solo a Rough-In) en Rough-In y Pull Sheet. Trim-Out no se toca.
   function csAplicarDesdeFactura(lote, fecha) {
     if (csTipo === 'pull') psGuardarBorrador(); else csGuardarBorrador();
     CS_HOJAS_LIGADAS.forEach((t) => {
@@ -7215,7 +7215,7 @@
       try {
         const d = JSON.parse(localStorage.getItem(clave) || '{}') || {};
         d.lote = lote;
-        if (fecha) d.fecha = fecha;
+        if (fecha && t !== 'pull') d.fecha = fecha;   // al Pull Sheet nunca se le pone la fecha sola
         localStorage.setItem(clave, JSON.stringify(d));
       } catch (e) {}
     });
@@ -7835,6 +7835,12 @@
 
   (function psIniciar() {
     if (!$('ps-hoja')) return;
+    try {
+      if (!localStorage.getItem('gh-ps-fecha-limpia')) {
+        const d0 = psLeerGuardado(); if (d0.fecha) { delete d0.fecha; localStorage.setItem(PS_KEY, JSON.stringify(d0)); }
+        localStorage.setItem('gh-ps-fecha-limpia', '1');
+      }
+    } catch (e) {}
     psLlenar(psLeerGuardado());
     $('ps-zoom-menos').addEventListener('click', () => psCambiarZoom(-0.15));
     $('ps-zoom-mas').addEventListener('click', () => psCambiarZoom(0.15));
