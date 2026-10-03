@@ -500,6 +500,12 @@
   .doc-subpanel{display:none;}
   .doc-subpanel.active{display:block;}
 
+  /* ── Botones chicos por línea de factura ─────── */
+  .inv-acc { white-space: nowrap; }
+  .inv-mini { width: 28px; height: 28px; margin-right: 4px; border: 1.5px solid var(--border); border-radius: 7px; background: #fff;
+              font-size: 13px; line-height: 1; cursor: pointer; color: var(--ink); vertical-align: middle; }
+  .inv-mini:active { background: #F5F7FC; }
+
   /* ── Carpeta de listas en Facturas ─────── */
   .inv-carpetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
   .inv-carpeta-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 10px;
@@ -1262,6 +1268,16 @@
         </div>
       </div>
 
+      <!-- Completion Sheets -->
+      <div class="gc-card" style="margin-top:16px;">
+        <p class="gc-card-title">Completion Sheets</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Muestra la carpeta <strong>Completion Sheets</strong> (Rough-In, Trim-Out y Pull Sheet de American Heating &amp; Cooling) dentro de Facturas. Se guarda para la base de datos que estás viendo.</p>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="aj-cs-toggle" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
+          <span style="font-size:13.5px;color:var(--ink);">Activar Completion Sheets</span>
+        </label>
+      </div>
+
       <!-- Idioma -->
       <div class="gc-card" style="margin-top:16px;">
         <p class="gc-card-title">Idioma / Language</p>
@@ -1606,7 +1622,7 @@
           <th style="width:36px;">#</th><th style="width:132px;">DATE</th>
           <th style="width:220px;">SUBDIVISION</th><th>WORK PERFORMED</th>
           <th class="r" style="width:78px;">TONS</th>
-          <th class="r" style="width:130px;">AMOUNT DUE</th><th style="width:40px;"></th>
+          <th class="r" style="width:130px;">AMOUNT DUE</th><th style="width:104px;"></th>
         </tr></thead><tbody id="inv-tbody"></tbody></table>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -2185,7 +2201,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v99 · 3 oct';
+  const APP_VERSION = 'v101 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -2611,7 +2627,19 @@
 
   // ---- Toggle tipo ----
   let ajusteDir = 'sumar';
-  let ajusteSocioIdx = -1; // índice del socio que recibe el ajuste (-1 = no seleccionado)
+  let ajusteSocioSel = ''; // id de quien recibe el ajuste: 'empresa' o el id del socio ('' = sin elegir)
+  // Todos los que entran en el reparto: la compañía primero y luego los socios
+  function opcionesAjuste() {
+    const nombreEmpresa = (cfgFacturaNombre || 'Empresa').trim();
+    const clave = nombreEmpresa.toLowerCase();
+    return [{ id: 'empresa', nombre: nombreEmpresa + ' (compañía)' },
+      ...(cfgSocios || []).filter((x) => x && x.nombre && x.nombre.trim().toLowerCase() !== clave)
+        .map((x) => ({ id: x.id, nombre: x.nombre }))];
+  }
+  function nombreDeAjuste(id) {
+    const o = opcionesAjuste().find((x) => x.id === id);
+    return o ? o.nombre.replace(/ \(compañía\)$/, '') : '';
+  }
   document.querySelectorAll('.gc-type-toggle > .gc-type-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.gc-type-toggle > .gc-type-btn').forEach((b) => b.classList.remove('active'));
@@ -2623,6 +2651,7 @@
       const hayParaAjuste = cfgSocios && cfgSocios.length > 0;
       // Solo mostrar ajuste si hay socios disponibles
       $('ajuste-direccion-row').style.display = (esAjuste && hayParaAjuste) ? 'block' : 'none';
+      if (esAjuste && hayParaAjuste) actualizarSociosAjusteSelect();   // siempre con la lista de socios actual
       // Si no hay socios pero se clickeó ajuste, desactivar y mostrar aviso
       if (esAjuste && !hayParaAjuste) {
         btn.classList.remove('active');
@@ -2655,28 +2684,23 @@
   function actualizarSociosAjusteSelect() {
     const select = $('ajuste-socio-select');
     if (!select) return;
-    const socios = cfgSocios || [];
-    select.innerHTML = '<option value="">-- Selecciona un socio --</option>';
-    socios.forEach((s, i) => {
-      const opt = document.createElement('option');
-      opt.value = String(i);
-      opt.textContent = s.nombre || ('Socio ' + (i + 1));
-      select.appendChild(opt);
-    });
-    if (ajusteSocioIdx >= 0 && ajusteSocioIdx < socios.length) {
-      select.value = String(ajusteSocioIdx);
-    }
+    const ops = opcionesAjuste();
+    select.innerHTML = '<option value="">-- Selecciona a quién va --</option>' +
+      ops.map((o) => `<option value="${escapeHtml(o.id)}">${escapeHtml(o.nombre)}</option>`).join('');
+    if (!ops.some((o) => o.id === ajusteSocioSel)) ajusteSocioSel = '';
+    select.value = ajusteSocioSel;
+    actualizarInfoAjuste();
+  }
+  function actualizarInfoAjuste() {
+    const infoText = $('ajuste-info-text');
+    if (!infoText) return;
+    const nombre = ajusteSocioSel ? nombreDeAjuste(ajusteSocioSel) : 'un socio';
+    infoText.innerHTML = `Al sumar/restar dinero a <strong>${escapeHtml(nombre)}</strong>, también genera tax si tiene tax activado (igual que con su parte normal, sale de las taxas). Ej: pagó a un trabajador, compró algo, o le debe algo al otro.`;
   }
 
   $('ajuste-socio-select').addEventListener('change', (e) => {
-    ajusteSocioIdx = e.target.value === '' ? -1 : parseInt(e.target.value, 10);
-    if (ajusteSocioIdx >= 0) {
-      const nombre = (cfgSocios[ajusteSocioIdx] && cfgSocios[ajusteSocioIdx].nombre) || 'Socio ' + (ajusteSocioIdx + 1);
-      const infoText = $('ajuste-info-text');
-      if (infoText) {
-        infoText.innerHTML = `Al sumar/restar dinero a <strong>${escapeHtml(nombre)}</strong>, también genera tax si ese socio tiene tax activado (igual que con su mitad normal, sale de las taxas). Ej: el socio pagó a un trabajador, compró algo, o le debe algo al otro.`;
-      }
-    }
+    ajusteSocioSel = e.target.value || '';
+    actualizarInfoAjuste();
   });
 
   function renderCatSelect() {
@@ -2799,7 +2823,7 @@
     $('m-deducible').checked = false;
     // Reset ajuste-related fields
     ajusteDir = 'sumar';
-    ajusteSocioIdx = -1;
+    ajusteSocioSel = '';
     document.querySelectorAll('.ajuste-dir-btn').forEach((b) => b.classList.toggle('active', b.dataset.dir === 'sumar'));
     actualizarSociosAjusteSelect();
     // El tipo (Ingreso/Gasto/Ajuste) se queda donde el usuario lo dejó — no se resetea
@@ -2822,7 +2846,7 @@
 
     if (!esAjuste && !cat) { $('status-mov').textContent = 'Agrega al menos una categoría primero'; return; }
     if (cat === '__nueva__') { $('status-mov').textContent = 'Termina de agregar la categoría nueva, o elige una de la lista'; $('mov-cat-nueva-row').style.display = 'block'; $('mov-cat-nueva-input').focus(); return; }
-    if (esAjuste && ajusteSocioIdx < 0) { $('status-mov').textContent = 'Selecciona un socio para el ajuste'; return; }
+    if (esAjuste && !ajusteSocioSel) { $('status-mov').textContent = 'Elige a quién va el ajuste'; toast('Elige a quién va el ajuste', 'error'); return; }
     if (!monto || monto <= 0) {
       $('status-mov').textContent = 'Captura un monto válido';
       setTimeout(() => { $('status-mov').textContent = ''; }, 1800);
@@ -2839,12 +2863,13 @@
         // Preservar datos de ajuste para movimientos tipo ajuste
         if (esAjuste) {
           movimientos[idx].ajusteDir = ajusteDir;
-          movimientos[idx].ajusteSocioIdx = ajusteSocioIdx;
-          movimientos[idx].ajusteSocioId = (cfgSocios[ajusteSocioIdx] && cfgSocios[ajusteSocioIdx].id) || null;
+          movimientos[idx].ajusteSocioId = ajusteSocioSel;
+          movimientos[idx].ajusteSocioNombre = nombreDeAjuste(ajusteSocioSel);
         } else if (tipoActual !== 'ajuste') {
           // Si no es ajuste, limpiar datos de ajuste
           delete movimientos[idx].ajusteDir;
           delete movimientos[idx].ajusteSocioIdx;
+          delete movimientos[idx].ajusteSocioNombre;
           delete movimientos[idx].ajusteSocioId;
         }
 
@@ -2874,15 +2899,15 @@
     const nuevo = { id: Date.now(), fecha, tipo: tipoActual, cat, monto, desc, deducible };
     if (esAjuste) {
       nuevo.ajusteDir = ajusteDir;
-      nuevo.ajusteSocioIdx = ajusteSocioIdx;
-      nuevo.ajusteSocioId = (cfgSocios[ajusteSocioIdx] && cfgSocios[ajusteSocioIdx].id) || null;
+      nuevo.ajusteSocioId = ajusteSocioSel;
+      nuevo.ajusteSocioNombre = nombreDeAjuste(ajusteSocioSel);
     }
     movimientos.push(nuevo);
     limpiarFormularioMov(false);
     saveMov();
     renderMovimientos();
     renderReparto();
-    const nombreSocio = (ajusteSocioIdx >= 0 && cfgSocios && cfgSocios[ajusteSocioIdx]) ? cfgSocios[ajusteSocioIdx].nombre : 'socio';
+    const nombreSocio = nombreDeAjuste(ajusteSocioSel) || 'socio';
     toast(esAjuste ? `Ajuste a ${nombreSocio} guardado ✓` : 'Movimiento guardado ✓', 'success');
   });
 
@@ -3082,7 +3107,7 @@
           <td>${m.fecha || ''}</td>
           <td><span class="gc-tipo-tag ${m.tipo}">${tipoLabel}</span></td>
           <td>${escapeHtml(m.cat || '')}${m.tipo === 'gasto' && m.deducible ? ' <span title="Deducible de impuestos" style="display:inline-block;font-size:9px;font-weight:800;color:var(--gold);background:var(--gold-bg);padding:2px 7px;border-radius:8px;letter-spacing:.3px;vertical-align:middle;">DEDUCIBLE</span>' : ''}</td>
-          <td>${escapeHtml(m.desc || '')}${m.tipo === 'ajuste' ? (() => { const id = idSocioDeAjuste(m); const so = id ? (cfgSocios || []).find((x) => x.id === id) : ((cfgSocios || [])[0]); return so ? ' <span style="font-size:10px;font-weight:700;color:#4A6FA8;">→ ' + escapeHtml(so.nombre || '') + '</span>' : ''; })() : ''}</td>
+          <td>${escapeHtml(m.desc || '')}${m.tipo === 'ajuste' ? (() => { const nom = nombreDeAjuste(idSocioDeAjuste(m)) || m.ajusteSocioNombre || ''; return nom ? ' <span style="font-size:10px;font-weight:700;color:#4A6FA8;">→ ' + escapeHtml(nom) + '</span>' : ''; })() : ''}</td>
           <td class="gc-num" style="color:${tipoColor}">${fmt(m.monto)}</td>
           <td style="white-space:nowrap;">
             <button class="gc-action-btn gc-dup-mov" data-id="${m.id}" title="Repetir este movimiento" style="padding:3px 9px;font-size:11px;">⧉</button>
@@ -3260,7 +3285,7 @@
     $('m-deducible').checked = !!m.deducible;
     if (esAjuste) {
       ajusteDir = m.ajusteDir || 'sumar';
-      ajusteSocioIdx = (() => { const id = idSocioDeAjuste(m); if (id) return (cfgSocios || []).findIndex((x) => x.id === id); return (cfgSocios && cfgSocios.length) ? 0 : -1; })();
+      ajusteSocioSel = idSocioDeAjuste(m) || '';
       document.querySelectorAll('.ajuste-dir-btn').forEach((b) => {
         b.classList.toggle('active', b.dataset.dir === ajusteDir);
       });
@@ -3305,7 +3330,7 @@
     $('m-deducible').checked = !!m.deducible;
     if (esAjuste) {
       ajusteDir = m.ajusteDir || 'sumar';
-      ajusteSocioIdx = (() => { const id = idSocioDeAjuste(m); if (id) return (cfgSocios || []).findIndex((x) => x.id === id); return (cfgSocios && cfgSocios.length) ? 0 : -1; })();
+      ajusteSocioSel = idSocioDeAjuste(m) || '';
       document.querySelectorAll('.ajuste-dir-btn').forEach((b) => {
         b.classList.toggle('active', b.dataset.dir === ajusteDir);
       });
@@ -3329,9 +3354,14 @@
   // ajustes anteriores, por su posición en la lista de socios).
   function idSocioDeAjuste(m) {
     const lista = cfgSocios || [];
+    if (m.ajusteSocioId === 'empresa') return 'empresa';
     if (m.ajusteSocioId && lista.some((x) => x.id === m.ajusteSocioId)) return m.ajusteSocioId;
+    // Si el socio se renombró/borró, buscarlo por nombre
+    if (m.ajusteSocioNombre) { const porNombre = opcionesAjuste().find((x) => nombreDeAjuste(x.id).toLowerCase() === m.ajusteSocioNombre.toLowerCase()); if (porNombre) return porNombre.id; }
     if (m.ajusteSocioIdx != null && lista[m.ajusteSocioIdx]) return lista[m.ajusteSocioIdx].id;
-    return null;
+    // Ajustes viejos sin socio: iban al primer socio después de la compañía
+    const ops = opcionesAjuste();
+    return ops[1] ? ops[1].id : null;
   }
 
   function calcularSemanas() {
@@ -3339,10 +3369,10 @@
     movimientos.forEach((m) => {
       const { key, label } = weekInfo(m.fecha || today());
       if (!grupos.has(key)) {
-        grupos.set(key, { label, ingresos: 0, gastos: 0, gastoItems: [], ajustesPorSocio: {}, ajusteItems: [] });
+        grupos.set(key, { label, ingresos: 0, gastos: 0, gastoItems: [], ajustesPorSocio: {}, ajusteItems: [], ingresoItems: [] });
       }
       const g = grupos.get(key);
-      if (m.tipo === 'ingreso') g.ingresos += Number(m.monto) || 0;
+      if (m.tipo === 'ingreso') { g.ingresos += Number(m.monto) || 0; g.ingresoItems.push(m); }
       else if (m.tipo === 'ajuste') {
         const signo = m.ajusteDir === 'restar' ? -1 : 1;
         const monto = signo * (Number(m.monto) || 0);
@@ -3380,7 +3410,7 @@
       ];
       const base = neto / lista.length;
       const pagos = lista.map((s, i) => {
-        const ajusteSocio = s.esEmpresa ? 0 : ((g.ajustesPorSocio[s.id] || 0) + (i === 1 ? (g.ajustesPorSocio['__legacy__'] || 0) : 0));
+        const ajusteSocio = (g.ajustesPorSocio[s.id] || 0) + (i === 1 ? (g.ajustesPorSocio['__legacy__'] || 0) : 0);
         const baseConAjuste = base + ajusteSocio;
         const pct = Number(s.bonoPct) || 0;
         const bono = baseConAjuste > 0 ? baseConAjuste * (pct / 100) : 0;
@@ -3400,7 +3430,7 @@
       const bonoAjuste = ajusteGuzman * (pct1 / 100);
 
       const gastoItems = [...g.gastoItems].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
-      resultado.push({ key, label: g.label, ingresos: g.ingresos, gastos: g.gastos, gastoItems, ajusteGuzman: ajusteGuzman, ajusteItems: g.ajusteItems, taxas, gastosTotales, neto, mitad, bonoBase, bonoAjuste, bonoCra, pagoCra, pagoGuzman, taxGuzman, pagos });
+      resultado.push({ key, label: g.label, ingresos: g.ingresos, gastos: g.gastos, gastoItems, ajusteGuzman: ajusteGuzman, ajusteItems: g.ajusteItems, ingresoItems: g.ingresoItems, taxas, gastosTotales, neto, mitad, bonoBase, bonoAjuste, bonoCra, pagoCra, pagoGuzman, taxGuzman, pagos });
     });
     return resultado;
   }
@@ -3477,11 +3507,25 @@
         // Reconstruir los movimientos de ese invoice y devolverlos a la hoja activa
         const movsReabiertos = [];
         // Gastos (guardados en gastoItems)
+        const nuevoId = () => Date.now() + Math.random();
         (inv.gastoItems || []).forEach((g) => {
-          movsReabiertos.push({ id: Date.now() + Math.random(), fecha: g.fecha, tipo: 'gasto', cat: g.cat, monto: g.monto, desc: g.desc });
+          movsReabiertos.push({ ...g, id: nuevoId(), tipo: 'gasto' });
         });
-        // Ingreso total de la semana (se guardó como suma). Lo devolvemos como una línea de ingreso.
-        if (inv.ingresos > 0) {
+        // Ajustes: vuelven tal cual (socio, sumar/restar, monto, descripción).
+        if (Array.isArray(inv.ajusteItems) && inv.ajusteItems.length) {
+          inv.ajusteItems.forEach((a) => movsReabiertos.push({ ...a, id: nuevoId(), tipo: 'ajuste' }));
+        } else if (inv.ajusteGuzman) {
+          // Invoice viejo que solo guardó el total del ajuste: se rehace como un ajuste al mismo socio.
+          const socio = (cfgSocios || [])[0];
+          const fechaAj = inv.gastoItems && inv.gastoItems[0] ? inv.gastoItems[0].fecha : today();
+          movsReabiertos.push({ id: nuevoId(), fecha: fechaAj, tipo: 'ajuste', cat: 'Ajuste', monto: Math.abs(inv.ajusteGuzman),
+            ajusteDir: inv.ajusteGuzman < 0 ? 'restar' : 'sumar', ajusteSocioId: socio ? socio.id : null,
+            desc: 'Ajuste reabierto de ' + (inv.label || '') });
+        }
+        // Ingresos: si el invoice guardó cada línea, vuelven igual; si no, como una sola línea con el total.
+        if (Array.isArray(inv.ingresoItems) && inv.ingresoItems.length) {
+          inv.ingresoItems.forEach((g) => movsReabiertos.push({ ...g, id: nuevoId(), tipo: 'ingreso' }));
+        } else if (inv.ingresos > 0) {
           const fechaIng = inv.gastoItems && inv.gastoItems[0] ? inv.gastoItems[0].fecha : today();
           movsReabiertos.push({ id: Date.now() + Math.random(), fecha: fechaIng, tipo: 'ingreso', cat: (catIngresos[0] || 'Ingreso'), monto: inv.ingresos, desc: 'Ingreso reabierto de ' + (inv.label || '') });
         }
@@ -7120,7 +7164,45 @@
 
   function csGuardarBorrador() {
     if (csTipo === 'pull') return;   // el Pull Sheet se guarda aparte
-    try { localStorage.setItem(CS_KEY(csTipo), JSON.stringify(csLeer())); } catch (e) {}
+    const d = csLeer();
+    try { localStorage.setItem(CS_KEY(csTipo), JSON.stringify(d)); } catch (e) {}
+    if (csTipo !== 'trim') csCompartirLote(d.lote, csTipo);   // Trim-Out no comparte nada
+  }
+
+  // Lot# / Subdivision es el mismo en Rough-In y Pull Sheet: si cambia en una,
+  // se actualiza en la otra. La hoja Trim-Out NO se llena sola nunca: se
+  // escribe a mano y nada de otras hojas ni de las facturas la toca.
+  const CS_HOJAS_LIGADAS = ['rough', 'pull'];
+  function csCompartirLote(lote, origen) {
+    lote = lote || '';
+    CS_HOJAS_LIGADAS.forEach((t) => {
+      if (t === origen) return;
+      const clave = t === 'pull' ? 'gh-cs-pull' : CS_KEY(t);
+      try {
+        const d = JSON.parse(localStorage.getItem(clave) || '{}') || {};
+        if ((d.lote || '') === lote) return;
+        d.lote = lote;
+        localStorage.setItem(clave, JSON.stringify(d));
+      } catch (e) {}
+    });
+  }
+
+  // Desde Nueva Factura (botón 📋 de una línea): pone esa subdivisión (y la
+  // fecha, si la línea tiene) en Rough-In y Pull Sheet. Trim-Out no se toca.
+  function csAplicarDesdeFactura(lote, fecha) {
+    if (csTipo === 'pull') psGuardarBorrador(); else csGuardarBorrador();
+    CS_HOJAS_LIGADAS.forEach((t) => {
+      const clave = t === 'pull' ? 'gh-cs-pull' : CS_KEY(t);
+      try {
+        const d = JSON.parse(localStorage.getItem(clave) || '{}') || {};
+        d.lote = lote;
+        if (fecha) d.fecha = fecha;
+        localStorage.setItem(clave, JSON.stringify(d));
+      } catch (e) {}
+    });
+    if (csTipo === 'pull') psLlenar(psLeerGuardado()); else csLlenar(csLeerGuardado(csTipo));
+    const activo = typeof csActivo === 'undefined' || csActivo;
+    toast(activo ? `Completion Sheets actualizadas: ${lote} ✓` : `Guardado en Completion Sheets: ${lote} (actívalas en Ajustes → Avanzado)`, 'success', 3000);
   }
 
   function csFechaUS(iso) {
@@ -7455,7 +7537,9 @@
     return { fecha: h('fecha'), job: h('job'), builder: h('builder'), lote: h('lote'), puller: h('puller'), installer: h('installer'), q };
   }
   function psGuardarBorrador() {
-    try { localStorage.setItem(PS_KEY, JSON.stringify(psLeer())); } catch (e) {}
+    const d = psLeer();
+    try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
+    csCompartirLote(d.lote, 'pull');
     psContar();
   }
   function psContar() {
@@ -7599,6 +7683,28 @@
     $('ps-zoom-ajustar').addEventListener('click', () => { psZoom = null; psAplicarZoom(); });
     window.addEventListener('resize', psAplicarZoom);
   })();
+  // ---- Activar / desactivar Completion Sheets (Ajustes → Avanzado) ----
+  const CS_ACTIVO_KEY = 'gh-cfg-completion';
+  let csActivo = true;   // encendido de fábrica: así nadie pierde lo que ya usa
+  function csAplicarActivo() {
+    const tab = document.querySelector('.inv-subtab[data-sub="completion"]');
+    if (tab) tab.style.display = csActivo ? '' : 'none';
+    if (!csActivo && tab && tab.classList.contains('active')) document.querySelector('.inv-subtab[data-sub="nueva"]').click();
+    document.querySelectorAll('.inv-mini[title*="Completion"]').forEach((b) => { b.style.display = csActivo ? '' : 'none'; });
+    const t = $('aj-cs-toggle'); if (t) t.checked = csActivo;
+  }
+  async function csCargarActivo() {
+    try { const r = await window.storage.get(CS_ACTIVO_KEY); if (r && r.value != null) csActivo = JSON.parse(r.value) !== false; } catch (e) {}
+    csAplicarActivo();
+  }
+  if ($('aj-cs-toggle')) $('aj-cs-toggle').addEventListener('change', async (e) => {
+    csActivo = e.target.checked;
+    csAplicarActivo();
+    try { await window.storage.set(CS_ACTIVO_KEY, JSON.stringify(csActivo)); } catch (err) {}
+    toast(csActivo ? 'Completion Sheets activadas ✓' : 'Completion Sheets desactivadas', 'info', 2000);
+  });
+  csCargarActivo();
+  document.querySelector('.gc-tab[data-tab="facturas"]').addEventListener('click', () => csCargarActivo());
   // FIN MÓDULO TRIM OUT PULL SHEET
   // ====================================================================
 
@@ -7711,7 +7817,24 @@
     tonPista.style.cssText='font-size:9.5px;color:var(--muted-soft);margin-top:2px;text-align:right;min-height:11px;';
     tonTd.appendChild(tonIn); tonTd.appendChild(tonPista); tr.appendChild(tonTd);
     const amtTd=mkTd(); amtTd.className='r'; const amtIn=mkIn('inv-amt','0.00',item.amount||''); amtIn.inputMode='decimal'; amtTd.appendChild(amtIn); tr.appendChild(amtTd);
-    const delTd=mkTd(); const delBtn=document.createElement('button'); delBtn.className='gc-del'; delBtn.type='button'; delBtn.textContent='✕'; delTd.appendChild(delBtn); tr.appendChild(delTd);
+    const delTd=mkTd(); delTd.className='inv-acc';
+    const dupBtn=document.createElement('button'); dupBtn.type='button'; dupBtn.className='inv-mini'; dupBtn.title='Duplicar fecha y subdivisión en una línea nueva'; dupBtn.textContent='⧉';
+    const csBtn=document.createElement('button'); csBtn.type='button'; csBtn.className='inv-mini'; csBtn.title='Usar esta subdivisión en Completion Sheets (Rough-In y Pull Sheet)'; csBtn.textContent='📋';
+    const delBtn=document.createElement('button'); delBtn.className='gc-del'; delBtn.type='button'; delBtn.textContent='✕';
+    try { if (!csActivo) csBtn.style.display = 'none'; } catch (e) {}
+    delTd.appendChild(dupBtn); delTd.appendChild(csBtn); delTd.appendChild(delBtn); tr.appendChild(delTd);
+    // Duplicar: misma fecha y subdivisión, justo debajo, sin volver a escribirlas
+    dupBtn.addEventListener('click', () => {
+      const nueva = invCrearFila({ dia: diaSel.value, location: locIn.value });
+      tr.after(nueva); invRenumerar(); invCalcTotales();
+      nueva.querySelector('.inv-work').focus();
+    });
+    // Pasar la subdivisión (y la fecha) de esta línea a las Completion Sheets
+    csBtn.addEventListener('click', () => {
+      const lote = locIn.value.trim();
+      if (!lote) { toast('Esta línea no tiene subdivisión todavía', 'error'); return; }
+      if (typeof csAplicarDesdeFactura === 'function') csAplicarDesdeFactura(lote, diaSel.value);
+    });
 
     // Cálculo automático del monto según el trabajo elegido:
     //  - Si el trabajo se cobra POR TONELADA: monto = precio × toneladas.
@@ -7848,7 +7971,14 @@
     $('inv-notas').value = '';
     $('inv-tax').value = '0';
     $('inv-tbody').innerHTML = '';
+    invRellenarLineas();
     invRenumerar(); invCalcTotales();
+  }
+  // Una factura siempre empieza con 6 líneas listas para llenar (las vacías no se guardan)
+  const INV_LINEAS_MIN = 6;
+  function invRellenarLineas() {
+    const tb = $('inv-tbody');
+    while (tb.querySelectorAll('tr').length < INV_LINEAS_MIN) tb.appendChild(invCrearFila());
   }
   $('inv-btn-limpiar').addEventListener('click', invLimpiar);
 
@@ -7899,7 +8029,7 @@
     $('inv-tax').value = inv.taxPct||0;
     $('inv-tbody').innerHTML = '';
     (inv.items||[]).forEach(it => $('inv-tbody').appendChild(invCrearFila(it)));
-    if (!$('inv-tbody').querySelectorAll('tr').length) $('inv-tbody').appendChild(invCrearFila());
+    invRellenarLineas();
     invRenumerar(); invCalcTotales();
     document.querySelector('.inv-subtab[data-sub="nueva"]').click();
     toast('Editando '+inv.numero, 'info');
@@ -8402,6 +8532,7 @@
           $('inv-num').value = invAutoNum();   // siguiente número, según las facturas ya guardadas
           $('inv-fecha').value = invToday();
           $('inv-tbody').innerHTML='';
+          invRellenarLineas();
           invRenumerar(); invCalcTotales();
         }
       });
