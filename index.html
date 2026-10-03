@@ -500,6 +500,28 @@
   .doc-subpanel{display:none;}
   .doc-subpanel.active{display:block;}
 
+  /* ── Carpeta de listas en Facturas ─────── */
+  .inv-carpetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .inv-carpeta-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 10px;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; color: var(--ink); background: var(--card);
+    border: 1.5px solid var(--border); border-radius: var(--r); cursor: pointer; }
+  .inv-carpeta-btn .ic { font-size: 18px; }
+  .inv-carpeta-btn.active { border-color: var(--accent); color: var(--accent-dk); background: #F5F7FC; }
+
+  /* ── Trim Out Pull Sheet (pantalla) ─────── */
+  .ps-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ps-tabla th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; color: var(--muted);
+                 padding: 6px 8px; border-bottom: 1.5px solid var(--border); position: sticky; top: 0; background: #fff; }
+  .ps-tabla td { padding: 4px 8px; border-bottom: 1px solid var(--border); }
+  .ps-tabla .ps-p { font-weight: 700; font-size: 12.5px; word-break: break-all; }
+  .ps-tabla .ps-d { color: var(--muted); font-size: 12.5px; }
+  .ps-tabla td:nth-child(2), .ps-tabla td:nth-child(3) { width: 1%; text-align: center; }
+  .ps-tabla tr.ps-sec td { font-weight: 800; font-size: 11.5px; letter-spacing: .6px; color: var(--accent-dk);
+                           background: #F5F7FC; padding: 8px; }
+  .ps-tabla input { width: 54px; font-family: 'Inter', sans-serif; font-size: 14px; padding: 6px 6px; text-align: center;
+                    border: 1.5px solid var(--border); border-radius: 8px; }
+  .ps-tabla th:nth-child(2), .ps-tabla th:nth-child(3) { text-align: center; }
+
   /* ── Calendario de trabajos ─────────────── */
   .cal-dia { margin-bottom: 16px; border: 1px solid var(--border-soft); border-radius: var(--r-sm); overflow: hidden; }
   .cal-dia-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #F5F7FC; border-bottom: 1px solid var(--border-soft); font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ink); }
@@ -609,7 +631,7 @@
   .gh-hero-refresh { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; transition: all .16s var(--ease); flex-shrink: 0; }
   .gh-hero-refresh:hover { background: rgba(255,255,255,.2); transform: rotate(90deg); }
   .gh-hero-refresh:active { transform: scale(.9) rotate(90deg); }
-  .gh-hero-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; position: relative; z-index: 1; }
+  .gh-hero-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; position: relative; z-index: 1; }
   .gh-tile {
     background: rgba(255,255,255,.085); border: 1px solid rgba(255,255,255,.14);
     border-radius: var(--r-sm); padding: 13px 14px; text-align: left; cursor: pointer;
@@ -625,7 +647,6 @@
   @media (max-width: 720px) {
     .gh-hero { padding: 17px 16px; border-radius: var(--r); }
     .gh-hero-tiles { grid-template-columns: 1fr 1fr; }
-    .gh-hero-tiles .gh-tile:last-child { grid-column: 1 / -1; }
     .gh-tile-val { font-size: 18.5px; }
   }
 
@@ -807,7 +828,6 @@
   <nav class="gc-nav">
     <button class="gc-tab active" data-tab="movimientos" data-i18n="registro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Registro</button>
     <button class="gc-tab" data-tab="facturas" data-i18n="facturas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Facturas</button>
-    <button class="gc-tab" data-tab="calendario" data-i18n="cal_calendario_tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendario</button>
     <button class="gc-tab" data-tab="planos" data-i18n="planos_tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>Planos</button>
     <button class="gc-tab" data-tab="nomina" data-i18n="nomina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Nómina</button>
     <button class="gc-tab" data-tab="buscar" data-i18n="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Buscar</button>
@@ -842,7 +862,7 @@
             <span class="gh-tile-val" id="gh-val-cobrar">—</span>
             <span class="gh-tile-sub" id="gh-sub-cobrar">facturas pendientes</span>
           </button>
-          <button type="button" class="gh-tile" id="gh-tile-hoy">
+          <button type="button" class="gh-tile" id="gh-tile-hoy" style="display:none;">
             <span class="gh-tile-lbl">Hoy</span>
             <span class="gh-tile-val" id="gh-val-hoy">—</span>
             <span class="gh-tile-sub" id="gh-sub-hoy">trabajos agendados</span>
@@ -885,12 +905,19 @@
           <button class="gc-type-btn" data-i18n="ajuste" data-type="ajuste">± Ajuste</button>
         </div>
         <div id="ajuste-direccion-row" style="display:none;margin-bottom:14px;">
-          <div class="gc-field"><label>Tipo de ajuste a <span class="socio-mitad">GUZMAN HVAC</span></label>
+          <div class="gc-form-row wide" style="margin-bottom:0;">
+            <div class="gc-field"><label>Socio que recibe el ajuste</label>
+              <select id="ajuste-socio-select" style="width:100%;">
+                <option value="">-- Selecciona un socio --</option>
+              </select>
+            </div>
+          </div>
+          <div class="gc-field" style="margin-top:14px;"><label>Tipo de ajuste</label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <button type="button" class="gc-type-btn ajuste-dir-btn active" data-i18n="sumar" data-dir="sumar" style="grid-template-columns:none;">+ Sumar</button>
+              <button type="button" class="gc-type-btn ajuste-dir-btn active" data-i18n="sumar" data-dir="sumar">+ Sumar</button>
               <button type="button" class="gc-type-btn ajuste-dir-btn" data-i18n="restar" data-dir="restar">− Restar</button>
             </div>
-            <p style="font-size:11.5px;color:var(--muted);margin-top:8px;">Al sumar/restar dinero a <span class="socio-mitad">GUZMAN HVAC</span>, también genera tax si ese socio tiene tax activado (igual que con su mitad normal, sale de las taxas). Ej: el socio pagó a un trabajador, compró algo, o le debe algo al otro.</p>
+            <p style="font-size:11.5px;color:var(--muted);margin-top:8px;" id="ajuste-info-text">Al sumar/restar dinero a un socio, también genera tax si ese socio tiene tax activado (igual que con su mitad normal, sale de las taxas). Ej: el socio pagó a un trabajador, compró algo, o le debe algo al otro.</p>
           </div>
         </div>
         <div id="ingreso-semana-row" style="display:none;margin-bottom:14px;">
@@ -1530,10 +1557,7 @@
     <button class="inv-subtab active" data-i18n="nueva_factura" data-sub="nueva">+ Nueva Factura</button>
     <button class="inv-subtab" data-i18n="guardadas" data-sub="guardadas">Guardadas</button>
     <button class="inv-subtab" data-sub="completion">Completion Sheets</button>
-    <button class="inv-subtab" data-i18n="cobros_por_casa" data-sub="cobros">Cobros por casa</button>
-    <button class="inv-subtab" data-i18n="clientes" data-sub="clientes">Clientes</button>
-    <button class="inv-subtab" data-i18n="trabajos" data-sub="trabajos">Trabajos</button>
-    <button class="inv-subtab" data-i18n="colonias" data-sub="colonias">Colonias</button>
+    <button class="inv-subtab" data-sub="carpeta">📁 Listas</button>
   </div>
   <!-- Nueva Factura -->
   <div class="inv-subpanel active" id="inv-sub-nueva">
@@ -1560,7 +1584,7 @@
     <div class="gc-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
         <p class="gc-card-title" data-i18n="trabajos" style="margin:0;">Trabajos</p>
-        <button type="button" class="inv-add" id="inv-btn-cargar-semana" style="border-color:var(--accent);color:var(--accent-dk);">
+        <button type="button" class="inv-add" id="inv-btn-cargar-semana" style="display:none;border-color:var(--accent);color:var(--accent-dk);">
           📅 Cargar trabajos de esta semana
         </button>
       </div>
@@ -1625,6 +1649,7 @@
       <div class="cs-tipos">
         <button type="button" class="cs-tipo-btn active" data-cstipo="rough">Rough-In</button>
         <button type="button" class="cs-tipo-btn" data-cstipo="trim">Trim-Out</button>
+        <button type="button" class="cs-tipo-btn" data-cstipo="pull">Pull Sheet</button>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
         <p class="gc-card-title" id="cs-titulo" style="margin:0;">Rough-In Completion Sheet</p>
@@ -1634,6 +1659,27 @@
           <button type="button" class="gc-save-btn" id="cs-btn-imprimir-ambas" style="padding:8px 18px;font-size:13px;">🖨 Imprimir las dos</button>
         </div>
       </div>
+      <div id="cs-form-pull" style="display:none;">
+        <p style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">AHC Trim Out Pull Sheet — Standard Trim. Sale igual que el papel, en <strong>dos páginas</strong> (elige <em>Doble cara</em> al imprimir). Solo llena ORDER y SHIP de las partes que lleves; las demás salen en blanco. <span id="ps-contador" style="font-weight:700;color:var(--accent-dk);"></span></p>
+        <div class="gc-form-row">
+          <div class="gc-field"><label>Date</label><input type="date" id="ps-fecha"></div>
+          <div class="gc-field"><label>Lot / Sub</label><input type="text" id="ps-lote" list="dl-colonias" placeholder="Lote + colonia" autocomplete="off"></div>
+        </div>
+        <div class="gc-form-row">
+          <div class="gc-field"><label>Job</label><input type="text" id="ps-job" autocomplete="off"></div>
+          <div class="gc-field"><label>Puller</label><input type="text" id="ps-puller" autocomplete="off"></div>
+        </div>
+        <div class="gc-form-row">
+          <div class="gc-field"><label>Builder</label><input type="text" id="ps-builder" list="dl-clientes" autocomplete="off"></div>
+          <div class="gc-field"><label>Installer</label><input type="text" id="ps-installer" autocomplete="off"></div>
+        </div>
+        <div style="overflow-x:auto;margin-top:8px;">
+          <table class="ps-tabla"><thead><tr><th>PART · DESCRIPTION</th><th>ORDER</th><th>SHIP</th></tr></thead>
+            <tbody id="ps-lista"></tbody></table>
+        </div>
+      </div>
+
+      <div id="cs-form-check">
       <p style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">American Heating &amp; Cooling — New Construction Completion Sheet. Cada hoja se llena por separado. <strong>Imprimir las dos</strong> saca Rough-In y Trim-Out en dos páginas: en la ventana de impresión elige <em>Doble cara</em> para que queden al frente y al reverso de la misma hoja.</p>
 
       <div class="gc-form-row">
@@ -1670,6 +1716,7 @@
 
       <p style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px;">Checklist</p>
       <div class="cs-checklist" id="cs-checklist"></div>
+      </div>
     </div>
   </div>
 
@@ -1693,6 +1740,14 @@
     </div>
   </div>
   <!-- Clientes -->
+  <!-- Carpeta: Clientes, Trabajos y Colonias juntos -->
+  <div class="inv-subpanel" id="inv-sub-carpeta">
+    <div class="inv-carpetas">
+      <button type="button" class="inv-carpeta-btn active" data-carpeta="clientes"><span class="ic">📁</span>Clientes</button>
+      <button type="button" class="inv-carpeta-btn" data-carpeta="trabajos"><span class="ic">📁</span>Trabajos</button>
+      <button type="button" class="inv-carpeta-btn" data-carpeta="colonias"><span class="ic">📁</span>Colonias</button>
+    </div>
+  </div>
   <div class="inv-subpanel" id="inv-sub-clientes">
     <div class="gc-card">
       <p class="gc-card-title" data-i18n="base_de_datos_de_clientes">Base de datos de Clientes</p>
@@ -2126,7 +2181,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v96 · 22 sep';
+  const APP_VERSION = 'v98 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -2338,8 +2393,9 @@
     try {
       const r = await window.storage.get(CFG_KEY);
       const c = JSON.parse(r.value);
-      if (Array.isArray(c.socios) && c.socios.length) {
+      if (Array.isArray(c.socios)) {
         // Formato nuevo: usar tal cual (normalizando por si falta algún campo)
+        // Nota: permitimos socios vacío [] para bases de datos sin socios
         cfgSocios = c.socios.map((s, i) => ({
           id: s.id || ('socio-' + (i + 1)),
           nombre: s.nombre || ('Socio ' + (i + 1)),
@@ -2551,6 +2607,7 @@
 
   // ---- Toggle tipo ----
   let ajusteDir = 'sumar';
+  let ajusteSocioIdx = -1; // índice del socio que recibe el ajuste (-1 = no seleccionado)
   document.querySelectorAll('.gc-type-toggle > .gc-type-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.gc-type-toggle > .gc-type-btn').forEach((b) => b.classList.remove('active'));
@@ -2559,7 +2616,16 @@
       // Mostrar/ocultar campos según el tipo
       const esAjuste = tipoActual === 'ajuste';
       const esIngreso = tipoActual === 'ingreso';
-      $('ajuste-direccion-row').style.display = esAjuste ? 'block' : 'none';
+      const hayParaAjuste = cfgSocios && cfgSocios.length > 0;
+      // Solo mostrar ajuste si hay socios disponibles
+      $('ajuste-direccion-row').style.display = (esAjuste && hayParaAjuste) ? 'block' : 'none';
+      // Si no hay socios pero se clickeó ajuste, desactivar y mostrar aviso
+      if (esAjuste && !hayParaAjuste) {
+        btn.classList.remove('active');
+        tipoActual = 'ingreso';
+        document.querySelector('.gc-type-btn[data-type="ingreso"]').classList.add('active');
+        toast('Agrega al menos un socio en Ajustes → Nombres de socios', 'error');
+      }
       $('cat-field-wrap').style.display = esAjuste ? 'none' : 'block';
       $('ingreso-semana-row').style.display = esIngreso ? 'block' : 'none';
       $('gasto-deducible-row').style.display = tipoActual === 'gasto' ? 'block' : 'none';
@@ -2579,6 +2645,34 @@
       btn.classList.add('active');
       ajusteDir = btn.dataset.dir;
     });
+  });
+
+  // Actualizar dropdown de socios para ajuste
+  function actualizarSociosAjusteSelect() {
+    const select = $('ajuste-socio-select');
+    if (!select) return;
+    const socios = cfgSocios || [];
+    select.innerHTML = '<option value="">-- Selecciona un socio --</option>';
+    socios.forEach((s, i) => {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = s.nombre || ('Socio ' + (i + 1));
+      select.appendChild(opt);
+    });
+    if (ajusteSocioIdx >= 0 && ajusteSocioIdx < socios.length) {
+      select.value = String(ajusteSocioIdx);
+    }
+  }
+
+  $('ajuste-socio-select').addEventListener('change', (e) => {
+    ajusteSocioIdx = e.target.value === '' ? -1 : parseInt(e.target.value, 10);
+    if (ajusteSocioIdx >= 0) {
+      const nombre = (cfgSocios[ajusteSocioIdx] && cfgSocios[ajusteSocioIdx].nombre) || 'Socio ' + (ajusteSocioIdx + 1);
+      const infoText = $('ajuste-info-text');
+      if (infoText) {
+        infoText.innerHTML = `Al sumar/restar dinero a <strong>${escapeHtml(nombre)}</strong>, también genera tax si ese socio tiene tax activado (igual que con su mitad normal, sale de las taxas). Ej: el socio pagó a un trabajador, compró algo, o le debe algo al otro.`;
+      }
+    }
   });
 
   function renderCatSelect() {
@@ -2699,6 +2793,11 @@
     $('m-monto').value = '';
     $('m-desc').value = '';
     $('m-deducible').checked = false;
+    // Reset ajuste-related fields
+    ajusteDir = 'sumar';
+    ajusteSocioIdx = -1;
+    document.querySelectorAll('.ajuste-dir-btn').forEach((b) => b.classList.toggle('active', b.dataset.dir === 'sumar'));
+    actualizarSociosAjusteSelect();
     // El tipo (Ingreso/Gasto/Ajuste) se queda donde el usuario lo dejó — no se resetea
     renderCatSelect();
     refrescarSugerenciasDesc();
@@ -2719,6 +2818,7 @@
 
     if (!esAjuste && !cat) { $('status-mov').textContent = 'Agrega al menos una categoría primero'; return; }
     if (cat === '__nueva__') { $('status-mov').textContent = 'Termina de agregar la categoría nueva, o elige una de la lista'; $('mov-cat-nueva-row').style.display = 'block'; $('mov-cat-nueva-input').focus(); return; }
+    if (esAjuste && ajusteSocioIdx < 0) { $('status-mov').textContent = 'Selecciona un socio para el ajuste'; return; }
     if (!monto || monto <= 0) {
       $('status-mov').textContent = 'Captura un monto válido';
       setTimeout(() => { $('status-mov').textContent = ''; }, 1800);
@@ -2731,9 +2831,18 @@
       if (idx >= 0) {
         const orig = movimientos[idx];
         const fechaCambio = !esAjuste && tipoActual === 'gasto' && orig.tipo === 'gasto' && orig.fecha !== fecha;
-        movimientos[idx] = { id: movEditandoId, fecha, tipo: tipoActual, cat, monto, desc, deducible,
-          ajusteDir: esAjuste ? ajusteDir : (orig.ajusteDir || undefined) };
-        if (!esAjuste) delete movimientos[idx].ajusteDir;
+        movimientos[idx] = { id: movEditandoId, fecha, tipo: tipoActual, cat, monto, desc, deducible };
+        // Preservar datos de ajuste para movimientos tipo ajuste
+        if (esAjuste) {
+          movimientos[idx].ajusteDir = ajusteDir;
+          movimientos[idx].ajusteSocioIdx = ajusteSocioIdx;
+          movimientos[idx].ajusteSocioId = (cfgSocios[ajusteSocioIdx] && cfgSocios[ajusteSocioIdx].id) || null;
+        } else if (tipoActual !== 'ajuste') {
+          // Si no es ajuste, limpiar datos de ajuste
+          delete movimientos[idx].ajusteDir;
+          delete movimientos[idx].ajusteSocioIdx;
+          delete movimientos[idx].ajusteSocioId;
+        }
 
         // Si es un gasto y cambió de fecha, mover también los demás gastos activos
         // de esa misma semana (invoice) a la nueva fecha — sin tocar invoices ya guardados.
@@ -2759,14 +2868,18 @@
     }
 
     const nuevo = { id: Date.now(), fecha, tipo: tipoActual, cat, monto, desc, deducible };
-    if (esAjuste) nuevo.ajusteDir = ajusteDir;
+    if (esAjuste) {
+      nuevo.ajusteDir = ajusteDir;
+      nuevo.ajusteSocioIdx = ajusteSocioIdx;
+      nuevo.ajusteSocioId = (cfgSocios[ajusteSocioIdx] && cfgSocios[ajusteSocioIdx].id) || null;
+    }
     movimientos.push(nuevo);
     limpiarFormularioMov(false);
     saveMov();
     renderMovimientos();
     renderReparto();
-    const nombreSocio2 = (cfgSocios && cfgSocios[1]) ? cfgSocios[1].nombre : 'segundo socio';
-    toast(esAjuste ? `Ajuste a ${nombreSocio2} guardado ✓` : 'Movimiento guardado ✓', 'success');
+    const nombreSocio = (ajusteSocioIdx >= 0 && cfgSocios && cfgSocios[ajusteSocioIdx]) ? cfgSocios[ajusteSocioIdx].nombre : 'socio';
+    toast(esAjuste ? `Ajuste a ${nombreSocio} guardado ✓` : 'Movimiento guardado ✓', 'success');
   });
 
   // ---- Hoja de movimientos agrupada por semana ----
@@ -2819,7 +2932,7 @@
       document.querySelector('.gc-tab[data-tab="facturas"]').click();
       document.querySelector('.inv-subtab[data-sub="guardadas"]').click();
     });
-    if (t2) t2.addEventListener('click', () => document.querySelector('.gc-tab[data-tab="calendario"]').click());
+    // (Calendario quitado: la ficha "Hoy" ya no se muestra)
     if (t3) t3.addEventListener('click', () => document.querySelector('.mov-subtab[data-msub="invoices"]').click());
     if (rf) rf.addEventListener('click', () => { ghActualizarHero(); toast('Resumen actualizado ✓', 'info', 1500); });
   })();
@@ -2965,7 +3078,7 @@
           <td>${m.fecha || ''}</td>
           <td><span class="gc-tipo-tag ${m.tipo}">${tipoLabel}</span></td>
           <td>${escapeHtml(m.cat || '')}${m.tipo === 'gasto' && m.deducible ? ' <span title="Deducible de impuestos" style="display:inline-block;font-size:9px;font-weight:800;color:var(--gold);background:var(--gold-bg);padding:2px 7px;border-radius:8px;letter-spacing:.3px;vertical-align:middle;">DEDUCIBLE</span>' : ''}</td>
-          <td>${escapeHtml(m.desc || '')}</td>
+          <td>${escapeHtml(m.desc || '')}${m.tipo === 'ajuste' ? (() => { const id = idSocioDeAjuste(m); const so = id ? (cfgSocios || []).find((x) => x.id === id) : ((cfgSocios || [])[0]); return so ? ' <span style="font-size:10px;font-weight:700;color:#4A6FA8;">→ ' + escapeHtml(so.nombre || '') + '</span>' : ''; })() : ''}</td>
           <td class="gc-num" style="color:${tipoColor}">${fmt(m.monto)}</td>
           <td style="white-space:nowrap;">
             <button class="gc-action-btn gc-dup-mov" data-id="${m.id}" title="Repetir este movimiento" style="padding:3px 9px;font-size:11px;">⧉</button>
@@ -3135,16 +3248,19 @@
     // Mostrar/ocultar campos según tipo
     const esAjuste = m.tipo === 'ajuste';
     const esIngreso = m.tipo === 'ingreso';
-    $('ajuste-direccion-row').style.display = esAjuste ? 'block' : 'none';
+    const hayParaAjuste = cfgSocios && cfgSocios.length > 0;
+    $('ajuste-direccion-row').style.display = (esAjuste && hayParaAjuste) ? 'block' : 'none';
     $('cat-field-wrap').style.display = esAjuste ? 'none' : 'block';
     $('ingreso-semana-row').style.display = esIngreso ? 'block' : 'none';
     $('gasto-deducible-row').style.display = m.tipo === 'gasto' ? 'block' : 'none';
     $('m-deducible').checked = !!m.deducible;
     if (esAjuste) {
       ajusteDir = m.ajusteDir || 'sumar';
+      ajusteSocioIdx = (() => { const id = idSocioDeAjuste(m); if (id) return (cfgSocios || []).findIndex((x) => x.id === id); return (cfgSocios && cfgSocios.length) ? 0 : -1; })();
       document.querySelectorAll('.ajuste-dir-btn').forEach((b) => {
         b.classList.toggle('active', b.dataset.dir === ajusteDir);
       });
+      actualizarSociosAjusteSelect();
     }
     renderCatSelect();
     $('m-fecha').value = m.fecha || today();
@@ -3177,16 +3293,19 @@
     });
     const esAjuste = m.tipo === 'ajuste';
     const esIngreso = m.tipo === 'ingreso';
-    $('ajuste-direccion-row').style.display = esAjuste ? 'block' : 'none';
+    const hayParaAjuste = cfgSocios && cfgSocios.length > 0;
+    $('ajuste-direccion-row').style.display = (esAjuste && hayParaAjuste) ? 'block' : 'none';
     $('cat-field-wrap').style.display = esAjuste ? 'none' : 'block';
     $('ingreso-semana-row').style.display = esIngreso ? 'block' : 'none';
     $('gasto-deducible-row').style.display = m.tipo === 'gasto' ? 'block' : 'none';
     $('m-deducible').checked = !!m.deducible;
     if (esAjuste) {
       ajusteDir = m.ajusteDir || 'sumar';
+      ajusteSocioIdx = (() => { const id = idSocioDeAjuste(m); if (id) return (cfgSocios || []).findIndex((x) => x.id === id); return (cfgSocios && cfgSocios.length) ? 0 : -1; })();
       document.querySelectorAll('.ajuste-dir-btn').forEach((b) => {
         b.classList.toggle('active', b.dataset.dir === ajusteDir);
       });
+      actualizarSociosAjusteSelect();
     }
     renderCatSelect();
     if (esIngreso) { ingresoSemanaOffset = 0; actualizarSemanaIngreso(); } // semana actual, no la del original
@@ -3202,16 +3321,31 @@
   }
 
   // ---- Reparto semanal ----
+  // Devuelve el id del socio al que va un ajuste (por id guardado o, en
+  // ajustes anteriores, por su posición en la lista de socios).
+  function idSocioDeAjuste(m) {
+    const lista = cfgSocios || [];
+    if (m.ajusteSocioId && lista.some((x) => x.id === m.ajusteSocioId)) return m.ajusteSocioId;
+    if (m.ajusteSocioIdx != null && lista[m.ajusteSocioIdx]) return lista[m.ajusteSocioIdx].id;
+    return null;
+  }
+
   function calcularSemanas() {
     const grupos = new Map();
     movimientos.forEach((m) => {
       const { key, label } = weekInfo(m.fecha || today());
-      if (!grupos.has(key)) grupos.set(key, { label, ingresos: 0, gastos: 0, gastoItems: [], ajusteGuzman: 0, ajusteItems: [] });
+      if (!grupos.has(key)) {
+        grupos.set(key, { label, ingresos: 0, gastos: 0, gastoItems: [], ajustesPorSocio: {}, ajusteItems: [] });
+      }
       const g = grupos.get(key);
       if (m.tipo === 'ingreso') g.ingresos += Number(m.monto) || 0;
       else if (m.tipo === 'ajuste') {
         const signo = m.ajusteDir === 'restar' ? -1 : 1;
-        g.ajusteGuzman += signo * (Number(m.monto) || 0);
+        const monto = signo * (Number(m.monto) || 0);
+        // Se guarda por id del socio (estable aunque cambie el orden de la lista).
+        // Ajustes viejos sin socio elegido van al primer socio después de la empresa.
+        const socioKey = idSocioDeAjuste(m) || '__legacy__';
+        g.ajustesPorSocio[socioKey] = (g.ajustesPorSocio[socioKey] || 0) + monto;
         g.ajusteItems.push(m);
       }
       else { g.gastos += Number(m.monto) || 0; g.gastoItems.push(m); }
@@ -3223,16 +3357,14 @@
       const taxas = g.ingresos * TASA_TAXAS;
       const gastosTotales = g.gastos + taxas;
       const neto = g.ingresos - gastosTotales;
-      const ajuste = g.ajusteGuzman; // + o −, siempre del segundo socio de la lista
 
       // Reparto en partes iguales entre TODOS los socios de la lista (1, 2 o
       // más). Si solo hay uno, "su parte" es el 100% — sale solo, sin caso
-      // especial. El ajuste manual siempre es del segundo socio; el bono de
+      // especial. Los ajustes manuales van al socio seleccionado; el bono de
       // cada quien es su propio porcentaje sobre (su parte + su ajuste).
       // La EMPRESA siempre entra en el reparto y va primero. Los socios son
       // opcionales: sin ninguno, la empresa se lleva todo; con socios, la
-      // semana se divide en partes iguales entre la empresa y ellos, y cada
-      // socio suma su porcentaje (el segundo socio recibe los ajustes manuales).
+      // semana se divide en partes iguales entre la empresa y ellos.
       const nombreEmpresa = (cfgFacturaNombre || 'Empresa').trim();
       const claveEmpresa = nombreEmpresa.toLowerCase();
       const lista = [
@@ -3244,7 +3376,7 @@
       ];
       const base = neto / lista.length;
       const pagos = lista.map((s, i) => {
-        const ajusteSocio = i === 1 ? ajuste : 0;
+        const ajusteSocio = s.esEmpresa ? 0 : ((g.ajustesPorSocio[s.id] || 0) + (i === 1 ? (g.ajustesPorSocio['__legacy__'] || 0) : 0));
         const baseConAjuste = base + ajusteSocio;
         const pct = Number(s.bonoPct) || 0;
         const bono = baseConAjuste > 0 ? baseConAjuste * (pct / 100) : 0;
@@ -3260,10 +3392,11 @@
       // Desglose del bono del segundo socio en "de su mitad" vs "de su ajuste" (solo para mostrarlo detallado en la factura/recibo)
       const pct1 = pagos[1] ? pagos[1].bonoPct : 0;
       const bonoBase = base > 0 ? base * (pct1 / 100) : 0;
-      const bonoAjuste = ajuste * (pct1 / 100);
+      const ajusteGuzman = pagos[1] ? pagos[1].ajuste : 0;
+      const bonoAjuste = ajusteGuzman * (pct1 / 100);
 
       const gastoItems = [...g.gastoItems].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
-      resultado.push({ key, label: g.label, ingresos: g.ingresos, gastos: g.gastos, gastoItems, ajusteGuzman: ajuste, ajusteItems: g.ajusteItems, taxas, gastosTotales, neto, mitad, bonoBase, bonoAjuste, bonoCra, pagoCra, pagoGuzman, taxGuzman, pagos });
+      resultado.push({ key, label: g.label, ingresos: g.ingresos, gastos: g.gastos, gastoItems, ajusteGuzman: ajusteGuzman, ajusteItems: g.ajusteItems, taxas, gastosTotales, neto, mitad, bonoBase, bonoAjuste, bonoCra, pagoCra, pagoGuzman, taxGuzman, pagos });
     });
     return resultado;
   }
@@ -3723,12 +3856,6 @@
     ).map((d) => `${d.numero || '(sin número)'} · ${d.cliente || '—'} · ${invFmt(d.total)}`),
       () => { document.querySelector('.gc-tab[data-tab="facturas"]').click(); document.querySelector('.inv-subtab[data-sub="guardadas"]').click(); });
 
-    // Trabajos agendados en el Calendario
-    agrega('Calendario', (citas || []).filter((c) =>
-      (c.cliente || '').toLowerCase().includes(texto) || (c.jobNum || '').toLowerCase().includes(texto) ||
-      (c.loc || '').toLowerCase().includes(texto) || (c.descripcion || '').toLowerCase().includes(texto)
-    ).map((c) => `${invFechaNum(c.fecha)} · ${[c.jobNum, c.loc, c.cliente].filter(Boolean).join(' · ') || '—'}`),
-      () => document.querySelector('.gc-tab[data-tab="calendario"]').click());
 
     // Planos
     agrega('Planos', (planos || []).filter((p) =>
@@ -3738,9 +3865,9 @@
 
     // Clientes y colonias
     agrega('Clientes', (invClientes || []).filter((c) => (c || '').toLowerCase().includes(texto)),
-      () => { document.querySelector('.gc-tab[data-tab="facturas"]').click(); document.querySelector('.inv-subtab[data-sub="clientes"]').click(); });
+      () => { document.querySelector('.gc-tab[data-tab="facturas"]').click(); invAbrirCarpeta('clientes'); });
     agrega('Colonias', (invColonias || []).filter((c) => (c || '').toLowerCase().includes(texto)),
-      () => { document.querySelector('.gc-tab[data-tab="facturas"]').click(); document.querySelector('.inv-subtab[data-sub="colonias"]').click(); });
+      () => { document.querySelector('.gc-tab[data-tab="facturas"]').click(); invAbrirCarpeta('colonias'); });
 
     // Trabajadores (nómina)
     agrega('Trabajadores', (empleados || []).filter((e) =>
@@ -6988,6 +7115,7 @@
   }
 
   function csGuardarBorrador() {
+    if (csTipo === 'pull') return;   // el Pull Sheet se guarda aparte
     try { localStorage.setItem(CS_KEY(csTipo), JSON.stringify(csLeer())); } catch (e) {}
   }
 
@@ -7109,9 +7237,22 @@
 
   function csCambiarTipo(tipo) {
     if (tipo === csTipo) return;
-    csGuardarBorrador();          // guarda la hoja que estaba en pantalla
+    if (csTipo === 'pull') psGuardarBorrador(); else csGuardarBorrador();   // guarda la hoja que estaba en pantalla
     csTipo = tipo;
-    csLlenar(csLeerGuardado(tipo));
+    csMostrarForma();
+    if (tipo === 'pull') psLlenar(psLeerGuardado());
+    else csLlenar(csLeerGuardado(tipo));
+  }
+
+  // Rough-In / Trim-Out usan la forma con checklist; el Pull Sheet la suya.
+  function csMostrarForma() {
+    const esPull = csTipo === 'pull';
+    $('cs-form-pull').style.display = esPull ? '' : 'none';
+    $('cs-form-check').style.display = esPull ? 'none' : '';
+    $('cs-btn-imprimir-ambas').style.display = esPull ? 'none' : '';
+    $('cs-btn-imprimir').textContent = esPull ? '🖨 Imprimir (2 páginas)' : '🖨 Imprimir esta';
+    document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', b.dataset.cstipo === csTipo));
+    if (esPull) $('cs-titulo').textContent = 'Trim Out Pull Sheet';
   }
 
   (function csIniciar() {
@@ -7147,6 +7288,14 @@
     document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.addEventListener('click', () => csCambiarTipo(b.dataset.cstipo)));
 
     $('cs-btn-imprimir').addEventListener('click', () => {
+      if (csTipo === 'pull') {
+        psGuardarBorrador();
+        const dp = psLeerGuardado();
+        const tp = `Pull Sheet ${dp.lote || ''}`.trim();
+        ghImprimirEnVentana('', tp, psDocumento(tp));
+        toast('En la ventana de impresión elige "Doble cara" para frente y vuelta', 'info', 4500);
+        return;
+      }
       csGuardarBorrador();
       const d = csLeerGuardado(csTipo);
       const titulo = `${CS_HOJAS[csTipo].nombre} ${d.lote || ''}`.trim();
@@ -7165,6 +7314,13 @@
     });
 
     $('cs-btn-limpiar').addEventListener('click', async () => {
+      if (csTipo === 'pull') {
+        if (!await gcConfirm('¿Limpiar el Pull Sheet para empezar uno nuevo?', { okText: 'Limpiar' })) return;
+        try { localStorage.removeItem(PS_KEY); } catch (e) {}
+        psLlenar({});
+        toast('Hoja limpia', 'info', 1500);
+        return;
+      }
       if (!await gcConfirm(`¿Limpiar la hoja de ${CS_HOJAS[csTipo].nombre} para empezar una nueva?`, { okText: 'Limpiar' })) return;
       try { localStorage.removeItem(CS_KEY(csTipo)); } catch (e) {}
       csLlenar({});
@@ -7172,6 +7328,257 @@
     });
   })();
   // FIN MÓDULO COMPLETION SHEETS
+  // ====================================================================
+
+  // ====================================================================
+  // MÓDULO: TRIM OUT PULL SHEET (AHC — Standard Trim)
+  // Copia del papel de American Heating & Cooling: 2 páginas carta, letra
+  // Calibri ~9pt, mismas columnas (PART · DESCRIPTION · ORDER · SHIP) y los
+  // mismos renglones. En pantalla solo se llenan ORDER y SHIP de cada parte.
+  // ====================================================================
+  const PS_KEY = 'gh-cs-pull';
+  const _S = (t) => ({ s: t }), _B = null;
+  const _I = (p, d) => ({ p, d });
+  const PS_PAGINAS = [
+    {
+      // Columnas medidas sobre el escaneo (pulgadas, desde el borde de la hoja)
+      x: [0.215, 1.215, 1.43, 2.335, 2.555, 2.94, 3.155, 3.665, 3.945, 4.71, 4.925, 5.75, 5.965, 6.525, 6.74, 7.25],
+      top: 0.30, tituloX: 3.775, subX: 4.025, titulo: 'AHC TRIM OUT PULL SHEET',
+      // índices de columna: [part, desc, order, ship] de cada lado
+      izq: [0, 2, 4, 6], der: [8, 10, 12, 14],
+      L: [
+        _S('GAS PIPE'),
+        _I('BP11421', '1 1/4" gas pipe'), _I('BP121', '1" gas pipe'), _I('BP3421', '3/4" gas pipe'), _I('BP1221', '1/2" gas pipe'),
+        _I('BP11490', '1 1/4" 90 degree'), _I('BP114C', '1 1/4" cap'), _I('BP114CP', '1 1/4" coupling'), _I('BP114T', '1 1/4" tee'),
+        _I('BP114X6N', '1 1/4"x6" nipple'), _I('BP114X1BR', '1 1/4"x1" bell reducer'), _I('BP190', '1" 90 degree'), _I('BP1C', '1" cap'),
+        _I('BP1CP', '1" coupling'), _I('BP1T', '1" tee'), _I('BP1X2N', '1"x2" nipple'), _I('BP1X6N', '1"x6" nipple'),
+        _I('BP1X34BR', '1"x3/4" bell reducer'), _I('BP3490', '3/4" 90 degree'), _I('BP34C', '3/4" cap'), _I('BP34CP', '3/4" coupling'),
+        _I('BP34T', '3/4" tee'), _I('BP34UN', '3/4" union'), _I('BP34GV', '3/4" gas valve'), _I('BP34X2N', '3/4"x2" nipple'),
+        _I('BP34X6N', '3/4"x6" nipple'), _I('BP34X12BR', '3/4"x1/2" bell reducer'), _I('BP1290', '1/2" 90 degree'), _I('BP12C', '1/2" cap'),
+        _I('BP12CP', '1/2" coupling'), _I('BP12T', '1/2" tee'), _I('BP12GV', '1/2" gas valve'), _I('BP12UN', '1/2" union'),
+        _I('BP12X2N', '1/2"x2" nipple'), _I('BP12X3N', '1/2"x3" nipple'), _I('BP12X4N', '1/2"x4" nipple'), _I('BP12X5N', '1/2"x5" nipple'),
+        _I('BP12X6N', '1/2"x6" nipple'), _I('TEST GUAGE', 'test gauge'), _I('BP3812MPT', '3/8"x1/2" mpt fitt'), _I('BP38FN', '3/8" flare nut'),
+        _I('BPCHRKEYWALLST', 'chrome wall key'), _I('BPCHRKEYFLOOAGL', 'chrome floor key'), _I('FLEXGASHOSE', '1/2" flex gas hose'),
+        _I('BP12TP', '1/2" trac pipe'), _I('BP12TPF', '1/2" trac pipe fitting')
+      ],
+      R: [
+        _S('MISC'),
+        _I('FLEXTAPE', 'flex tape'), _I('M SEAL FLOSS', 'sealfloss'), _I('6AL', '6" alum flex'), _I('M CAULK L', 'latex caulk'),
+        _I('M CAULK S', 'silicone caulk'), _I('6JENNAIR', '6" jenn-air cap'), _I('DVC4', 'white dryer vent cap'), _I('4EVECAP', 'white eve cap'),
+        _I('DVC4B', 'brown dryer vent cap'), _I('4BROWNEVECAP', 'brown eve cap'), _I('FLSW', 'float switch'), _I('LOCKINGPORTCAP', 'locking service port caps'),
+        _B,
+        _S('SHEET METAL'),
+        _I('SM PB U14', '#14 plenum box'), _I('SM PB U17', '#17 plenum box'), _I('SM PB U21', '#21 plenum box'), _I('SMDP18 30X72', 'large drain pan'),
+        _I('SMDP17', 'small drain pan'), _I('SM3696', 'sheet metal'), _I('SM UNIT FL 7', 'angle flashing'), _I('SM UNIT FL 4', 'unit flashing'),
+        _I('SR2 G', '14" sq to rnd- set'), _I('SR2.5-3.5 G', '16" sq to rnd- set'), _I('SR4 G', '18" sq to rnd- set'), _I('SR5 G', '20" sq to rnd- set'),
+        _B,
+        _S('DOUBLE WALL'),
+        _I('4RD F', '4RD flashing'), _I('4RD SC', '4RD storm collar'), _I('4RD C', '4RD cap'), _I('4RD 60', '4RD 60"'), _I('4RD 36', '4RD 36"'),
+        _I('4RD 24', '4RD 24"'), _I('4RD 18', '4RD 18"'), _I('4RD 12', '4RD 12"'), _I('4RD 90', '4RD 90 degree'), _I('4RD AJ12', '4RD 12" adjust'),
+        _B,
+        _S('MISC'),
+        _I('6EVECAP', 'white eve cap'), _I('6BROWNEVE', 'brown eve cap'), _I('', 'Trim Rings')
+      ]
+    },
+    {
+      x: [0.165, 1.29, 1.505, 2.355, 2.57, 2.96, 3.175, 3.685, 4.205, 5.2, 5.415, 6.525, 6.74, 7.135, 7.35, 7.86, 8.085],
+      top: 0.29, tituloX: 4.15, subX: 4.425, titulo: 'AHC TRIM OUT PULL SHEET',
+      izq: [0, 2, 4, 6], der: [8, 10, 12, 14],
+      L: [
+        _S('PIPE'),
+        _I('RMP20', '20" round pipe'), _I('RMP18', '18" round pipe'), _I('RMP16', '16" round pipe'), _I('RMP14', '14" round pipe'),
+        _I('RMP12', '12" round pipe'), _I('RMP10', '10" round pipe'), _I('RMP6', '6" round pipe'), _I('RMP4', '4" round pipe'),
+        _B,
+        _S('90 DEGREE'),
+        _I('90MP6', '6" 90'), _I('90MP4', '4" 90'),
+        _B,
+        _S('ELECTRICAL'),
+        _I('E 34 SEAL', '3/4" sealtite'), _I('E 34 SEALC90', '3/4" sealtite 90'), _I('E 34 SEALCST', '3/4" sealtite straight'), _I('E 34 RS', '3/4" rigid strap'),
+        _I('E 12 SEAL', '1/2" sealtite'), _I('E 12 SEALC90', '1/2" sealtite 90'), _I('E 12 SEALCST', '1/2" sealtite straight'), _I('E 12 RS', '1/2" rigid strap'),
+        _I('E TOG', 'toggle switch'), _I('E COV', 'switch cover'), _I('E 24 HB', '2"x4" handy box'), _I('WTHHN10B', '#10 black wire'),
+        _I('WTHHN10G', '#10 green wire'), _I('WTHHN8B', '#8 black wire'), _I('WTHHN6B', '#6 black wire'),
+        _B,
+        _S('COPPER'),
+        _I('LS7838', '7/8" copper lineset'), _I('C7890', '7/8" copper 90'), _I('A7834', '7/8"x3/4" armaflex'), _I('LS3438', '3/4" copper lineset'),
+        _I('C3490', '3/4" copper 90'),
+        _B,
+        _S('THERMOSTATS'),
+        _I('TH4110U2005AMER', 'T4 prog gas stat'), _I('TH4210U2002AMER', 'T4 prog H/P stat'),
+        _B,
+        _S('FLEX'),
+        _I('FD20R8', '20" R8 Flex'), _I('FD18R8', '18" R8 Flex'), _I('FD16R8', '16" R8 Flex'), _I('FD14R8', '14" R8 Flex'), _I('FD12R8', '12" R8 Flex'),
+        _I('FD10R8', '10" R8 Flex'), _I('FD8R8', '8" R8 Flex'), _I('FD7R8', '7" R8 Flex'), _I('FD6R8', '6" R8 Flex'), _I('FD5R8', '5" R8 Flex')
+      ],
+      R: [
+        _S('FILTER GRILLS'),
+        _I('FG1212 170FF', '12x12'), _I('FG1414 170FF', '14x14'), _I('FG1616 170FF', '16x16'), _I('FG1818 170FF', '18x18'),
+        _I('FG1420170FF', '14x20'), _I('FG1425170FF', '14x25'), _I('FG1430170FF', '14x30'), _I('FG1630 170FF', '16x30'),
+        _I('FG2020170FF', '20x20'), _I('FG2025170FF', '20x25'), _I('FG2030170FF', '20x30'), _I('FG3020170FF', '30x20'),
+        _I('FG2430170FF', '24x30'), _I('FG2436170FF', '24x36'),
+        _B,
+        _S('FILTERS'),
+        _I('F12121', '12x12 1" filter'), _I('F1414 1', '14x14 1" filter'), _I('F16161', '16x16 1" filter'), _I('F1818 1', '18x18 1" filter'),
+        _I('F14201', '14x20 1" filter'), _I('F14251', '14x25 1" filter'), _I('F14301', '14x30 1" filter'), _I('F1630 1', '16x30 1" filter'),
+        _I('F20201', '20x20 1" filter'), _I('F20251', '20x25 1" filter'), _I('F20301', '20x30 1" filter'), _I('F24301', '24x30 1" filter'),
+        _I('F24361', '24x36 1" filter'),
+        _B,
+        _S('FLOOR REGISTERS'),
+        _I('FR4X10302', '4x10'), _I('FR4X12302', '4x12'), _I('FR4X14302', '4x14'),
+        _B,
+        _S('CEILING REGISTERS'),
+        _I('4X10 140', '4x10 three way'), _I('4X12 140', '4x12 three way'), _I('4X14 140', '4x14 three way'),
+        _B,
+        _S('BARRIER POSTS'),
+        _I('WHP', 'water heater post'), _I('WHP4', 'water heater post'), _I('TITANHDANCHOR', 'drive anchor'),
+        _B,
+        _S('PVC'),
+        _I('PVC34PIPE', '3/4" pvc pipe'), _I('PVC3490', '3/4" pvc 90'), _I('PVC34MA', '3/4" pvc male adapt'), _I('PVC34C', '3/4" pvc coupling'),
+        _I('PVC34PT', '3/4" pvc p-trap')
+      ]
+    }
+  ];
+  const PS_FILAS = 53;            // renglones de partes por lado (igual que el papel)
+  const PS_ALTO = 0.15625;        // alto de cada renglón en pulgadas
+  const psClave = (pg, lado, i) => `${pg}${lado}${i}`;
+
+  function psLeerGuardado() {
+    try { return JSON.parse(localStorage.getItem(PS_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function psLeer() {
+    const q = {};
+    document.querySelectorAll('#ps-lista input[data-ps]').forEach((i) => { if (i.value.trim()) q[i.dataset.ps] = i.value.trim(); });
+    return {
+      fecha: $('ps-fecha').value, job: $('ps-job').value.trim(), builder: $('ps-builder').value.trim(),
+      lote: $('ps-lote').value.trim(), puller: $('ps-puller').value.trim(), installer: $('ps-installer').value.trim(), q
+    };
+  }
+  function psGuardarBorrador() {
+    try { localStorage.setItem(PS_KEY, JSON.stringify(psLeer())); } catch (e) {}
+    psContar();
+  }
+  function psContar() {
+    const n = [...document.querySelectorAll('#ps-lista input[data-ps]')].filter((i) => i.value.trim()).length;
+    const el = $('ps-contador'); if (el) el.textContent = n ? `${n} casilla${n === 1 ? '' : 's'} llena${n === 1 ? '' : 's'}` : '';
+  }
+
+  function psLlenar(d) {
+    d = d || {};
+    $('ps-fecha').value = d.fecha || ''; $('ps-job').value = d.job || ''; $('ps-builder').value = d.builder || '';
+    $('ps-lote').value = d.lote || ''; $('ps-puller').value = d.puller || ''; $('ps-installer').value = d.installer || '';
+    const q = d.q || {};
+    let html = '';
+    PS_PAGINAS.forEach((pg, n) => {
+      ['L', 'R'].forEach((lado) => {
+        pg[lado].forEach((f, i) => {
+          if (!f) return;
+          if (f.s) { html += `<tr class="ps-sec"><td colspan="3">${escapeHtml(f.s)}</td></tr>`; return; }
+          const k = psClave(n, lado, i);
+          html += `<tr><td><div class="ps-p">${escapeHtml(f.p) || '&nbsp;'}</div><div class="ps-d">${escapeHtml(f.d)}</div></td>
+            <td><input type="text" inputmode="decimal" data-ps="${k}o" value="${escapeHtml(q[k + 'o'] || '')}"></td>
+            <td><input type="text" inputmode="decimal" data-ps="${k}s" value="${escapeHtml(q[k + 's'] || '')}"></td></tr>`;
+        });
+      });
+    });
+    $('ps-lista').innerHTML = html;
+    $('ps-lista').querySelectorAll('input').forEach((i) => i.addEventListener('input', psGuardarBorrador));
+    psContar();
+  }
+
+  const PS_PRINT_CSS = `
+    @page { size: letter; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #fff; }
+    body { font-family: 'Carlito', 'Calibri', 'Helvetica Neue', Arial, sans-serif; color: #111;
+           -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .ps-pag { position: relative; width: 8.5in; height: 11in; overflow: hidden; }
+    .ps-pag + .ps-pag { page-break-before: always; break-before: page; }
+    .ps-t { position: absolute; font-size: 8.9pt; font-weight: 700; white-space: nowrap; line-height: ${PS_ALTO}in; height: ${PS_ALTO}in; }
+    .ps-g { position: absolute; border-collapse: collapse; table-layout: fixed; font-size: 8.9pt; }
+    .ps-g td { height: ${PS_ALTO}in; padding: 0 0 0 0.025in; border: 0.6pt solid #8a8a8a; white-space: nowrap;
+               overflow: visible; line-height: ${PS_ALTO - 0.01}in; vertical-align: bottom; }
+    .ps-g td.v { border-bottom: 1pt solid #111; text-align: center; padding: 0; font-size: 9.5pt; font-weight: 700; }
+    .ps-g td.b { font-weight: 700; }
+    .ps-g td.ov { position: relative; }
+    .ps-g td.ov span { position: absolute; left: 0.025in; bottom: 0; background: transparent; }
+    .ps-g td.v.q span { left: 0; right: 0; text-align: center; }
+    .ps-marco { position: absolute; border: 1.2pt solid #111; pointer-events: none; }
+  `;
+
+  function psBuildPrint(d) {
+    d = d || {};
+    const q = d.q || {};
+    const fechaUS = d.fecha ? csFechaUS(d.fecha) : '';
+    return PS_PAGINAS.map((pg, n) => {
+      const x = pg.x, nc = x.length - 1;
+      const anchos = x.slice(1).map((v, i) => (v - x[i]).toFixed(3));
+      const cols = anchos.map((w) => `<col style="width:${w}in">`).join('');
+      // Una fila de la tabla: arreglo de {c: columna, t: texto, cls, span}
+      const fila = (celdas) => {
+        let out = '<tr>', c = 0;
+        const porCol = {}; celdas.forEach((x2) => { porCol[x2.c] = x2; });
+        while (c < nc) {
+          const cel = porCol[c];
+          if (cel) {
+            const span = cel.span || 1;
+            const txt = cel.t ? `<span>${escapeHtml(cel.t)}</span>` : '';
+            out += `<td class="ov ${cel.cls || ''}"${span > 1 ? ` colspan="${span}"` : ''}>${txt}</td>`;
+            c += span;
+          } else { out += '<td></td>'; c++; }
+        }
+        return out + '</tr>';
+      };
+      const [lp, ld, lo, ls] = pg.izq, [rp, rd, ro, rs] = pg.der;
+      let filas = '';
+      // 1-2: título (va encima, posicionado aparte, como en el papel)
+      filas += fila([]) + fila([]);
+      // 3-5: encabezado
+      const enc = [['DATE', fechaUS, 'LOT/SUB', d.lote], ['JOB', d.job, 'PULLER', d.puller], ['BUILDER', d.builder, 'INSTALLER', d.installer]];
+      enc.forEach(([a, va, b, vb]) => {
+        filas += fila([
+          { c: ld, t: a, cls: 'b' }, { c: lo, t: va, cls: 'v', span: ls - lo + 1 },
+          { c: rd, t: b, cls: 'b' }, { c: ro, t: vb, cls: 'v', span: rs - ro + 1 }
+        ]);
+      });
+      filas += fila([]);
+      filas += fila([{ c: lp, t: 'PART' }, { c: ld, t: 'DESCRIPTION' }, { c: lo, t: 'ORDER' }, { c: ls, t: 'SHIP' },
+                     { c: rp, t: 'PART' }, { c: rd, t: 'DESCRIPTION' }, { c: ro, t: 'ORDER' }, { c: rs, t: 'SHIP' }]);
+      filas += fila([]);
+      for (let i = 0; i < PS_FILAS; i++) {
+        const celdas = [];
+        [['L', lp, ld, lo, ls], ['R', rp, rd, ro, rs]].forEach(([lado, p, de, o, s]) => {
+          const f = pg[lado][i];
+          if (!f) return;
+          if (f.s) { celdas.push({ c: p, t: f.s, cls: 'b' }); return; }
+          const k = psClave(n, lado, i);
+          celdas.push({ c: p, t: f.p }, { c: de, t: f.d }, { c: o, t: q[k + 'o'] || '', cls: 'v q' }, { c: s, t: q[k + 's'] || '', cls: 'v q' });
+        });
+        filas += fila(celdas);
+      }
+      const ancho = (x[nc] - x[0]).toFixed(3), alto = ((PS_FILAS + 8) * PS_ALTO).toFixed(3);
+      return `<div class="ps-pag">
+        <table class="ps-g" style="left:${x[0]}in;top:${pg.top}in;width:${ancho}in;">${cols}${filas}</table>
+        <div class="ps-marco" style="left:${x[0]}in;top:${pg.top}in;width:${ancho}in;height:${alto}in;"></div>
+        <div class="ps-t" style="left:${pg.tituloX}in;top:${pg.top}in;">${pg.titulo}</div>
+        <div class="ps-t" style="left:${pg.subX}in;top:${(pg.top + PS_ALTO).toFixed(4)}in;">STANDARD TRIM</div>
+      </div>`;
+    }).join('');
+  }
+
+  function psDocumento(titulo) {
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(titulo)}</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=block" rel="stylesheet">
+      <style>${PS_PRINT_CSS}</style></head><body>${psBuildPrint(psLeerGuardado())}</body></html>`;
+  }
+
+  (function psIniciar() {
+    if (!$('ps-lista')) return;
+    psLlenar(psLeerGuardado());
+    ['ps-fecha', 'ps-job', 'ps-builder', 'ps-lote', 'ps-puller', 'ps-installer'].forEach((id) => {
+      const el = $(id); if (el) { el.addEventListener('input', psGuardarBorrador); el.addEventListener('change', psGuardarBorrador); }
+    });
+  })();
+  // FIN MÓDULO TRIM OUT PULL SHEET
   // ====================================================================
 
   // FIN MÓDULO PLANOS
@@ -7186,6 +7593,7 @@
       document.querySelectorAll('.inv-subpanel').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
       $('inv-sub-' + tab.dataset.sub).classList.add('active');
+      if (tab.dataset.sub === 'carpeta') invMostrarCarpeta(invCarpetaActual);
       if (tab.dataset.sub === 'guardadas') invRenderLista();
       if (tab.dataset.sub === 'cobros') invRenderCobros();
       if (tab.dataset.sub === 'colonias') invRenderColonias();
@@ -7193,6 +7601,22 @@
       if (tab.dataset.sub === 'trabajos') invRenderTrabajos();
     });
   });
+
+  // Carpeta "Listas": Clientes, Trabajos y Colonias dentro de Facturas
+  let invCarpetaActual = 'clientes';
+  function invMostrarCarpeta(cual) {
+    invCarpetaActual = cual;
+    ['clientes', 'trabajos', 'colonias'].forEach((c) => $('inv-sub-' + c).classList.toggle('active', c === cual));
+    document.querySelectorAll('.inv-carpeta-btn').forEach((b) => b.classList.toggle('active', b.dataset.carpeta === cual));
+    if (cual === 'colonias') invRenderColonias();
+    if (cual === 'clientes') invRenderClientes();
+    if (cual === 'trabajos') invRenderTrabajos();
+  }
+  function invAbrirCarpeta(cual) {
+    invCarpetaActual = cual;
+    document.querySelector('.inv-subtab[data-sub="carpeta"]').click();
+  }
+  document.querySelectorAll('.inv-carpeta-btn').forEach((b) => b.addEventListener('click', () => invMostrarCarpeta(b.dataset.carpeta)));
 
   async function invSaveInv() { await window.storage.set(INV_KEY, JSON.stringify(invDocs)); }
   async function invSaveCol() { await window.storage.set(COL_KEY, JSON.stringify(invColonias)); invRefreshDlColonias(); }
