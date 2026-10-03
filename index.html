@@ -661,7 +661,7 @@
   .gh-hero-refresh { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; transition: all .16s var(--ease); flex-shrink: 0; }
   .gh-hero-refresh:hover { background: rgba(255,255,255,.2); transform: rotate(90deg); }
   .gh-hero-refresh:active { transform: scale(.9) rotate(90deg); }
-  .gh-hero-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; position: relative; z-index: 1; }
+  .gh-hero-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; position: relative; z-index: 1; }
   .gh-tile {
     background: rgba(255,255,255,.085); border: 1px solid rgba(255,255,255,.14);
     border-radius: var(--r-sm); padding: 13px 14px; text-align: left; cursor: pointer;
@@ -677,6 +677,7 @@
   @media (max-width: 720px) {
     .gh-hero { padding: 17px 16px; border-radius: var(--r); }
     .gh-hero-tiles { grid-template-columns: 1fr 1fr; }
+    .gh-hero-tiles .gh-tile#gh-tile-semana { grid-column: 1 / -1; }
     .gh-tile-val { font-size: 18.5px; }
   }
 
@@ -856,7 +857,7 @@
 
   <!-- NAV TABS -->
   <nav class="gc-nav">
-    <button class="gc-tab active" data-tab="movimientos" data-i18n="registro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Registro</button>
+    <button class="gc-tab active" data-tab="movimientos" data-i18n="tab_principal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Principal</button>
     <button class="gc-tab" data-tab="facturas" data-i18n="facturas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Facturas</button>
     <button class="gc-tab" data-tab="nomina" data-i18n="nomina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Nómina</button>
     <button class="gc-tab" data-tab="buscar" data-i18n="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Buscar</button>
@@ -868,7 +869,7 @@
   <!-- ===== MOVIMIENTOS (hub con carpetas) ===== -->
   <div class="gc-panel active" id="panel-movimientos">
     <div class="inv-subnav">
-      <button class="mov-subtab active" data-i18n="movimientos" data-msub="movs">Movimientos</button>
+      <button class="mov-subtab active" data-i18n="sub_registro" data-msub="movs">Registro</button>
       <button class="mov-subtab" data-i18n="invoices_guardados" data-msub="invoices">Invoices guardados</button>
       <button class="mov-subtab" data-i18n="categorias" data-msub="categorias">Categorías</button>
     </div>
@@ -890,6 +891,11 @@
             <span class="gh-tile-lbl">Por cobrar</span>
             <span class="gh-tile-val" id="gh-val-cobrar">—</span>
             <span class="gh-tile-sub" id="gh-sub-cobrar">facturas pendientes</span>
+          </button>
+          <button type="button" class="gh-tile" id="gh-tile-nomina">
+            <span class="gh-tile-lbl">Nómina</span>
+            <span class="gh-tile-val" id="gh-val-nomina">—</span>
+            <span class="gh-tile-sub" id="gh-sub-nomina">semana pasada</span>
           </button>
           <button type="button" class="gh-tile" id="gh-tile-hoy" style="display:none;">
             <span class="gh-tile-lbl">Hoy</span>
@@ -2224,7 +2230,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v103 · 3 oct';
+  const APP_VERSION = 'v104 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -2411,10 +2417,10 @@
   // es del SEGUNDO socio de la lista. bonoPct = porcentaje de bono (0-100),
   // 0 significa que ese socio no recibe bono.
   const CFG_KEY = 'kontaly-config';
-  let cfgSocios = [
-    { id: 'socio-1', nombre: 'CRA HVAC', bonoPct: 10 },
-    { id: 'socio-2', nombre: 'GUZMAN HVAC', bonoPct: 0 }
-  ];
+  // De fábrica NO hay socios: los que tengas vienen de tu configuración en la
+  // nube. (Antes venían 2 de ejemplo y, si la nube tardaba en contestar, se
+  // guardaban encima de los tuyos — por eso "regresaba" un socio borrado.)
+  let cfgSocios = [];
   // Alias de compatibilidad: apuntan siempre al 1° y 2° socio de la lista.
   // Muchas partes de la app (facturas, nómina, etiquetas) solo necesitan
   // "el nombre principal", así que se siguen leyendo desde aquí.
@@ -2432,10 +2438,32 @@
   let cfgUltimoCliente = ''; // último "Bill To" usado en Facturas — se mantiene hasta que lo cambien
   let cfgUltimoClienteDir = ''; // última dirección del cliente — se recuerda igual que el nombre
 
+  // Copia local de la última configuración buena, por base de datos. Si al
+  // abrir la app la nube no contesta (sesión vencida, sin señal), se usa esta
+  // copia en vez de los valores de fábrica, y nunca se guardan encima.
+  const cfgCacheKey = () => 'gh-cfg-cache:' + ((typeof window.GH_GET_CUENTA === 'function' && window.GH_GET_CUENTA()) || 'principal');
+  let cfgCargada = false;   // true cuando ya se leyó la config real (nube o copia)
+  async function cfgLeerSeguro() {
+    for (let intento = 0; intento < 3; intento++) {
+      try {
+        const r = await window.storage.get(CFG_KEY);
+        const c = JSON.parse(r.value);
+        if (c && typeof c === 'object') {
+          try { localStorage.setItem(cfgCacheKey(), r.value); } catch (e) {}
+          return c;
+        }
+      } catch (e) {}
+      if (intento < 2) await new Promise((res) => setTimeout(res, 800 * (intento + 1)));
+    }
+    const copia = localStorage.getItem(cfgCacheKey());
+    if (copia) { setTimeout(() => cargarConfig(), 15000); return JSON.parse(copia); }   // reintenta la nube más tarde
+    throw new Error('sin-config');
+  }
+
   async function cargarConfig() {
     try {
-      const r = await window.storage.get(CFG_KEY);
-      const c = JSON.parse(r.value);
+      const c = await cfgLeerSeguro();
+      cfgCargada = true;
       if (Array.isArray(c.socios)) {
         // Formato nuevo: usar tal cual (normalizando por si falta algún campo)
         // Nota: permitimos socios vacío [] para bases de datos sin socios
@@ -2461,6 +2489,8 @@
       if (typeof c.ultimoClienteDir === 'string') cfgUltimoClienteDir = c.ultimoClienteDir;
       if (typeof c.tasaTaxas === 'number' && c.tasaTaxas >= 0 && c.tasaTaxas < 1) TASA_TAXAS = c.tasaTaxas;
     } catch (e) {
+      // No hay configuración ni en la nube ni en este teléfono: base de datos nueva.
+      cfgCargada = true;
       // Migración: si había una dirección vieja en localStorage, usarla
       try { const d = localStorage.getItem('cra-direccion'); if (d) cfgFacturaDireccion = d; } catch (e2) {}
     }
@@ -2503,6 +2533,9 @@
     if (campoDirEmp && !campoDirEmp.value) campoDirEmp.value = cfgFacturaDireccion;
   }
   async function guardarConfig() {
+    // Nunca guardar antes de haber leído la configuración real: así no se
+    // pisan tus socios con valores de fábrica.
+    if (!cfgCargada) return;
     const c = {
       socios: cfgSocios,
       socioBonus: cfgSocioBonus, socioMitad: cfgSocioMitad, // se dejan también por compatibilidad hacia atrás
@@ -2510,6 +2543,7 @@
       facturaSigueSocio: cfgFacturaSigueSocio, sociosMigrados: cfgSociosMigrados, logoDataUrl: cfgLogoDataUrl,
       ultimoCliente: cfgUltimoCliente, ultimoClienteDir: cfgUltimoClienteDir, tasaTaxas: TASA_TAXAS
     };
+    try { localStorage.setItem(cfgCacheKey(), JSON.stringify(c)); } catch (e) {}
     try { await window.storage.set(CFG_KEY, JSON.stringify(c)); } catch (e) {}
   }
   // El encabezado siempre usa el logo de la app (GH Manager).
@@ -2954,11 +2988,40 @@
       const r = await window.storage.get(INV_KEY).catch(() => null);
       try { docs = JSON.parse(r.value); } catch (e) { docs = []; }
     }
-    const pend = (docs || []).filter((d) => !d.pagada);
+    // Semana pasada (lunes a domingo): es la que se cobra y se paga esta semana
+    const hoyD = new Date(today() + 'T00:00:00');
+    const lunesPas = new Date(hoyD); lunesPas.setDate(hoyD.getDate() - ((hoyD.getDay() + 6) % 7) - 7);
+    const domPas = new Date(lunesPas); domPas.setDate(lunesPas.getDate() + 6);
+    const iniPas = ghFechaLocal(lunesPas), finPas = ghFechaLocal(domPas);
+    const enSemPas = (iso) => !!iso && iso >= iniPas && iso <= finPas;
+    const mesesC = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const rangoTxt = `${lunesPas.getDate()} ${mesesC[lunesPas.getMonth()]} – ${domPas.getDate()} ${mesesC[domPas.getMonth()]}`;
+
+    // Por cobrar: facturas pendientes del trabajo de la semana pasada (por la
+    // fecha de sus líneas; si no traen fecha, por la fecha de la factura).
+    const deSemPasada = (d) => {
+      const dias = (d.items || []).map((it) => it.dia).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x || ''));
+      return dias.length ? dias.some(enSemPas) : enSemPas(d.fecha);
+    };
+    const pend = (docs || []).filter((d) => !d.pagada && deSemPasada(d));
     const totalPend = pend.reduce((sum, d) => sum + (Number(d.total) || 0), 0);
     $('gh-val-cobrar').textContent = fmt(totalPend);
-    $('gh-sub-cobrar').textContent = pend.length === 1 ? '1 factura pendiente' : `${pend.length} facturas pendientes`;
+    $('gh-sub-cobrar').textContent = (pend.length === 1 ? '1 factura' : `${pend.length} facturas`) + ' · ' + rangoTxt;
     $('gh-tile-cobrar').classList.toggle('alerta', pend.length > 0);
+
+    // Nómina de la semana pasada (lo que se paga esta semana)
+    let nom = [];
+    try { const rn = await window.storage.get('gh-nomina'); nom = JSON.parse(rn.value) || []; } catch (e) { nom = []; }
+    let totalNom = 0; const trabNom = new Set();
+    (nom || []).forEach((n) => {
+      const dias = Array.isArray(n.dias) ? n.dias.slice().sort() : [];
+      const ref = dias[0] || (n.creadoEn || '').slice(0, 10);
+      if (!enSemPas(ref)) return;
+      totalNom += Number(n.monto) || 0;
+      if (n.trabajador) trabNom.add(n.trabajador);
+    });
+    $('gh-val-nomina').textContent = fmt(totalNom);
+    $('gh-sub-nomina').textContent = (trabNom.size === 1 ? '1 trabajador' : `${trabNom.size} trabajadores`) + ' · ' + rangoTxt;
 
     // Trabajos agendados para hoy
     let lista = citas;
@@ -2985,6 +3048,8 @@
       document.querySelector('.inv-subtab[data-sub="guardadas"]').click();
     });
     // (Calendario quitado: la ficha "Hoy" ya no se muestra)
+    const t4 = $('gh-tile-nomina');
+    if (t4) t4.addEventListener('click', () => document.querySelector('.gc-tab[data-tab="nomina"]').click());
     if (t3) t3.addEventListener('click', () => document.querySelector('.mov-subtab[data-msub="invoices"]').click());
     if (rf) rf.addEventListener('click', () => { ghActualizarHero(); toast('Resumen actualizado ✓', 'info', 1500); });
   })();
@@ -5079,21 +5144,35 @@
   }
   function ajNombreDe(codigo) {
     const c = ajCuentas.find((x) => x.codigo === codigo);
-    return c ? c.nombre : codigo;
+    if (c) return c.nombre;
+    if (codigo === 'principal' && typeof ajPrincipal !== 'undefined') return ajPrincipal.nombre;
+    return codigo;
   }
 
+  // La principal ahora también se puede renombrar y quitar de la lista.
+  // Su nombre y si está oculta se guardan en la misma lista, como una
+  // entrada más con codigo 'principal'. (Sus datos nunca se borran.)
+  let ajPrincipal = { codigo: 'principal', nombre: 'Principal (información original)', oculta: false };
   async function ajCargarCuentas() {
-    ajCuentas = [{ codigo: 'principal', nombre: 'Principal (información original)' }];
-    try {
-      const r = await window.storage.get('__cuentas_lista');
-      const guardadas = JSON.parse(r.value);
-      if (Array.isArray(guardadas)) guardadas.forEach((c) => { if (c && c.codigo && c.codigo !== 'principal') ajCuentas.push({ codigo: c.codigo, nombre: c.nombre || c.codigo }); });
-    } catch (e) {}
+    ajCuentas = [];
+    let guardadas = null;
+    try { const r = await window.storage.get('__cuentas_lista'); guardadas = JSON.parse(r.value); } catch (e) {}
+    if (!Array.isArray(guardadas)) { try { guardadas = JSON.parse(localStorage.getItem('gh-cuentas-cache') || 'null'); } catch (e) {} }
+    else { try { localStorage.setItem('gh-cuentas-cache', JSON.stringify(guardadas)); } catch (e) {} }
+    const pr = Array.isArray(guardadas) ? guardadas.find((c) => c && c.codigo === 'principal') : null;
+    ajPrincipal = { codigo: 'principal', nombre: (pr && pr.nombre) || 'Principal (información original)', oculta: !!(pr && pr.oculta) };
+    if (!ajPrincipal.oculta) ajCuentas.push({ codigo: 'principal', nombre: ajPrincipal.nombre });
+    if (Array.isArray(guardadas)) guardadas.forEach((c) => { if (c && c.codigo && c.codigo !== 'principal') ajCuentas.push({ codigo: c.codigo, nombre: c.nombre || c.codigo }); });
     return ajCuentas;
   }
   async function ajGuardarCuentas() {
-    const guardar = ajCuentas.filter((c) => c.codigo !== 'principal');
+    const enLista = ajCuentas.find((c) => c.codigo === 'principal');
+    if (enLista) ajPrincipal.nombre = enLista.nombre;
+    ajPrincipal.oculta = !enLista;
+    const guardar = [{ codigo: 'principal', nombre: ajPrincipal.nombre, oculta: ajPrincipal.oculta },
+      ...ajCuentas.filter((c) => c.codigo !== 'principal')];
     await window.storage.set('__cuentas_lista', JSON.stringify(guardar));
+    try { localStorage.setItem('gh-cuentas-cache', JSON.stringify(guardar)); } catch (e) {}
   }
 
   // Rellena un <select> con las bases de datos
@@ -5106,15 +5185,51 @@
   function ajRenderBD() {
     const cont = $('aj-bd-lista');
     if (!cont) return;
+    const actual = (window.GH_GET_CUENTA && window.GH_GET_CUENTA()) || 'principal';
     cont.innerHTML = ajCuentas.map((c) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
-        <div><span style="font-weight:600;">${escapeHtml(c.nombre)}</span> <span style="font-size:11px;color:var(--muted);">(${escapeHtml(c.codigo)})</span></div>
-        ${c.codigo === 'principal' ? '<span style="font-size:11px;color:var(--muted);">fija</span>' : `<button class="gc-del aj-bd-del" data-codigo="${escapeHtml(c.codigo)}">✕</button>`}
-      </div>`).join('');
+      <div class="aj-bd-fila" data-codigo="${escapeHtml(c.codigo)}" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div class="aj-bd-nombre" style="flex:1;min-width:0;"><span style="font-weight:600;">${escapeHtml(c.nombre)}</span> <span style="font-size:11px;color:var(--muted);">(${escapeHtml(c.codigo)})${c.codigo === actual ? ' · <strong style="color:var(--accent-dk);">en uso</strong>' : ''}</span></div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button type="button" class="gc-action-btn aj-bd-ren" data-codigo="${escapeHtml(c.codigo)}" style="padding:4px 10px;font-size:12px;">✎ Nombre</button>
+          <button class="gc-del aj-bd-del" data-codigo="${escapeHtml(c.codigo)}">✕</button>
+        </div>
+      </div>`).join('') + (ajPrincipal.oculta ? `
+      <p style="font-size:11.5px;color:var(--muted);margin-top:10px;">"${escapeHtml(ajPrincipal.nombre)}" está quitada de la lista. <button type="button" class="gc-action-btn" id="aj-bd-reponer" style="padding:3px 10px;font-size:11.5px;">Volver a mostrarla</button></p>` : '');
+    // Cambiar el nombre (el código interno no cambia, así los datos siguen en su lugar)
+    cont.querySelectorAll('.aj-bd-ren').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const fila = btn.closest('.aj-bd-fila'), caja = fila.querySelector('.aj-bd-nombre');
+        const cu = ajCuentas.find((c) => c.codigo === btn.dataset.codigo); if (!cu) return;
+        caja.innerHTML = `<div style="display:flex;gap:6px;"><input type="text" class="aj-bd-ren-in" value="${escapeHtml(cu.nombre)}" style="flex:1;min-width:0;font-family:'Inter',sans-serif;font-size:13.5px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;"><button type="button" class="gc-save-btn aj-bd-ren-ok" style="padding:6px 12px;font-size:12.5px;">Guardar</button></div>`;
+        btn.style.display = 'none';
+        const inp = caja.querySelector('input'); inp.focus(); inp.select();
+        const guardar = async () => {
+          const nuevo = inp.value.trim();
+          if (!nuevo) { toast('Escribe un nombre', 'error'); return; }
+          cu.nombre = nuevo;
+          try { await ajGuardarCuentas(); } catch (e) { toast('No se pudo guardar el nombre', 'error'); return; }
+          ajRenderBD();
+          ajLlenarSelect($('aj-cuenta-select'), window.GH_GET_CUENTA && window.GH_GET_CUENTA());
+          if ($('aj-cuenta-actual')) $('aj-cuenta-actual').value = ajNombreDe(window.GH_GET_CUENTA ? window.GH_GET_CUENTA() : 'principal');
+          toast('Nombre cambiado ✓', 'success');
+        };
+        caja.querySelector('.aj-bd-ren-ok').addEventListener('click', guardar);
+        inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') guardar(); if (e.key === 'Escape') ajRenderBD(); });
+      });
+    });
+    if ($('aj-bd-reponer')) $('aj-bd-reponer').addEventListener('click', async () => {
+      ajCuentas.unshift({ codigo: 'principal', nombre: ajPrincipal.nombre });
+      await ajGuardarCuentas(); ajRenderBD();
+      ajLlenarSelect($('aj-cuenta-select'), window.GH_GET_CUENTA && window.GH_GET_CUENTA());
+      toast('Base de datos de vuelta en la lista ✓', 'success');
+    });
     cont.querySelectorAll('.aj-bd-del').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        if (!await gcConfirm(`¿Quitar la base de datos "${ajNombreDe(btn.dataset.codigo)}" de la lista? La información no se borra, pero dejará de aparecer para asignar.`, { okText: 'Quitar', danger: true })) return;
-        ajCuentas = ajCuentas.filter((c) => c.codigo !== btn.dataset.codigo);
+        const cod = btn.dataset.codigo;
+        if (cod === actual) { toast('Estás usando esta base de datos. Cámbiate a otra primero (arriba, "Cambiar") y luego quítala.', 'error', 5000); return; }
+        if (ajCuentas.length <= 1) { toast('Tiene que quedar al menos una base de datos', 'error'); return; }
+        if (!await gcConfirm(`¿Quitar la base de datos "${ajNombreDe(cod)}" de la lista? La información no se borra, pero dejará de aparecer para elegir o asignar.`, { okText: 'Quitar', danger: true })) return;
+        ajCuentas = ajCuentas.filter((c) => c.codigo !== cod);
         await ajGuardarCuentas();
         ajRenderBD();
         ajLlenarSelect($('aj-cuenta-select'), window.GH_GET_CUENTA && window.GH_GET_CUENTA());
@@ -5397,6 +5512,8 @@
     recibo_semanal: {es:'Recibo semanal',en:'Weekly receipt'},
     registrar_pago: {es:'Registrar pago',en:'Log payment'},
     registro: {es:'Registro',en:'Log'},
+    tab_principal: {es:'Principal',en:'Home'},
+    sub_registro: {es:'Registro',en:'Log'},
     reportes_y_exportacion: {es:'Reportes y exportación',en:'Reports & export'},
     restar: {es:'− Restar',en:'− Subtract'},
     restaurar_respaldo: {es:'Restaurar respaldo',en:'Restore backup'},
@@ -9824,9 +9941,9 @@
       listaNombres = JSON.parse(r.value) || [];
     } catch (e) {}
     const nombreDe = (codigo) => {
-      if (codigo === 'principal') return 'Principal';
       const enc = listaNombres.find((c) => c.codigo === codigo);
-      return enc ? enc.nombre : codigo;
+      if (enc && enc.nombre) return enc.nombre;
+      return codigo === 'principal' ? 'Principal' : codigo;
     };
 
     // 3. Cargar los datos de CADA base de datos permitida (invoices + nómina)
