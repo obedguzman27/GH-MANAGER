@@ -508,19 +508,32 @@
   .inv-carpeta-btn .ic { font-size: 18px; }
   .inv-carpeta-btn.active { border-color: var(--accent); color: var(--accent-dk); background: #F5F7FC; }
 
-  /* ── Trim Out Pull Sheet (pantalla) ─────── */
-  .ps-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .ps-tabla th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; color: var(--muted);
-                 padding: 6px 8px; border-bottom: 1.5px solid var(--border); position: sticky; top: 0; background: #fff; }
-  .ps-tabla td { padding: 4px 8px; border-bottom: 1px solid var(--border); }
-  .ps-tabla .ps-p { font-weight: 700; font-size: 12.5px; word-break: break-all; }
-  .ps-tabla .ps-d { color: var(--muted); font-size: 12.5px; }
-  .ps-tabla td:nth-child(2), .ps-tabla td:nth-child(3) { width: 1%; text-align: center; }
-  .ps-tabla tr.ps-sec td { font-weight: 800; font-size: 11.5px; letter-spacing: .6px; color: var(--accent-dk);
-                           background: #F5F7FC; padding: 8px; }
-  .ps-tabla input { width: 54px; font-family: 'Inter', sans-serif; font-size: 14px; padding: 6px 6px; text-align: center;
-                    border: 1.5px solid var(--border); border-radius: 8px; }
-  .ps-tabla th:nth-child(2), .ps-tabla th:nth-child(3) { text-align: center; }
+  /* ── Trim Out Pull Sheet (pantalla: igual que el papel) ─────── */
+  .ps-zoom { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .ps-zoom .gc-action-btn { padding: 6px 14px; font-size: 15px; }
+  #ps-zoom-lbl { min-width: 46px; text-align: center; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  .ps-marco-hoja { overflow: auto; background: #E4E7EE; border-radius: var(--r-sm); padding: 0; max-height: 78vh; -webkit-overflow-scrolling: touch; }
+  #ps-hoja { width: max-content; font-family: 'Carlito', 'Calibri', 'Helvetica Neue', Arial, sans-serif; color: #111; }
+  #ps-hoja .ps-pag { position: relative; width: 8.5in; height: 10.35in; overflow: hidden; background: #fff;
+                     box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+  #ps-hoja .ps-pag + .ps-pag { margin-top: 14px; }
+  #ps-hoja .ps-t { position: absolute; font-size: 8.9pt; font-weight: 700; white-space: nowrap; line-height: 0.15625in; height: 0.15625in; }
+  #ps-hoja .ps-g { position: absolute; border-collapse: collapse; table-layout: fixed; font-size: 8.9pt; }
+  #ps-hoja .ps-g td { height: 0.15625in; padding: 0 0 0 0.025in; border: 0.6pt solid #8a8a8a; white-space: nowrap;
+                      overflow: visible; line-height: 0.146in; vertical-align: bottom; }
+  #ps-hoja .ps-g td.v { border-bottom: 1pt solid #111; text-align: center; padding: 0; font-size: 9.5pt; font-weight: 700; }
+  #ps-hoja .ps-g td.b { font-weight: 700; }
+  #ps-hoja .ps-g td.ov { position: relative; }
+  #ps-hoja .ps-g td.ov span { position: absolute; left: 0.025in; bottom: 0; }
+  #ps-hoja .ps-g td.v.q span { left: 0; right: 0; text-align: center; }
+  #ps-hoja .ps-marco { position: absolute; border: 1.2pt solid #111; pointer-events: none; }
+  #ps-hoja .ps-g td input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0 2px;
+      border: 0; border-radius: 0; background: rgba(255, 226, 120, .28); font-family: inherit; font-size: 9.5pt;
+      font-weight: 700; color: #0b3d91; text-align: center; outline: none; -webkit-appearance: none; appearance: none; }
+  #ps-hoja .ps-g td input:focus { background: rgba(255, 200, 60, .55); box-shadow: inset 0 0 0 1.5px #E07B1A; }
+  #ps-hoja .ps-g td:not(.q) input { text-align: left; padding-left: 4px; }
+  #ps-hoja .ps-g td input[type=date] { font-size: 8.5pt; }
+  #ps-hoja .ps-g td input[type=date]::-webkit-calendar-picker-indicator { padding: 0; margin: 0; width: 10px; }
 
   /* ── Calendario de trabajos ─────────────── */
   .cal-dia { margin-bottom: 16px; border: 1px solid var(--border-soft); border-radius: var(--r-sm); overflow: hidden; }
@@ -1660,23 +1673,14 @@
         </div>
       </div>
       <div id="cs-form-pull" style="display:none;">
-        <p style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">AHC Trim Out Pull Sheet — Standard Trim. Sale igual que el papel, en <strong>dos páginas</strong> (elige <em>Doble cara</em> al imprimir). Solo llena ORDER y SHIP de las partes que lleves; las demás salen en blanco. <span id="ps-contador" style="font-weight:700;color:var(--accent-dk);"></span></p>
-        <div class="gc-form-row">
-          <div class="gc-field"><label>Date</label><input type="date" id="ps-fecha"></div>
-          <div class="gc-field"><label>Lot / Sub</label><input type="text" id="ps-lote" list="dl-colonias" placeholder="Lote + colonia" autocomplete="off"></div>
+        <p style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">AHC Trim Out Pull Sheet — Standard Trim. Sale igual que el papel, en <strong>dos páginas</strong> (elige <em>Doble cara</em> al imprimir). Escribe directo en la hoja: los cuadros amarillos son los que se llenan (DATE, JOB, BUILDER, LOT/SUB, PULLER, INSTALLER, ORDER y SHIP). Usa <strong>+</strong> para agrandarla. <span id="ps-contador" style="font-weight:700;color:var(--accent-dk);"></span></p>
+        <div class="ps-zoom">
+          <button type="button" class="gc-action-btn" id="ps-zoom-menos">−</button>
+          <span id="ps-zoom-lbl">100%</span>
+          <button type="button" class="gc-action-btn" id="ps-zoom-mas">+</button>
+          <button type="button" class="gc-action-btn" id="ps-zoom-ajustar">Ajustar</button>
         </div>
-        <div class="gc-form-row">
-          <div class="gc-field"><label>Job</label><input type="text" id="ps-job" autocomplete="off"></div>
-          <div class="gc-field"><label>Puller</label><input type="text" id="ps-puller" autocomplete="off"></div>
-        </div>
-        <div class="gc-form-row">
-          <div class="gc-field"><label>Builder</label><input type="text" id="ps-builder" list="dl-clientes" autocomplete="off"></div>
-          <div class="gc-field"><label>Installer</label><input type="text" id="ps-installer" autocomplete="off"></div>
-        </div>
-        <div style="overflow-x:auto;margin-top:8px;">
-          <table class="ps-tabla"><thead><tr><th>PART · DESCRIPTION</th><th>ORDER</th><th>SHIP</th></tr></thead>
-            <tbody id="ps-lista"></tbody></table>
-        </div>
+        <div class="ps-marco-hoja" id="ps-marco-hoja"><div id="ps-hoja"></div></div>
       </div>
 
       <div id="cs-form-check">
@@ -2181,7 +2185,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v98 · 3 oct';
+  const APP_VERSION = 'v99 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -7252,7 +7256,7 @@
     $('cs-btn-imprimir-ambas').style.display = esPull ? 'none' : '';
     $('cs-btn-imprimir').textContent = esPull ? '🖨 Imprimir (2 páginas)' : '🖨 Imprimir esta';
     document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', b.dataset.cstipo === csTipo));
-    if (esPull) $('cs-titulo').textContent = 'Trim Out Pull Sheet';
+    if (esPull) { $('cs-titulo').textContent = 'Trim Out Pull Sheet'; requestAnimationFrame(psAplicarZoom); }
   }
 
   (function csIniciar() {
@@ -7446,42 +7450,51 @@
   }
   function psLeer() {
     const q = {};
-    document.querySelectorAll('#ps-lista input[data-ps]').forEach((i) => { if (i.value.trim()) q[i.dataset.ps] = i.value.trim(); });
-    return {
-      fecha: $('ps-fecha').value, job: $('ps-job').value.trim(), builder: $('ps-builder').value.trim(),
-      lote: $('ps-lote').value.trim(), puller: $('ps-puller').value.trim(), installer: $('ps-installer').value.trim(), q
-    };
+    document.querySelectorAll('#ps-hoja input[data-ps]').forEach((i) => { if (i.value.trim()) q[i.dataset.ps] = i.value.trim(); });
+    const h = (k) => { const el = document.querySelector(`#ps-hoja input[data-h="${k}"]`); return el ? el.value.trim() : ''; };
+    return { fecha: h('fecha'), job: h('job'), builder: h('builder'), lote: h('lote'), puller: h('puller'), installer: h('installer'), q };
   }
   function psGuardarBorrador() {
     try { localStorage.setItem(PS_KEY, JSON.stringify(psLeer())); } catch (e) {}
     psContar();
   }
   function psContar() {
-    const n = [...document.querySelectorAll('#ps-lista input[data-ps]')].filter((i) => i.value.trim()).length;
+    const n = [...document.querySelectorAll('#ps-hoja input[data-ps]')].filter((i) => i.value.trim()).length;
     const el = $('ps-contador'); if (el) el.textContent = n ? `${n} casilla${n === 1 ? '' : 's'} llena${n === 1 ? '' : 's'}` : '';
   }
 
   function psLlenar(d) {
     d = d || {};
-    $('ps-fecha').value = d.fecha || ''; $('ps-job').value = d.job || ''; $('ps-builder').value = d.builder || '';
-    $('ps-lote').value = d.lote || ''; $('ps-puller').value = d.puller || ''; $('ps-installer').value = d.installer || '';
-    const q = d.q || {};
-    let html = '';
-    PS_PAGINAS.forEach((pg, n) => {
-      ['L', 'R'].forEach((lado) => {
-        pg[lado].forEach((f, i) => {
-          if (!f) return;
-          if (f.s) { html += `<tr class="ps-sec"><td colspan="3">${escapeHtml(f.s)}</td></tr>`; return; }
-          const k = psClave(n, lado, i);
-          html += `<tr><td><div class="ps-p">${escapeHtml(f.p) || '&nbsp;'}</div><div class="ps-d">${escapeHtml(f.d)}</div></td>
-            <td><input type="text" inputmode="decimal" data-ps="${k}o" value="${escapeHtml(q[k + 'o'] || '')}"></td>
-            <td><input type="text" inputmode="decimal" data-ps="${k}s" value="${escapeHtml(q[k + 's'] || '')}"></td></tr>`;
-        });
+    const hoja = $('ps-hoja');
+    hoja.innerHTML = psBuildPrint(d, true);
+    hoja.querySelectorAll('input').forEach((i) => {
+      // El encabezado sale en las dos páginas: lo que escribes en una se copia a la otra
+      if (i.dataset.h) i.addEventListener('input', () => {
+        hoja.querySelectorAll(`input[data-h="${i.dataset.h}"]`).forEach((o) => { if (o !== i) o.value = i.value; });
       });
+      i.addEventListener('input', psGuardarBorrador);
+      i.addEventListener('change', psGuardarBorrador);
     });
-    $('ps-lista').innerHTML = html;
-    $('ps-lista').querySelectorAll('input').forEach((i) => i.addEventListener('input', psGuardarBorrador));
+    psAplicarZoom();
     psContar();
+  }
+
+  // Zoom de la hoja en pantalla: "Ajustar" la hace caber a lo ancho; con +/−
+  // se agranda para escribir cómodo (se recorre de lado con el dedo).
+  let psZoom = null;   // null = ajustar a lo ancho
+  function psAplicarZoom() {
+    const hoja = $('ps-hoja'), marco = $('ps-marco-hoja');
+    if (!hoja || !marco) return;
+    const anchoHoja = 8.5 * 96 + 2;
+    const ajustar = Math.min(1, (marco.clientWidth || anchoHoja) / anchoHoja);
+    const z = psZoom == null ? ajustar : psZoom;
+    hoja.style.zoom = z;
+    const lbl = $('ps-zoom-lbl'); if (lbl) lbl.textContent = Math.round(z * 100) + '%';
+  }
+  function psCambiarZoom(delta) {
+    const actual = parseFloat($('ps-hoja').style.zoom) || 1;
+    psZoom = Math.max(0.35, Math.min(2, Math.round((actual + delta) * 20) / 20));
+    psAplicarZoom();
   }
 
   const PS_PRINT_CSS = `
@@ -7504,7 +7517,7 @@
     .ps-marco { position: absolute; border: 1.2pt solid #111; pointer-events: none; }
   `;
 
-  function psBuildPrint(d) {
+  function psBuildPrint(d, editable) {
     d = d || {};
     const q = d.q || {};
     const fechaUS = d.fecha ? csFechaUS(d.fecha) : '';
@@ -7520,7 +7533,11 @@
           const cel = porCol[c];
           if (cel) {
             const span = cel.span || 1;
-            const txt = cel.t ? `<span>${escapeHtml(cel.t)}</span>` : '';
+            let txt = cel.t ? `<span>${escapeHtml(cel.t)}</span>` : '';
+            if (editable && cel.k) {
+              const val = cel.k === 'h:fecha' ? (d.fecha || '') : (cel.raw || '');
+              txt = `<input type="${cel.k === 'h:fecha' ? 'date' : 'text'}" ${cel.k.startsWith('h:') ? `data-h="${cel.k.slice(2)}"` : `data-ps="${cel.k}" inputmode="decimal"`} value="${escapeHtml(val)}" autocomplete="off">`;
+            }
             out += `<td class="ov ${cel.cls || ''}"${span > 1 ? ` colspan="${span}"` : ''}>${txt}</td>`;
             c += span;
           } else { out += '<td></td>'; c++; }
@@ -7532,11 +7549,12 @@
       // 1-2: título (va encima, posicionado aparte, como en el papel)
       filas += fila([]) + fila([]);
       // 3-5: encabezado
-      const enc = [['DATE', fechaUS, 'LOT/SUB', d.lote], ['JOB', d.job, 'PULLER', d.puller], ['BUILDER', d.builder, 'INSTALLER', d.installer]];
-      enc.forEach(([a, va, b, vb]) => {
+      const enc = [['DATE', fechaUS, 'fecha', 'LOT/SUB', d.lote, 'lote'], ['JOB', d.job, 'job', 'PULLER', d.puller, 'puller'], ['BUILDER', d.builder, 'builder', 'INSTALLER', d.installer, 'installer']];
+      enc.forEach(([a, va, ka, b, vb, kb]) => {
+        const ed = true;   // en pantalla se puede escribir en el encabezado de las dos páginas
         filas += fila([
-          { c: ld, t: a, cls: 'b' }, { c: lo, t: va, cls: 'v', span: ls - lo + 1 },
-          { c: rd, t: b, cls: 'b' }, { c: ro, t: vb, cls: 'v', span: rs - ro + 1 }
+          { c: ld, t: a, cls: 'b' }, { c: lo, t: va, cls: 'v', span: ls - lo + 1, k: ed ? 'h:' + ka : null, raw: va },
+          { c: rd, t: b, cls: 'b' }, { c: ro, t: vb, cls: 'v', span: rs - ro + 1, k: ed ? 'h:' + kb : null, raw: vb }
         ]);
       });
       filas += fila([]);
@@ -7550,7 +7568,9 @@
           if (!f) return;
           if (f.s) { celdas.push({ c: p, t: f.s, cls: 'b' }); return; }
           const k = psClave(n, lado, i);
-          celdas.push({ c: p, t: f.p }, { c: de, t: f.d }, { c: o, t: q[k + 'o'] || '', cls: 'v q' }, { c: s, t: q[k + 's'] || '', cls: 'v q' });
+          celdas.push({ c: p, t: f.p }, { c: de, t: f.d },
+            { c: o, t: q[k + 'o'] || '', cls: 'v q', k: k + 'o', raw: q[k + 'o'] || '' },
+            { c: s, t: q[k + 's'] || '', cls: 'v q', k: k + 's', raw: q[k + 's'] || '' });
         });
         filas += fila(celdas);
       }
@@ -7572,11 +7592,12 @@
   }
 
   (function psIniciar() {
-    if (!$('ps-lista')) return;
+    if (!$('ps-hoja')) return;
     psLlenar(psLeerGuardado());
-    ['ps-fecha', 'ps-job', 'ps-builder', 'ps-lote', 'ps-puller', 'ps-installer'].forEach((id) => {
-      const el = $(id); if (el) { el.addEventListener('input', psGuardarBorrador); el.addEventListener('change', psGuardarBorrador); }
-    });
+    $('ps-zoom-menos').addEventListener('click', () => psCambiarZoom(-0.15));
+    $('ps-zoom-mas').addEventListener('click', () => psCambiarZoom(0.15));
+    $('ps-zoom-ajustar').addEventListener('click', () => { psZoom = null; psAplicarZoom(); });
+    window.addEventListener('resize', psAplicarZoom);
   })();
   // FIN MÓDULO TRIM OUT PULL SHEET
   // ====================================================================
