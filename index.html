@@ -539,6 +539,17 @@
   #ps-hoja .ps-g td input:focus { background: rgba(255, 200, 60, .55); box-shadow: inset 0 0 0 1.5px #E07B1A; }
   #ps-hoja .ps-g td:not(.q) input { text-align: left; padding-left: 4px; }
   #ps-hoja .ps-g td input[type=date] { font-size: 8.5pt; }
+  #ps-editbar { background: #F5F7FC; border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; margin-bottom: 10px;
+                position: sticky; top: 0; z-index: 5; }
+  #ps-sel-info { font-size: 12.5px; color: var(--ink); margin: 0 0 8px; }
+  .ps-editbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ps-editbtns .gc-action-btn { padding: 7px 11px; font-size: 12.5px; }
+  #ps-hoja.editando .ps-g td input.ps-e { text-align: left; padding-left: 3px; font-weight: 400; color: #111; font-size: 8.9pt;
+      background: rgba(14, 143, 130, .07); }
+  #ps-hoja.editando .ps-g td.b input.ps-e { font-weight: 700; }
+  #ps-hoja.editando .ps-g td input.ps-e:focus { background: rgba(14, 143, 130, .2); box-shadow: inset 0 0 0 1.5px #0E8F82; }
+  #ps-hoja.editando .ps-g td.sel { background: rgba(224, 123, 26, .22); }
+  #ps-hoja.editando .ps-g td[data-r] { cursor: pointer; }
   #ps-hoja .ps-g td input[type=date]::-webkit-calendar-picker-indicator { padding: 0; margin: 0; width: 10px; }
 
   /* ── Calendario de trabajos ─────────────── */
@@ -847,7 +858,6 @@
   <nav class="gc-nav">
     <button class="gc-tab active" data-tab="movimientos" data-i18n="registro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Registro</button>
     <button class="gc-tab" data-tab="facturas" data-i18n="facturas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Facturas</button>
-    <button class="gc-tab" data-tab="planos" data-i18n="planos_tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>Planos</button>
     <button class="gc-tab" data-tab="nomina" data-i18n="nomina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Nómina</button>
     <button class="gc-tab" data-tab="buscar" data-i18n="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Buscar</button>
     <button class="gc-tab" data-tab="respaldo" data-i18n="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Ajustes</button>
@@ -1094,7 +1104,7 @@
     <!-- Resultados en el resto de la app (clientes, facturas, trabajos, planos…) -->
     <div class="gc-card" id="b-global-card" style="margin-bottom:24px;display:none;">
       <p class="gc-card-title" style="margin-bottom:6px;">También encontrado en la app</p>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Coincidencias fuera de Movimientos: facturas, clientes, trabajos agendados, planos y colonias.</p>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Coincidencias fuera de Movimientos: facturas, clientes, colonias y nómina.</p>
       <div id="b-global-lista"></div>
     </div>
 
@@ -1695,6 +1705,19 @@
           <span id="ps-zoom-lbl">100%</span>
           <button type="button" class="gc-action-btn" id="ps-zoom-mas">+</button>
           <button type="button" class="gc-action-btn" id="ps-zoom-ajustar">Ajustar</button>
+          <button type="button" class="gc-action-btn" id="ps-btn-editar" style="margin-left:auto;">✎ Editar hoja</button>
+        </div>
+        <div id="ps-editbar" style="display:none;">
+          <p id="ps-sel-info">Toca un renglón de la hoja para moverlo o cambiarlo</p>
+          <div class="ps-editbtns">
+            <button type="button" class="gc-action-btn" data-psacc="subir">↑ Subir</button>
+            <button type="button" class="gc-action-btn" data-psacc="bajar">↓ Bajar</button>
+            <button type="button" class="gc-action-btn" data-psacc="insertar">＋ Renglón arriba</button>
+            <button type="button" class="gc-action-btn" data-psacc="quitar">🗑 Quitar renglón</button>
+            <button type="button" class="gc-action-btn" data-psacc="seccion" id="ps-ed-seccion">▤ Hacer sección</button>
+            <button type="button" class="gc-action-btn" id="ps-ed-restaurar" style="color:var(--ember);">↺ Original</button>
+          </div>
+          <p style="font-size:11px;color:var(--muted);margin:6px 0 0;">Escribe directo en PART y DESCRIPTION para cambiar el texto. Un renglón vacío se vuelve parte en cuanto le escribes. Toca <strong>✓ Listo</strong> para volver a llenar cantidades.</p>
         </div>
         <div class="ps-marco-hoja" id="ps-marco-hoja"><div id="ps-hoja"></div></div>
       </div>
@@ -2201,7 +2224,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v101 · 3 oct';
+  const APP_VERSION = 'v102 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -3906,10 +3929,6 @@
 
 
     // Planos
-    agrega('Planos', (planos || []).filter((p) =>
-      (p.nombre || '').toLowerCase().includes(texto) || (p.constructor || '').toLowerCase().includes(texto)
-    ).map((p) => `${p.nombre || '(sin nombre)'}${p.constructor ? ' · ' + p.constructor : ''}`),
-      () => document.querySelector('.gc-tab[data-tab="planos"]').click());
 
     // Clientes y colonias
     agrega('Clientes', (invClientes || []).filter((c) => (c || '').toLowerCase().includes(texto)),
@@ -7323,7 +7342,7 @@
 
   function csCambiarTipo(tipo) {
     if (tipo === csTipo) return;
-    if (csTipo === 'pull') psGuardarBorrador(); else csGuardarBorrador();   // guarda la hoja que estaba en pantalla
+    if (csTipo === 'pull') { if (psModo === 'editar') psCambiarModo('llenar'); psGuardarBorrador(); } else csGuardarBorrador();   // guarda la hoja que estaba en pantalla
     csTipo = tipo;
     csMostrarForma();
     if (tipo === 'pull') psLlenar(psLeerGuardado());
@@ -7527,6 +7546,109 @@
   const PS_ALTO = 0.15625;        // alto de cada renglón en pulgadas
   const psClave = (pg, lado, i) => `${pg}${lado}${i}`;
 
+  // ---- Hoja editable: textos y orden de los renglones ----
+  // psLayout guarda qué va en cada renglón ({s: sección} | {p, d} | null vacío).
+  // Empieza igual que el papel; lo que cambies se guarda en la nube.
+  const PS_LAYOUT_KEY = 'gh-ps-layout';
+  const psCopiarCol = (col) => Array.from({ length: PS_FILAS }, (_, i) => (col[i] ? { ...col[i] } : null));
+  const psLayoutOriginal = () => PS_PAGINAS.map((pg) => ({ L: psCopiarCol(pg.L), R: psCopiarCol(pg.R) }));
+  function psNormalizar(lay) {
+    if (!Array.isArray(lay) || lay.length !== PS_PAGINAS.length) return psLayoutOriginal();
+    return lay.map((pg) => ({ L: psCopiarCol((pg && pg.L) || []), R: psCopiarCol((pg && pg.R) || []) }));
+  }
+  let psLayout = (() => { try { return psNormalizar(JSON.parse(localStorage.getItem(PS_LAYOUT_KEY))); } catch (e) { return psLayoutOriginal(); } })();
+  let psModo = 'llenar';     // 'llenar' (cantidades) o 'editar' (textos y orden)
+  let psSel = null;          // renglón elegido en modo editar: {n, lado, i}
+  let psGuardarLayoutT = null;
+  function psGuardarLayout() {
+    try { localStorage.setItem(PS_LAYOUT_KEY, JSON.stringify(psLayout)); } catch (e) {}
+    clearTimeout(psGuardarLayoutT);
+    psGuardarLayoutT = setTimeout(async () => { try { await window.storage.set(PS_LAYOUT_KEY, JSON.stringify(psLayout)); } catch (e) {} }, 600);
+  }
+  async function psCargarLayoutNube() {
+    try {
+      const r = await window.storage.get(PS_LAYOUT_KEY);
+      if (r && r.value) {
+        const nube = psNormalizar(JSON.parse(r.value));
+        if (JSON.stringify(nube) !== JSON.stringify(psLayout)) {
+          psLayout = nube;
+          try { localStorage.setItem(PS_LAYOUT_KEY, JSON.stringify(psLayout)); } catch (e) {}
+          if ($('ps-hoja') && psModo === 'llenar') psLlenar(psLeerGuardado());
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Reordena una columna (página n, lado L/R): nuevo[j] = viejo[perm[j]].
+  // Las cantidades (ORDER/SHIP) se mueven junto con su renglón.
+  function psPermutar(n, lado, perm) {
+    const col = psLayout[n][lado];
+    psLayout[n][lado] = perm.map((k) => (k == null ? null : col[k]));
+    const d = psLeerGuardado(); const q = d.q || {}; const nq = { ...q };
+    for (let j = 0; j < PS_FILAS; j++) { delete nq[psClave(n, lado, j) + 'o']; delete nq[psClave(n, lado, j) + 's']; }
+    perm.forEach((k, j) => {
+      if (k == null) return;
+      ['o', 's'].forEach((c) => { const v = q[psClave(n, lado, k) + c]; if (v) nq[psClave(n, lado, j) + c] = v; });
+    });
+    d.q = nq;
+    try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
+    psGuardarLayout();
+  }
+  const psIdent = () => Array.from({ length: PS_FILAS }, (_, j) => j);
+
+  function psAccion(accion) {
+    if (!psSel) { toast('Primero toca un renglón de la hoja', 'info', 2200); return; }
+    const { n, lado } = psSel; let { i } = psSel;
+    const col = psLayout[n][lado];
+    if (accion === 'subir' || accion === 'bajar') {
+      const j = accion === 'subir' ? i - 1 : i + 1;
+      if (j < 0 || j >= PS_FILAS) return;
+      const perm = psIdent(); perm[i] = j; perm[j] = i;
+      psPermutar(n, lado, perm); i = j;
+    } else if (accion === 'insertar') {
+      if (col[PS_FILAS - 1]) { toast('No cabe otro renglón en esta columna: quita uno de abajo primero', 'error', 3200); return; }
+      const perm = psIdent().map((j) => (j < i ? j : j === i ? null : j - 1));
+      psPermutar(n, lado, perm);
+    } else if (accion === 'quitar') {
+      const perm = psIdent().map((j) => (j < i ? j : (j + 1 < PS_FILAS ? j + 1 : null)));
+      psPermutar(n, lado, perm);
+    } else if (accion === 'seccion') {
+      const f = col[i];
+      if (f && f.s) col[i] = { p: f.s, d: '' };
+      else {
+        col[i] = { s: (f && (f.p || f.d)) || 'NEW SECTION' };
+        const d = psLeerGuardado(); if (d.q) { delete d.q[psClave(n, lado, i) + 'o']; delete d.q[psClave(n, lado, i) + 's']; }
+        try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
+      }
+      psGuardarLayout();
+    }
+    psSel = { n, lado, i };
+    psLlenar(psLeerGuardado());
+  }
+
+  function psMarcarSel() {
+    document.querySelectorAll('#ps-hoja td.sel').forEach((td) => td.classList.remove('sel'));
+    const info = $('ps-sel-info');
+    if (!psSel) { if (info) info.textContent = 'Toca un renglón de la hoja para moverlo o cambiarlo'; return; }
+    const r = `${psSel.n}|${psSel.lado}|${psSel.i}`;
+    document.querySelectorAll(`#ps-hoja td[data-r="${r}"]`).forEach((td) => td.classList.add('sel'));
+    const f = psLayout[psSel.n][psSel.lado][psSel.i];
+    const nombre = f ? (f.s || f.p || f.d || '(sin nombre)') : '(renglón vacío)';
+    if (info) info.innerHTML = `<strong>${escapeHtml(nombre)}</strong> · página ${psSel.n + 1}, lado ${psSel.lado === 'L' ? 'izquierdo' : 'derecho'}, renglón ${psSel.i + 1}`;
+    const bs = $('ps-ed-seccion'); if (bs) bs.textContent = f && f.s ? '↺ Hacer parte' : '▤ Hacer sección';
+  }
+
+  function psCambiarModo(modo) {
+    if (psModo === 'llenar' && modo === 'editar') psGuardarBorrador();
+    psModo = modo;
+    psSel = null;
+    $('ps-editbar').style.display = modo === 'editar' ? '' : 'none';
+    $('ps-btn-editar').textContent = modo === 'editar' ? '✓ Listo' : '✎ Editar hoja';
+    $('ps-btn-editar').classList.toggle('gc-save-btn', modo === 'editar');
+    $('ps-hoja').classList.toggle('editando', modo === 'editar');
+    psLlenar(psLeerGuardado());
+  }
+
   function psLeerGuardado() {
     try { return JSON.parse(localStorage.getItem(PS_KEY) || '{}') || {}; } catch (e) { return {}; }
   }
@@ -7537,6 +7659,7 @@
     return { fecha: h('fecha'), job: h('job'), builder: h('builder'), lote: h('lote'), puller: h('puller'), installer: h('installer'), q };
   }
   function psGuardarBorrador() {
+    if (psModo === 'editar') return;   // en modo editar no hay casillas de cantidades en pantalla
     const d = psLeer();
     try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
     csCompartirLote(d.lote, 'pull');
@@ -7550,7 +7673,29 @@
   function psLlenar(d) {
     d = d || {};
     const hoja = $('ps-hoja');
-    hoja.innerHTML = psBuildPrint(d, true);
+    hoja.innerHTML = psBuildPrint(d, psModo === 'editar' ? 'editar' : true);
+    if (psModo === 'editar') {
+      hoja.querySelectorAll('input[data-e]').forEach((inp) => {
+        const [n, lado, i, campo] = inp.dataset.e.split('|');
+        const sel = () => { psSel = { n: +n, lado, i: +i }; psMarcarSel(); };
+        inp.addEventListener('focus', sel);
+        inp.addEventListener('input', () => {
+          const col = psLayout[+n][lado]; const v = inp.value;
+          if (campo === 's') col[+i] = v.trim() ? { s: v } : null;
+          else {
+            const f = col[+i] && !col[+i].s ? col[+i] : { p: '', d: '' };
+            f[campo] = v; col[+i] = (f.p || f.d) ? f : null;
+          }
+          psGuardarLayout(); psMarcarSel();
+        });
+      });
+      hoja.querySelectorAll('td[data-r]').forEach((td) => td.addEventListener('click', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const [n, lado, i] = td.dataset.r.split('|'); psSel = { n: +n, lado, i: +i }; psMarcarSel();
+      }));
+      psMarcarSel(); psAplicarZoom();
+      return;
+    }
     hoja.querySelectorAll('input').forEach((i) => {
       // El encabezado sale en las dos páginas: lo que escribes en una se copia a la otra
       if (i.dataset.h) i.addEventListener('input', () => {
@@ -7603,6 +7748,7 @@
 
   function psBuildPrint(d, editable) {
     d = d || {};
+    const modoEditar = editable === 'editar';
     const q = d.q || {};
     const fechaUS = d.fecha ? csFechaUS(d.fecha) : '';
     return PS_PAGINAS.map((pg, n) => {
@@ -7612,19 +7758,22 @@
       // Una fila de la tabla: arreglo de {c: columna, t: texto, cls, span}
       const fila = (celdas) => {
         let out = '<tr>', c = 0;
-        const porCol = {}; celdas.forEach((x2) => { porCol[x2.c] = x2; });
+        const porCol = {}; celdas.forEach((x2) => { if (!x2.soloR) porCol[x2.c] = x2; });
+        const rPorCol = {}; celdas.forEach((x2) => { if (x2.soloR) rPorCol[x2.c] = x2.r; });
         while (c < nc) {
           const cel = porCol[c];
           if (cel) {
             const span = cel.span || 1;
             let txt = cel.t ? `<span>${escapeHtml(cel.t)}</span>` : '';
-            if (editable && cel.k) {
+            if (modoEditar && cel.e) {
+              txt = `<input type="text" class="ps-e" data-e="${cel.e}" value="${escapeHtml(cel.raw || '')}" autocomplete="off" autocapitalize="characters" spellcheck="false">`;
+            } else if (editable === true && cel.k) {
               const val = cel.k === 'h:fecha' ? (d.fecha || '') : (cel.raw || '');
               txt = `<input type="${cel.k === 'h:fecha' ? 'date' : 'text'}" ${cel.k.startsWith('h:') ? `data-h="${cel.k.slice(2)}"` : `data-ps="${cel.k}" inputmode="decimal"`} value="${escapeHtml(val)}" autocomplete="off">`;
             }
-            out += `<td class="ov ${cel.cls || ''}"${span > 1 ? ` colspan="${span}"` : ''}>${txt}</td>`;
+            out += `<td class="ov ${cel.cls || ''}"${span > 1 ? ` colspan="${span}"` : ''}${cel.r ? ` data-r="${cel.r}"` : ''}>${txt}</td>`;
             c += span;
-          } else { out += '<td></td>'; c++; }
+          } else { out += `<td${rPorCol[c] ? ` data-r="${rPorCol[c]}"` : ''}></td>`; c++; }
         }
         return out + '</tr>';
       };
@@ -7648,7 +7797,16 @@
       for (let i = 0; i < PS_FILAS; i++) {
         const celdas = [];
         [['L', lp, ld, lo, ls], ['R', rp, rd, ro, rs]].forEach(([lado, p, de, o, s]) => {
-          const f = pg[lado][i];
+          const f = (psLayout[n] && psLayout[n][lado][i]) || null;
+          const r = `${n}|${lado}|${i}`;
+          if (modoEditar) {
+            // Todo el renglón de ese lado es tocable para elegirlo
+            for (let c2 = p; c2 <= s + 1 && c2 < nc; c2++) celdas.push({ c: c2, r, soloR: true });
+            if (f && f.s) { celdas.push({ c: p, cls: 'b', span: de - p + 1, e: `${r}|s`, raw: f.s, r }); return; }
+            celdas.push({ c: p, e: `${r}|p`, raw: f ? f.p : '', r }, { c: de, e: `${r}|d`, raw: f ? f.d : '', r },
+              { c: o, cls: f ? 'v q' : '', r }, { c: s, cls: f ? 'v q' : '', r });
+            return;
+          }
           if (!f) return;
           if (f.s) { celdas.push({ c: p, t: f.s, cls: 'b' }); return; }
           const k = psClave(n, lado, i);
@@ -7682,6 +7840,16 @@
     $('ps-zoom-mas').addEventListener('click', () => psCambiarZoom(0.15));
     $('ps-zoom-ajustar').addEventListener('click', () => { psZoom = null; psAplicarZoom(); });
     window.addEventListener('resize', psAplicarZoom);
+    $('ps-btn-editar').addEventListener('click', () => psCambiarModo(psModo === 'editar' ? 'llenar' : 'editar'));
+    document.querySelectorAll('#ps-editbar [data-psacc]').forEach((b) => b.addEventListener('click', () => psAccion(b.dataset.psacc)));
+    $('ps-ed-restaurar').addEventListener('click', async () => {
+      if (!await gcConfirm('¿Regresar el Pull Sheet a como viene en el papel? Se pierden los cambios de textos y orden (las cantidades que escribiste también se borran).', { okText: 'Restaurar', danger: true })) return;
+      psLayout = psLayoutOriginal(); psGuardarLayout();
+      const d = psLeerGuardado(); d.q = {}; try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
+      psSel = null; psLlenar(psLeerGuardado());
+      toast('Pull Sheet como el original ✓', 'info', 2000);
+    });
+    psCargarLayoutNube();
   })();
   // ---- Activar / desactivar Completion Sheets (Ajustes → Avanzado) ----
   const CS_ACTIVO_KEY = 'gh-cfg-completion';
