@@ -422,7 +422,7 @@
   .gc-toast-msg { flex: 1; min-width: 0; }
 
   /* ── CUSTOM CONFIRM MODAL ───────────────── */
-  .gc-confirm-overlay { position: fixed; inset: 0; background: rgba(19,28,46,.55); backdrop-filter: blur(4px); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity .16s var(--ease); }
+  .gc-confirm-overlay { position: fixed; inset: 0; background: rgba(19,28,46,.55); backdrop-filter: blur(4px); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity .16s var(--ease); }
   .gc-confirm-overlay.show { opacity: 1; }
   .gc-confirm-box { background: #fff; border-radius: var(--r-lg); box-shadow: 0 30px 90px rgba(10,16,28,.4); width: 100%; max-width: 400px; padding: 26px 26px 20px; transform: translateY(10px) scale(.97); transition: transform .18s var(--ease); }
   .gc-confirm-overlay.show .gc-confirm-box { transform: translateY(0) scale(1); }
@@ -1115,6 +1115,99 @@
     #gc-ledger tbody.sel-modo tr.sel-item.sel-on::after,
     #inv-list-tbl tbody.sel-modo tr.sel-item.sel-on::after { display: none; }
   }
+
+  /* ═══ INVOICES GUARDADOS (Principal → Invoices guardados) ═══ */
+  #mov-sub-invoices > .gc-note { padding: 11px 14px; font-size: 12px; line-height: 1.5; margin-bottom: 14px; }
+  #tabla-invoices-guardados { width: 100%; background: transparent; border: 0; box-shadow: none; border-radius: 0; overflow: visible; }
+  #tabla-invoices-guardados thead { display: none; }
+  #tabla-invoices-guardados tbody { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  @media (min-width: 861px) { #tabla-invoices-guardados tbody { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); } }
+  #tabla-invoices-guardados tbody tr.sel-item {
+    display: block; position: relative; background: var(--card); border: 1px solid var(--border-soft); border-radius: 18px;
+    box-shadow: var(--shadow-sm); content-visibility: visible; contain-intrinsic-size: auto; transition: box-shadow .16s var(--ease), border-color .16s var(--ease);
+  }
+  #tabla-invoices-guardados tbody tr.sel-item:hover { background: var(--card); box-shadow: var(--shadow); }
+  #tabla-invoices-guardados tbody tr.sel-item td { display: block; padding: 0; border: 0; background: none; }
+  .ig { padding: 15px 16px 13px; }
+  .ig-top { display: flex; align-items: center; justify-content: space-between; gap: 8px 10px; flex-wrap: wrap; }
+  .ig-tit { font-size: 18px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+  .ig-fecha { font-size: 11px; font-weight: 700; color: var(--muted); background: #F1F4F9; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+  .ig-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+  .ig-kpi { background: #F6F8FC; border-radius: 12px; padding: 9px 10px; min-width: 0; }
+  .ig-kpi span { display: block; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .ig-kpi b { display: block; margin-top: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ig-kpi b.ing { color: var(--teal-dk); }
+  .ig-kpi b.gas { color: var(--ember); }
+  .ig-pagos { margin-top: 12px; }
+  .ig-pagos-t { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin-bottom: 2px; }
+  .ig-pago { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  .ig-pago:last-child { border-bottom: 0; }
+  .ig-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: var(--accent); }
+  .ig-dot.c1, .iv-pay.c1 { --pc: var(--teal); }
+  .ig-dot.c1 { background: var(--teal); }
+  .ig-dot.c2 { background: var(--blue); }
+  .ig-dot.c3 { background: var(--gold); }
+  .ig-pago-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .ig-pago-v { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+  .ig-acc { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--border-soft); }
+  .ig-acc .gc-ver-invoice-btn { flex: 1; padding: 10px 14px; font-size: 13px; font-weight: 700; background: var(--accent-bg); border-color: transparent; color: var(--accent-dk); }
+  .ig-acc .gc-reabrir-invoice-btn { padding: 10px 14px; font-size: 13px; font-weight: 700; color: var(--gold); border-color: #E8DAB0; background: #fff; }
+  .ig-acc .gc-del { font-size: 16px; padding: 9px 13px; border-radius: 12px; }
+  /* Modo selección */
+  #tabla-invoices-guardados tbody.sel-modo tr.sel-item { padding-left: 0; }
+  #tabla-invoices-guardados tbody.sel-modo tr.sel-item .ig-top { padding-left: 26px; }
+  #tabla-invoices-guardados tbody.sel-modo tr.sel-item td:first-child { position: static; padding-left: 0; }
+  #tabla-invoices-guardados tbody.sel-modo tr.sel-item td:first-child::before,
+  #tabla-invoices-guardados tbody.sel-modo tr.sel-item.sel-on td:first-child::after { top: 22px; transform: none; }
+  #tabla-invoices-guardados tbody.sel-modo tr.sel-item.sel-on { background: var(--accent-bg); border-color: var(--accent); }
+  #tabla-invoices-guardados tbody.sel-modo tr.sel-item.sel-on::after { display: none; }
+  #tabla-invoices-guardados tbody.sel-modo tr.sel-item.sel-on td { background: transparent !important; }
+
+  /* ═══ Detalle del invoice (botón "Ver") ═══ */
+  .gc-print-overlay { padding: calc(14px + env(safe-area-inset-top, 0px)) 14px calc(28px + env(safe-area-inset-bottom, 0px)); }
+  .gc-print-toolbar { width: 100%; max-width: 780px; gap: 8px; margin-bottom: 12px; position: sticky; top: 0; z-index: 3; }
+  .gc-print-toolbar > button { flex: 1 1 auto; min-height: 44px; padding: 10px 8px; font-size: 12.5px; white-space: nowrap; text-align: center; border-radius: 12px; }
+  .gc-print-toolbar > .gc-save-btn { border-radius: 12px; }
+  #inv-print-content { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .gc-print-toolbar::before { content: ''; position: absolute; inset: -16px -14px -8px; background: linear-gradient(180deg, rgba(14,24,48,.94) 72%, rgba(14,24,48,0)); z-index: -1; pointer-events: none; }
+  .gc-print-sheet.iv-sheet { background: transparent; box-shadow: none; padding: 0; border-radius: 0; margin: 0; font-family: 'Inter', sans-serif; color: var(--ink); max-width: 780px; }
+  .iv-hero {
+    background: radial-gradient(700px 200px at 10% -30%, rgba(12,145,132,.35), transparent 62%), radial-gradient(600px 200px at 100% 130%, rgba(194,97,27,.4), transparent 62%), linear-gradient(125deg, var(--navy), var(--navy2) 60%, var(--navy3));
+    border-radius: 22px; padding: 18px 18px 16px; color: #fff; box-shadow: var(--shadow-lg);
+  }
+  .iv-hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .iv-co { font-size: 12px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: rgba(255,255,255,.78); }
+  .iv-addr { font-size: 11px; color: rgba(255,255,255,.52); margin-top: 3px; line-height: 1.35; }
+  .iv-chip { font-size: 10px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); padding: 4px 10px; border-radius: 999px; flex-shrink: 0; }
+  .iv-week { font-size: 27px; font-weight: 800; letter-spacing: -.03em; margin-top: 16px; line-height: 1.1; }
+  .iv-sub { font-size: 11.5px; color: rgba(255,255,255,.62); margin-top: 6px; line-height: 1.4; }
+  .iv-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+  .iv-kpi { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 10px 11px; min-width: 0; }
+  .iv-kpi span { display: block; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: rgba(255,255,255,.62); }
+  .iv-kpi b { display: block; margin-top: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .iv-kpi b.gas { color: #FFC08A; }
+  .iv-sec { background: #fff; border-radius: 20px; padding: 16px 16px 10px; margin-top: 12px; box-shadow: var(--shadow-sm); }
+  .iv-h { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); margin-bottom: 10px; }
+  .iv-h::before { content: ''; width: 4px; height: 13px; border-radius: 4px; background: var(--accent); }
+  .iv-pays { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 6px; }
+  .iv-pay { border: 1.5px solid var(--border-soft); border-left: 4px solid var(--accent); border-radius: 16px; padding: 13px 14px; background: linear-gradient(180deg, #fff, #F8FAFD); }
+  .iv-pay.c1 { border-left-color: var(--teal); }
+  .iv-pay.c2 { border-left-color: var(--blue); }
+  .iv-pay.c3 { border-left-color: var(--gold); }
+  .iv-pay-n { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  .iv-pay-v { font-family: 'IBM Plex Mono', monospace; font-size: 25px; font-weight: 700; letter-spacing: -.02em; margin-top: 2px; color: var(--ink); }
+  .iv-pay-note { font-size: 11.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .iv-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+  .iv-row-l { min-width: 0; }
+  .iv-row-l b { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); word-break: break-word; }
+  .iv-row-l span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .iv-row-v { font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 700; white-space: nowrap; color: var(--ink); }
+  .iv-vacio { font-size: 12.5px; color: var(--muted-soft); font-style: italic; padding: 8px 0 12px; }
+  .iv-tot { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--border-soft); }
+  .iv-tot:last-child { border-bottom: 0; }
+  .iv-tot b { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--ink); white-space: nowrap; }
+  .iv-tot.fuerte { font-size: 15px; font-weight: 800; color: var(--ink); border-top: 2px solid var(--ink); border-bottom: 0; margin-top: 4px; padding-top: 12px; }
+  @media (min-width: 861px) { .iv-week { font-size: 32px; } .iv-kpi b { font-size: 16px; } }
 </style>
 
 <div id="gc-app">
@@ -2528,7 +2621,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v105 · 3 oct';
+  const APP_VERSION = 'v106 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -3837,7 +3930,7 @@
     const sorted = [...invoicesGuardados].sort((a, b) => (b.guardadoEn || '').localeCompare(a.guardadoEn || ''));
     const hayDatos = sorted.length > 0;
     $('empty-invoices-guardados').style.display = hayDatos ? 'none' : 'block';
-    $('tabla-invoices-guardados').style.display = hayDatos ? 'table' : 'none';
+    $('tabla-invoices-guardados').style.display = hayDatos ? 'block' : 'none';
 
     // Encabezado: una columna de pago por cada socio actual (mínimo 1)
     const listaSocios = cfgSocios && cfgSocios.length ? cfgSocios : [{ nombre: cfgSocioBonus }];
@@ -3846,27 +3939,40 @@
       filaEnc.innerHTML = `<th data-i18n="h_semana">Semana</th><th data-i18n="h_guardado">Guardado</th><th class="num" data-i18n="h_gastos">Gastos</th>${listaSocios.map((s) => `<th class="num">${escapeHtml(s.nombre)}</th>`).join('')}<th></th>`;
     }
 
+    const fmtOpc = (v) => (v == null || v === '' || isNaN(Number(v))) ? '—' : fmt(v);
     sorted.forEach((inv, idxInv) => {
       const idInv = idxInv; // posición en la lista: siempre existe, aunque el invoice viejo no traiga id/key
-      const fechaGuardado = inv.guardadoEn ? new Date(inv.guardadoEn).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : '';
-      // Montos por socio: usa inv.pagos (invoices nuevos) si coincide en cantidad;
-      // si no, usa los campos viejos pagoCra/pagoGuzman como respaldo.
-      const montosPorSocio = listaSocios.map((s, i) => {
-        if (Array.isArray(inv.pagos) && inv.pagos[i]) return inv.pagos[i].total;
-        if (i === 0) return inv.pagoCra || 0;
-        if (i === 1) return inv.pagoGuzman || 0;
-        return null; // este invoice viejo no tiene datos para un 3er+ socio
-      });
+      const dGuard = inv.guardadoEn ? new Date(inv.guardadoEn) : null;
+      const fechaGuardado = dGuard && !isNaN(dGuard) ? dGuard.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      const titulo = invRangoCorto(inv.label) || inv.label || 'Invoice';
+      // Mismo reparto que se ve en "Ver" (nombres tal como se guardaron)
+      let pagos = [];
+      try { pagos = invPagosNormalizados(inv); } catch (e) { pagos = []; }
+      const filasPago = pagos.map((p, k) => `
+          <div class="ig-pago"><span class="ig-dot c${k % 4}"></span><span class="ig-pago-n">${escapeHtml(p.nombre || '—')}</span><span class="ig-pago-v">${fmtOpc(p.total)}</span></div>`).join('');
       const tr = document.createElement('tr');
       tr.className = 'sel-item';
       tr.dataset.selid = String(idxInv);
       tr.innerHTML = `
-        <td>${escapeHtml(inv.label || '')}</td>
-        <td>${fechaGuardado}</td>
-        <td class="gc-num">${fmt(inv.gastosTotales)}</td>
-        ${montosPorSocio.map((m) => `<td class="gc-num">${m == null ? '—' : fmt(m)}</td>`).join('')}
-        <td><button class="gc-action-btn gc-ver-invoice-btn" data-i18n="ver" data-id="${idInv}" style="padding:4px 10px; font-size:11px;">Ver</button> <button class="gc-action-btn gc-reabrir-invoice-btn" data-i18n="editar_2" data-id="${idInv}" style="padding:4px 10px; font-size:11px;color:var(--gold);border-color:var(--gold);">✎ Editar</button> <button class="gc-del" data-id="${idInv}">✕</button></td>
-      `;
+        <td colspan="9" class="ig-td">
+          <div class="ig">
+            <div class="ig-top">
+              <div class="ig-tit" title="${escapeHtml(inv.label || '')}">${escapeHtml(titulo)}</div>
+              ${fechaGuardado ? `<span class="ig-fecha">Guardado ${escapeHtml(fechaGuardado)}</span>` : ''}
+            </div>
+            <div class="ig-kpis">
+              <div class="ig-kpi"><span>Ingresos</span><b class="ing">${fmtOpc(inv.ingresos)}</b></div>
+              <div class="ig-kpi"><span>Gastos</span><b class="gas">${fmtOpc(inv.gastosTotales)}</b></div>
+              <div class="ig-kpi"><span>Neto</span><b>${fmtOpc(inv.neto)}</b></div>
+            </div>
+            ${filasPago ? `<div class="ig-pagos"><div class="ig-pagos-t">Reparto</div>${filasPago}</div>` : ''}
+            <div class="ig-acc">
+              <button class="gc-action-btn gc-ver-invoice-btn" data-i18n="ver" data-id="${idInv}">Ver</button>
+              <button class="gc-action-btn gc-reabrir-invoice-btn" data-i18n="editar_2" data-id="${idInv}">✎ Editar</button>
+              <button class="gc-del" data-id="${idInv}" title="Eliminar">✕</button>
+            </div>
+          </div>
+        </td>`;
       tbody.appendChild(tr);
     });
 
@@ -4535,6 +4641,53 @@
   document.getElementById('taxas-anio-filtro').addEventListener('change', () => { renderResumenTaxas(); renderTotalPorSocio(); });
 
   // ---- Vista previa como hoja impresa ----
+  // "Semana del lunes 28 de septiembre al viernes 2 de octubre" -> "28 sep – 2 oct"
+  const INV_MESES_CORTOS = { enero:'ene', febrero:'feb', marzo:'mar', abril:'abr', mayo:'may', junio:'jun', julio:'jul', agosto:'ago', septiembre:'sep', setiembre:'sep', octubre:'oct', noviembre:'nov', diciembre:'dic' };
+  function invRangoCorto(label) {
+    const m = /(\d{1,2}) de ([a-záéíóú]+)(?: de \d{4})? al \w+ (\d{1,2}) de ([a-záéíóú]+)/i.exec(label || '');
+    if (!m) return '';
+    const mes = (x) => INV_MESES_CORTOS[String(x).toLowerCase()] || String(x).slice(0, 3).toLowerCase();
+    return `${m[1]} ${mes(m[2])} – ${m[3]} ${mes(m[4])}`;
+  }
+
+  // Reparto de un invoice guardado, normalizado: lo usan el detalle en pantalla y
+  // el documento que se imprime/envía, así los dos siempre dicen lo mismo.
+  function invPagosNormalizados(inv) {
+    if (Array.isArray(inv.pagos) && inv.pagos.length) {
+          // Invoices guardados cuando la empresa estaba también en la lista de
+          // socios traen el mismo nombre dos veces con la mitad cada uno. Se
+          // juntan en una sola línea con el monto completo.
+          const porNombre = new Map();
+          inv.pagos.forEach((p) => {
+            const k = String(p.nombre || '').trim().toLowerCase();
+            if (!porNombre.has(k)) { porNombre.set(k, { ...p }); return; }
+            const a = porNombre.get(k);
+            a.base = (Number(a.base) || 0) + (Number(p.base) || 0);
+            a.ajuste = (Number(a.ajuste) || 0) + (Number(p.ajuste) || 0);
+            a.bono = (Number(a.bono) || 0) + (Number(p.bono) || 0);
+            a.total = (Number(a.total) || 0) + (Number(p.total) || 0);
+          });
+          return [...porNombre.values()];
+    }
+          // Invoices guardados antes de que existiera la lista de pagos: se
+          // reconstruye. La empresa SIEMPRE sale (una sola vez); el socio
+          // solo si esa semana de verdad le tocó algo — así, cuando hay un
+          // único dueño, no se repite el mismo nombre dos veces.
+          const arr = [{
+            nombre: cfgFacturaNombre || 'Empresa',
+            base: inv.mitad != null ? inv.mitad : inv.neto,
+            ajuste: inv.ajusteGuzman || 0, bono: 0, bonoPct: null,
+            total: inv.pagoGuzman != null ? inv.pagoGuzman : inv.neto
+          }];
+          const claveEmp = (cfgFacturaNombre || '').trim().toLowerCase();
+          const socioReal = (cfgSocios || []).find((x) => x && x.nombre && x.nombre.trim().toLowerCase() !== claveEmp);
+          const nombreSocio = (socioReal && socioReal.nombre) || '';
+          if (nombreSocio && Number(inv.pagoCra) > 0) {
+            arr.push({ nombre: nombreSocio, base: inv.mitad, ajuste: 0, bono: inv.bonoCra || 0, bonoPct: null, total: inv.pagoCra });
+          }
+          return arr;
+  }
+
   function construirHTMLInvoice(inv) {
     const filasGasto = (inv.gastoItems || []).length
       ? inv.gastoItems.map((m) => `
@@ -4575,40 +4728,7 @@
 
       <h2>Reparto</h2>
       <div class="ps-split">
-        ${(Array.isArray(inv.pagos) && inv.pagos.length ? (() => {
-          // Invoices guardados cuando la empresa estaba también en la lista de
-          // socios traen el mismo nombre dos veces con la mitad cada uno. Se
-          // juntan en una sola línea con el monto completo.
-          const porNombre = new Map();
-          inv.pagos.forEach((p) => {
-            const k = String(p.nombre || '').trim().toLowerCase();
-            if (!porNombre.has(k)) { porNombre.set(k, { ...p }); return; }
-            const a = porNombre.get(k);
-            a.base = (Number(a.base) || 0) + (Number(p.base) || 0);
-            a.ajuste = (Number(a.ajuste) || 0) + (Number(p.ajuste) || 0);
-            a.bono = (Number(a.bono) || 0) + (Number(p.bono) || 0);
-            a.total = (Number(a.total) || 0) + (Number(p.total) || 0);
-          });
-          return [...porNombre.values()];
-        })() : (() => {
-          // Invoices guardados antes de que existiera la lista de pagos: se
-          // reconstruye. La empresa SIEMPRE sale (una sola vez); el socio
-          // solo si esa semana de verdad le tocó algo — así, cuando hay un
-          // único dueño, no se repite el mismo nombre dos veces.
-          const arr = [{
-            nombre: cfgFacturaNombre || 'Empresa',
-            base: inv.mitad != null ? inv.mitad : inv.neto,
-            ajuste: inv.ajusteGuzman || 0, bono: 0, bonoPct: null,
-            total: inv.pagoGuzman != null ? inv.pagoGuzman : inv.neto
-          }];
-          const claveEmp = (cfgFacturaNombre || '').trim().toLowerCase();
-          const socioReal = (cfgSocios || []).find((x) => x && x.nombre && x.nombre.trim().toLowerCase() !== claveEmp);
-          const nombreSocio = (socioReal && socioReal.nombre) || '';
-          if (nombreSocio && Number(inv.pagoCra) > 0) {
-            arr.push({ nombre: nombreSocio, base: inv.mitad, ajuste: 0, bono: inv.bonoCra || 0, bonoPct: null, total: inv.pagoCra });
-          }
-          return arr;
-        })()).map((p) => `
+        ${invPagosNormalizados(inv).map((p) => `
           <div class="ps-split-box">
             <div class="ps-name">${escapeHtml(p.nombre)}</div>
             <div class="ps-total">${fmt(p.total)}</div>
@@ -4616,6 +4736,69 @@
           </div>`).join('')}
       </div>
     `;
+  }
+
+  // Vista en pantalla del invoice guardado (el documento que se imprime, se envía
+  // o se descarga sigue saliendo de construirHTMLInvoice, sin cambios).
+  function construirVistaInvoicePantalla(inv) {
+    const fmtOpc = (v) => (v == null || v === '' || isNaN(Number(v))) ? '—' : fmt(v);
+    const dG = inv.guardadoEn ? new Date(inv.guardadoEn) : null;
+    const guardadoNum = dG && !isNaN(dG)
+      ? `${String(dG.getMonth() + 1).padStart(2, '0')}/${String(dG.getDate()).padStart(2, '0')}/${dG.getFullYear()}` : '';
+    const rango = invRangoCorto(inv.label);
+    const gastos = Array.isArray(inv.gastoItems) ? inv.gastoItems : [];
+    const filasGasto = gastos.length ? gastos.map((m) => `
+        <div class="iv-row">
+          <div class="iv-row-l"><b>${escapeHtml(m.desc || m.cat || '—')}</b><span>${invFechaNum(m.fecha)}${m.cat && m.desc ? ' · ' + escapeHtml(m.cat) : ''}</span></div>
+          <div class="iv-row-v">${fmt(m.monto)}</div>
+        </div>`).join('') : '<div class="iv-vacio">Sin gastos capturados esta semana</div>';
+    const pagos = invPagosNormalizados(inv).map((p, k) => `
+        <div class="iv-pay c${k % 4}">
+          <div class="iv-pay-n">${escapeHtml(p.nombre || '—')}</div>
+          <div class="iv-pay-v">${fmtOpc(p.total)}</div>
+          <div class="iv-pay-note">parte ${fmt(p.base)}${p.bono ? ` + tax${p.bonoPct != null ? ' ' + p.bonoPct + '%' : ''} (${fmt(p.bono)})` : ''}${p.ajuste ? ` + ajuste ${fmt(p.ajuste)}` : ''}</div>
+        </div>`).join('');
+    return `
+      <div class="iv">
+        <div class="iv-hero">
+          <div class="iv-hero-top">
+            <div>
+              <div class="iv-co">${escapeHtml(cfgFacturaNombre || '')}</div>
+              ${cfgFacturaDireccion ? `<div class="iv-addr">${escapeHtml(cfgFacturaDireccion)}</div>` : ''}
+            </div>
+            <span class="iv-chip">Invoice</span>
+          </div>
+          <div class="iv-week">${escapeHtml(rango || inv.label || '')}</div>
+          <div class="iv-sub">${escapeHtml(inv.label || '')}${guardadoNum ? ' · guardado el ' + guardadoNum : ''}</div>
+          <div class="iv-kpis">
+            <div class="iv-kpi"><span>Ingresos</span><b>${fmtOpc(inv.ingresos)}</b></div>
+            <div class="iv-kpi"><span>Gastos</span><b class="gas">${fmtOpc(inv.gastosTotales)}</b></div>
+            <div class="iv-kpi"><span>Neto</span><b>${fmtOpc(inv.neto)}</b></div>
+          </div>
+        </div>
+
+        <div class="iv-sec">
+          <div class="iv-h">Reparto</div>
+          <div class="iv-pays">${pagos || '<div class="iv-vacio">Sin reparto guardado</div>'}</div>
+        </div>
+
+        <div class="iv-sec">
+          <div class="iv-h">Detalle de gastos</div>
+          ${filasGasto}
+          <div class="iv-tot"><span>Subtotal gastos</span><b>${fmt(inv.gastos)}</b></div>
+          <div class="iv-tot"><span>Taxas (10% de ingresos)</span><b>${fmt(inv.taxas)}</b></div>
+          <div class="iv-tot fuerte"><span>Total gastos</span><b>${fmt(inv.gastosTotales)}</b></div>
+        </div>
+
+        <div class="iv-sec">
+          <div class="iv-h">Resumen de la semana</div>
+          <div class="iv-tot"><span>Ingresos</span><b>${fmt(inv.ingresos)}</b></div>
+          <div class="iv-tot"><span>Total gastos (incluye taxas)</span><b>${fmt(inv.gastosTotales)}</b></div>
+          <div class="iv-tot"><span>Neto a repartir</span><b>${fmt(inv.neto)}</b></div>
+          ${inv.ajusteGuzman ? `<div class="iv-tot"><span>Ajuste ${inv.ajusteGuzman > 0 ? '(+)' : '(−)'}</span><b>${fmt(inv.ajusteGuzman)}</b></div>` : ''}
+          <div class="iv-tot"><span>Taxas restantes (después de tax)</span><b>${fmt(inv.taxGuzman)}</b></div>
+        </div>
+      </div>`;
   }
 
   let invoiceEnVista = null;
@@ -4630,7 +4813,9 @@
     // instalada a veces se queda en blanco si se cambia todo de un jalón.
     void overlay.offsetHeight;
     requestAnimationFrame(() => {
-      sheet.innerHTML = construirHTMLInvoice(inv);
+      // Si algo raro en un invoice viejo hiciera fallar la vista nueva, se usa la de siempre.
+      try { const v = construirVistaInvoicePantalla(inv); sheet.classList.add('iv-sheet'); sheet.innerHTML = v; }
+      catch (e) { sheet.classList.remove('iv-sheet'); sheet.innerHTML = construirHTMLInvoice(inv); }
     });
   }
 
