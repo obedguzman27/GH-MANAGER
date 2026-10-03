@@ -824,6 +824,297 @@
     #gc-toast { left: 16px; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); align-items: stretch; }
     .gc-toast-item { max-width: none; }
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     REDISEÑO v105 — solo presentación. No cambia estructura, IDs ni lógica.
+     (Va al final de la hoja de estilos a propósito: pisa lo anterior.)
+     ═══════════════════════════════════════════════════════════════════════ */
+  :root {
+    --bg: #F3F5FA;
+    --border: #E1E6F0;
+    --border-soft: #E9EDF5;
+    --track: #E6EAF3;
+    --income: var(--teal-dk);
+    --expense: var(--ember);
+    --shadow: 0 2px 4px rgba(14,24,48,.04), 0 10px 28px rgba(14,24,48,.08);
+    --shadow-sm: 0 1px 2px rgba(14,24,48,.04), 0 4px 14px rgba(14,24,48,.05);
+    --shadow-lg: 0 14px 40px rgba(14,24,48,.18), 0 4px 12px rgba(14,24,48,.08);
+    --r: 18px;
+    --r-sm: 12px;
+    --r-lg: 24px;
+  }
+  html, body { background: var(--bg); }
+  #gc-app { background: var(--bg); background-attachment: scroll; }
+  #gc-app input, #gc-app select, #gc-app textarea { min-width: 0; }
+
+  /* ── ENCABEZADO ───────────────────────────── */
+  .gc-header { border-bottom: 0; box-shadow: 0 8px 24px -8px rgba(10,16,28,.45); }
+  .gc-header::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; z-index: 1; pointer-events: none;
+    background: linear-gradient(90deg, var(--accent), rgba(255,255,255,0) 85%);
+  }
+  .gc-logo-badge { width: 40px; height: 40px; }
+  .gc-company { font-size: 20px; letter-spacing: .2px; }
+  .gc-date-badge { font-size: 11px; padding: 6px 13px; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.18); }
+
+  /* ── BARRA DE PESTAÑAS (escritorio) ────────── */
+  .gc-nav { background: rgba(255,255,255,.88); backdrop-filter: blur(14px) saturate(1.3); padding: 10px 24px; }
+  .gc-tab { background: transparent; font-weight: 700; padding: 9px 16px; }
+  .gc-tab:hover { background: #EBEFF7; }
+  .gc-tab.active { background: var(--accent); box-shadow: 0 6px 16px -6px rgba(0,0,0,.45); }
+
+  /* ── TARJETAS ────────────────────────────── */
+  .gc-card { border-radius: var(--r); padding: 22px 24px; box-shadow: var(--shadow-sm); border-color: var(--border-soft); }
+  .gc-card:hover { box-shadow: var(--shadow-sm); }
+  .gc-card-title { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 16px; gap: 9px; }
+  .gc-card-title::before { width: 4px; height: 17px; border-radius: 4px; background: var(--accent); }
+  .gc-sheet-title, .gc-cat-title, .emp-toolbar-title { font-family: 'Inter', sans-serif; font-weight: 700; letter-spacing: -.01em; }
+  .gc-sheet-title { font-size: 16px; }
+  .gc-note { background: #FFFBF1; border-color: #F1E6C6; border-left-width: 4px; box-shadow: none; }
+
+  /* ── MARCADORES DE RESUMEN ────────────────── */
+  .gc-stat { border-radius: var(--r); box-shadow: var(--shadow-sm); padding: 16px 18px; gap: 13px; }
+  .gc-stat:hover { transform: none; box-shadow: var(--shadow-sm); }
+  .gc-stat::before { display: none; }
+  .gc-stat-icon { width: 42px; height: 42px; border-radius: 13px; box-shadow: none; font-weight: 800; }
+  .gc-stat-label { letter-spacing: .5px; }
+  .gc-stat-val { font-size: 22px; letter-spacing: -.5px; }
+  .gc-stat.net .gc-stat-val { color: var(--ink); }
+
+  /* ── FORMULARIOS ─────────────────────────── */
+  .gc-field label { font-size: 10.5px; letter-spacing: .5px; margin-bottom: 7px; }
+  .gc-field input, .gc-field select, .gc-field textarea {
+    font-size: 14.5px; padding: 12px 14px; min-height: 46px; background: #F8FAFD;
+    border: 1.5px solid var(--border); border-radius: 12px; box-shadow: none;
+  }
+  .gc-field input:focus, .gc-field select:focus, .gc-field textarea:focus { background: #fff; }
+  .gc-type-btn { min-height: 46px; border-radius: 12px; background: #F3F6FB; border-color: transparent; }
+  .gc-type-btn:hover { background: #fff; border-color: var(--border); }
+  .gc-type-btn.active[data-type="ingreso"], .gc-type-btn.active[data-type="gasto"], .gc-type-btn.active[data-type="ajuste"] { box-shadow: 0 8px 18px -8px rgba(0,0,0,.45); }
+  .gc-type-btn.ajuste-dir-btn.active { background: var(--navy2); border-color: var(--navy2); color: #fff; }
+
+  /* ── BOTONES ─────────────────────────────── */
+  .gc-save-btn {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dk) 130%);
+    padding: 12px 24px; border-radius: 999px; letter-spacing: .1px;
+    box-shadow: 0 8px 18px -8px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.22);
+  }
+  .gc-save-btn:hover { box-shadow: 0 12px 22px -8px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.28); }
+  .gc-save-btn.danger { background: linear-gradient(180deg, #DC4F47, #B23333); }
+  .gc-action-btn { border-radius: 12px; border-width: 1.5px; background: #fff; }
+  .gc-action-btn:hover { box-shadow: none; }
+  .sel-btn { background: #fff; }
+
+  /* ── NAVEGACIÓN INTERNA (segmentada) ─────── */
+  .inv-subnav, .pln-subnav {
+    display: flex; gap: 4px; padding: 4px; margin-bottom: 18px;
+    background: var(--track); border: 0; border-radius: 16px; box-shadow: none;
+    overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .inv-subnav::-webkit-scrollbar, .pln-subnav::-webkit-scrollbar { display: none; }
+  .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab {
+    flex: 1 0 auto; padding: 10px 14px; border-radius: 12px; border-right: 0; white-space: nowrap;
+    font-size: 13px; font-weight: 700; color: var(--muted); background: transparent; line-height: 1.25;
+  }
+  .inv-subtab:hover, .nom-subtab:hover, .aj-subtab:hover, .mov-subtab:hover, .doc-subtab:hover, .pln-subtab:hover { background: rgba(255,255,255,.55); color: var(--ink); }
+  .inv-subtab.active, .nom-subtab.active, .aj-subtab.active, .mov-subtab.active, .doc-subtab.active, .pln-subtab.active {
+    background: #fff; color: var(--accent-dk); box-shadow: 0 1px 2px rgba(14,24,48,.1), 0 4px 10px rgba(14,24,48,.08);
+  }
+  .cs-tipos { background: var(--track); border: 0; padding: 4px; gap: 4px; border-radius: 14px; overflow-x: auto; scrollbar-width: none; }
+  .cs-tipo-btn { background: transparent; border-radius: 10px; padding: 9px 18px; white-space: nowrap; }
+  .cs-tipo-btn + .cs-tipo-btn { border-left: 0; }
+  .cs-tipo-btn.active { background: #fff; color: var(--accent-dk); box-shadow: 0 1px 2px rgba(14,24,48,.1), 0 4px 10px rgba(14,24,48,.08); }
+  .inv-carpeta-btn { border-radius: 14px; box-shadow: var(--shadow-sm); border-color: var(--border-soft); transition: all .16s var(--ease); }
+  .inv-carpeta-btn.active { background: var(--accent-bg); border-color: var(--accent); }
+
+  /* ── TABLAS ──────────────────────────────── */
+  .gc-ledger { border-radius: var(--r); box-shadow: var(--shadow-sm); border-color: var(--border-soft); }
+  .gc-ledger th, .inv-list-t th, .gc-inv-table th { background: #F6F8FC; }
+  .gc-ledger tbody tr:hover { background: #FAFBFE; }
+  .gc-week-row td { padding: 10px 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy2); background: #EEF2FA; border-bottom: 1px solid var(--border); }
+  .gc-ledger td.gc-num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; text-align: right; white-space: nowrap; }
+  .gc-tipo-tag { font-size: 10px; letter-spacing: .5px; padding: 3px 9px; white-space: nowrap; }
+  .inv-tbl thead tr { background: var(--navy2); }
+  .inv-tbl thead th:first-child { border-top-left-radius: 10px; }
+  .inv-tbl thead th:last-child { border-top-right-radius: 10px; }
+  .gc-week-card { border-radius: var(--r); }
+  .gc-week-card:hover { box-shadow: var(--shadow-sm); }
+  .gc-week-card-header { background: linear-gradient(120deg, var(--navy), var(--navy2)); }
+  .gc-kpi { background: #F6F8FC; border-radius: 14px; }
+  .gc-chart-card { border-radius: var(--r); padding: 20px 22px 16px; }
+
+  /* ── RESUMEN (HÉROE DE PRINCIPAL) ─────────── */
+  .gh-hero { border-radius: var(--r-lg); padding: 22px 22px 20px; box-shadow: var(--shadow-lg); margin-bottom: 18px; }
+  .gh-hero-top { align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .gh-hero-top > div:first-child { min-width: 0; }
+  .gh-hero-saludo { font-family: 'Inter', sans-serif; font-size: 23px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+  .gh-hero-fecha { font-size: 12px; margin-top: 4px; color: rgba(255,255,255,.62); }
+  .gh-hero-refresh { width: 36px; height: 36px; font-size: 16px; background: rgba(255,255,255,.12); }
+  .gh-tile { border-radius: 16px; padding: 14px 15px; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.17); gap: 3px; }
+  .gh-tile:hover { transform: none; background: rgba(255,255,255,.17); }
+  .gh-tile-lbl { display: flex; align-items: center; gap: 6px; letter-spacing: .7px; }
+  .gh-tile-lbl::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.55); flex-shrink: 0; }
+  #gh-tile-cobrar .gh-tile-lbl::before { background: #FFB074; }
+  #gh-tile-nomina .gh-tile-lbl::before { background: #6FD8CC; }
+  #gh-tile-semana .gh-tile-lbl::before { background: #B7C7F0; }
+  .gh-tile-val { font-size: 22px; margin: 2px 0 1px; }
+  .gh-tile-sub { color: rgba(255,255,255,.55); line-height: 1.35; }
+
+  /* Selector de base de datos (solo admin) — dentro del héroe */
+  .gh-bd {
+    position: relative; display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; max-width: 100%;
+    padding: 8px 12px 8px 12px; border-radius: 999px; cursor: pointer;
+    background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.24); color: #fff;
+    font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 700; line-height: 1;
+    transition: background .16s var(--ease), box-shadow .16s var(--ease);
+  }
+  .gh-bd:hover { background: rgba(255,255,255,.2); }
+  .gh-bd:focus-within { box-shadow: 0 0 0 3px rgba(255,255,255,.28); }
+  .gh-bd svg { width: 14px; height: 14px; flex-shrink: 0; opacity: .9; }
+  .gh-bd-pre { font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: rgba(255,255,255,.62); flex-shrink: 0; }
+  .gh-bd-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 190px; }
+  .gh-bd select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; border: 0; background: transparent; }
+
+  input[type="file"] { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--muted); max-width: 100%; }
+  input[type="file"]::file-selector-button, input[type="file"]::-webkit-file-upload-button {
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; padding: 10px 16px; margin-right: 12px;
+    border-radius: 12px; border: 1.5px solid var(--border); background: #fff; color: var(--ink); cursor: pointer;
+  }
+
+  #ledger-cont { display: flex; flex-direction: column; }
+  #ledger-cont > #mov-sel-host { order: -1; }
+  @media (min-width: 861px) { .inv-subnav { max-width: 760px; } }
+
+  /* ── AVISOS / DIÁLOGOS ───────────────────── */
+  .gc-toast-item { border-radius: 14px; }
+  .gc-confirm-box, .emp-modal { border-radius: var(--r-lg); }
+
+  /* ── ESCRITORIO ──────────────────────────── */
+  @media (min-width: 861px) {
+    .gc-card:hover { box-shadow: var(--shadow); }
+  }
+
+  /* ═════════════ TELÉFONO ═════════════ */
+  @media (max-width: 860px) {
+    .gc-header {
+      height: calc(58px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 16px 0;
+    }
+    .gc-logo-badge, #gc-logo-custom { width: 36px !important; height: 36px !important; }
+    .gc-brand { gap: 11px; }
+    .gc-company { font-size: 19px; }
+    .gc-date-badge { font-size: 10px; padding: 5px 11px; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .gc-body { padding: 14px 14px calc(108px + env(safe-area-inset-bottom, 0px)); }
+    .gc-card { padding: 18px 16px; margin-bottom: 14px; border-radius: 20px; }
+    .gc-card-title { font-size: 15.5px; margin-bottom: 14px; }
+
+    /* Barra inferior flotante */
+    .gc-nav {
+      left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      padding: 6px; gap: 2px; border-radius: 26px; border: 1px solid rgba(14,24,48,.07);
+      background: rgba(255,255,255,.9); -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+      box-shadow: 0 14px 34px -6px rgba(14,24,48,.28), 0 2px 8px rgba(14,24,48,.08);
+    }
+    .gc-tab { padding: 8px 2px 7px; border-radius: 20px; font-size: 10px; gap: 3px; background: transparent; }
+    .gc-tab svg { width: 21px; height: 21px; }
+    .gc-tab.active { background: var(--accent-bg); color: var(--accent-dk); box-shadow: none; }
+    .gc-tab.active svg { transform: none; }
+    .gc-tab:hover { background: transparent; color: var(--muted-soft); }
+    .gc-tab.active:hover { background: var(--accent-bg); color: var(--accent-dk); }
+    #gc-toast { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+    .sel-actionbar { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+
+    /* Resumen */
+    .gh-hero { padding: 18px 16px 16px; border-radius: 22px; }
+    .gh-hero-saludo { font-size: 22px; }
+    .gh-hero-tiles { gap: 9px; }
+    .gh-tile { padding: 13px 13px 12px; }
+    .gh-tile-val { font-size: 21px; }
+    #gh-tile-semana { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 12px; }
+    #gh-tile-semana .gh-tile-lbl { flex: 1 0 100%; }
+    #gh-tile-semana .gh-tile-val { margin: 0; }
+    .gc-stats { gap: 10px; margin-bottom: 14px; }
+    .gc-stat { padding: 13px 13px; gap: 10px; }
+    .gc-stat-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 15px; }
+    .gc-stat-label { font-size: 9.5px; letter-spacing: .3px; line-height: 1.25; }
+    .gc-stat-val { font-size: 16.5px; }
+
+    /* Formularios: 16px para que iPhone no haga zoom al tocar un campo */
+    .gc-field input, .gc-field select, .gc-field textarea,
+    #nom-grid-buscar, #inv-buscar, .gc-sub-add input { font-size: 16px !important; }
+    .gc-sub-add input, .gc-sub-add button { min-height: 44px; }
+    #nom-grid-buscar, #inv-buscar { min-height: 46px; border-radius: 12px !important; }
+    .gc-field input[type="date"] { -webkit-appearance: none; appearance: none; }
+    .gc-form-row { gap: 12px; margin-bottom: 12px; }
+    .gc-btn-row { gap: 8px; }
+    .gc-btn-row .gc-save-btn { flex: 1 1 auto; min-height: 46px; text-align: center; }
+    .gc-btn-row .gc-action-btn { min-height: 46px; }
+    .gc-kbd-hint { display: none; }
+    .gc-sheet-head { align-items: flex-start; flex-direction: column; gap: 10px; }
+    .gc-sheet-actions { flex-wrap: wrap; width: 100%; }
+    .gc-sheet-actions .gc-save-btn { flex: 1 1 auto; }
+
+    /* Navegación interna con menos relleno */
+    .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab { padding: 10px 13px; font-size: 12.5px; }
+
+    /* Diálogo de confirmación estilo hoja inferior */
+    .gc-confirm-overlay { align-items: flex-end; padding: 0; }
+    .gc-confirm-box { max-width: none; border-radius: 26px 26px 0 0; padding: 24px 20px calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateY(40px); }
+    .gc-confirm-actions { flex-direction: column-reverse; }
+    .gc-confirm-actions > * { width: 100%; min-height: 48px; justify-content: center; }
+  }
+
+  /* ═════════════ LISTAS COMO TARJETAS (teléfono) ═════════════ */
+  @media (max-width: 720px) {
+    /* Movimientos */
+    #gc-ledger { display: block; background: transparent; box-shadow: none; border: 0; border-radius: 0; overflow: visible; }
+    #gc-ledger thead { display: none; }
+    #gc-ledger tbody { display: flex; flex-direction: column; gap: 9px; }
+    #gc-ledger tbody tr { content-visibility: visible; contain-intrinsic-size: auto; }
+    #gc-ledger tr.gc-week-row { display: block; }
+    #gc-ledger tr.gc-week-row td { display: block; background: none; border: 0; padding: 12px 4px 0; font-size: 11px; color: var(--muted); }
+    #gc-ledger tr.sel-item {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 3px; align-items: center;
+      background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 12px 14px 8px; box-shadow: var(--shadow-sm);
+    }
+    #gc-ledger tr.sel-item:hover { background: var(--card); }
+    #gc-ledger tr.sel-item td { display: block; padding: 0; border: 0; font-size: 13px; min-width: 0; }
+    #gc-ledger tr.sel-item td:nth-child(1) { grid-column: 1; grid-row: 1; font-size: 11.5px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+    #gc-ledger tr.sel-item td:nth-child(2) { grid-column: 2; grid-row: 1; justify-self: end; }
+    #gc-ledger tr.sel-item td:nth-child(3) { grid-column: 1; grid-row: 2; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+    #gc-ledger tr.sel-item td:nth-child(5) { grid-column: 2; grid-row: 2; justify-self: end; font-size: 16px; }
+    #gc-ledger tr.sel-item td:nth-child(4) { grid-column: 1 / -1; grid-row: 3; color: var(--muted); font-size: 12.5px; line-height: 1.4; word-break: break-word; }
+    #gc-ledger tr.sel-item td:nth-child(4):empty { display: none; }
+    #gc-ledger tr.sel-item td:nth-child(6) { grid-column: 1 / -1; grid-row: 4; display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin-top: 4px; }
+    /* Modo selección: el círculo se coloca sobre la tarjeta completa */
+    #gc-ledger tbody.sel-modo tr.sel-item { padding-left: 42px; }
+    #gc-ledger tbody.sel-modo tr.sel-item td:first-child { padding-left: 0; position: static; }
+    #gc-ledger tbody.sel-modo tr.sel-item.sel-on { background: var(--accent-bg); border-color: var(--accent); }
+
+    /* Facturas guardadas */
+    #inv-list-tbl { display: block; width: 100%; }
+    #inv-list-tbl thead { display: none; }
+    #inv-list-tbl tbody { display: flex; flex-direction: column; gap: 9px; }
+    #inv-list-tbl tbody tr { content-visibility: visible; contain-intrinsic-size: auto; }
+    #inv-list-tbl tr.sel-item {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 4px; align-items: center;
+      background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 12px 14px 8px; box-shadow: var(--shadow-sm);
+    }
+    #inv-list-tbl tr.sel-item:hover, #inv-list-tbl tbody tr:hover { background: var(--card); }
+    #inv-list-tbl tr.sel-item td, #inv-list-tbl tbody tr:hover td { display: block; padding: 0; border: 0; background: none; min-width: 0; }
+    #inv-list-tbl tr.sel-item td:nth-child(1) { grid-column: 1; grid-row: 1; font-size: 15px; }
+    #inv-list-tbl tr.sel-item td:nth-child(4) { grid-column: 2; grid-row: 1; justify-self: end; font-size: 16px; }
+    #inv-list-tbl tr.sel-item td:nth-child(3) { grid-column: 1; grid-row: 2; font-size: 13.5px; color: var(--ink); }
+    #inv-list-tbl tr.sel-item td:nth-child(5) { grid-column: 2; grid-row: 2; justify-self: end; }
+    #inv-list-tbl tr.sel-item td:nth-child(2) { grid-column: 1; grid-row: 3; font-size: 12px; color: var(--muted); }
+    #inv-list-tbl tr.sel-item td:nth-child(6) { grid-column: 2; grid-row: 3; display: flex; justify-content: flex-end; align-items: center; gap: 2px; margin-top: 2px; }
+    #inv-list-tbl tbody.sel-modo tr.sel-item { padding-left: 42px; }
+    #inv-list-tbl tbody.sel-modo tr.sel-item td:first-child { padding-left: 0; position: static; }
+    #inv-list-tbl tbody.sel-modo tr.sel-item.sel-on { background: var(--accent-bg); border-color: var(--accent); }
+    /* La palomita ya la dibuja la primera celda; la fila misma no debe dibujar otra */
+    #gc-ledger tbody.sel-modo tr.sel-item.sel-on::after,
+    #inv-list-tbl tbody.sel-modo tr.sel-item.sel-on::after { display: none; }
+  }
 </style>
 
 <div id="gc-app">
@@ -857,8 +1148,8 @@
 
   <!-- NAV TABS -->
   <nav class="gc-nav">
-    <button class="gc-tab active" data-tab="movimientos" data-i18n="tab_principal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Principal</button>
-    <button class="gc-tab" data-tab="facturas" data-i18n="facturas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Facturas</button>
+    <button class="gc-tab active" data-tab="movimientos" data-i18n="tab_principal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>Principal</button>
+    <button class="gc-tab" data-tab="facturas" data-i18n="facturas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h12v19l-3-2-3 2-3-2-3 2z"/><path d="M9 7.5h6M9 11.5h6"/></svg>Facturas</button>
     <button class="gc-tab" data-tab="nomina" data-i18n="nomina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Nómina</button>
     <button class="gc-tab" data-tab="buscar" data-i18n="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Buscar</button>
     <button class="gc-tab" data-tab="respaldo" data-i18n="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Ajustes</button>
@@ -883,6 +1174,13 @@
           <div>
             <div class="gh-hero-saludo" id="gh-hero-saludo">Buen día</div>
             <div class="gh-hero-fecha" id="gh-hero-fecha"></div>
+            <label class="gh-bd" id="gh-bd" style="display:none;" title="Cambiar de base de datos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+              <span class="gh-bd-pre">Base</span>
+              <span class="gh-bd-lbl" id="gh-bd-nombre">—</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              <select id="gh-bd-select" aria-label="Cambiar de base de datos"></select>
+            </label>
           </div>
           <button type="button" class="gh-hero-refresh" id="gh-hero-refresh" title="Actualizar">⟳</button>
         </div>
@@ -2230,7 +2528,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v104 · 3 oct';
+  const APP_VERSION = 'v105 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -2624,7 +2922,7 @@
       $('panel-' + tab.dataset.tab).classList.add('active');
       if (tab.dataset.tab === 'buscar') { renderAnios(); renderBusqueda(); renderResumenTaxas(); renderTotalPorSocio(); }
       if (tab.dataset.tab === 'calendario') calCargarDatos();
-      if (tab.dataset.tab === 'movimientos') ghActualizarHero();
+      if (tab.dataset.tab === 'movimientos') { ghActualizarHero(); if (typeof ghBDHeroPintar === 'function') ghBDHeroPintar(); }
     });
   });
 
@@ -5274,6 +5572,53 @@
       toast('Cambiando…', 'success');
       setTimeout(() => location.reload(), 700);
     });
+  }
+
+  // ---- Cambiar de base de datos desde Principal (solo admin) ----
+  // Usa las mismas piezas que Ajustes → Bases de datos: la lista (ajCuentas),
+  // GH_SET_CUENTA y recargar. Para los demás roles el selector queda oculto.
+  function ghBDHeroEsAdmin() {
+    return typeof window.GH_GET_CUENTA === 'function' && typeof window.GH_SET_CUENTA === 'function' &&
+           (window.GH_ROL || 'admin') === 'admin';
+  }
+  function ghBDHeroPintar() {
+    const wrap = $('gh-bd'), sel = $('gh-bd-select');
+    if (!wrap || !sel) return;
+    if (!ghBDHeroEsAdmin()) { wrap.style.display = 'none'; return; }
+    const actual = window.GH_GET_CUENTA();
+    const lista = (ajCuentas || []).map((c) => ({ codigo: c.codigo, nombre: c.nombre }));
+    // Si la base actual no está en la lista (p. ej. fue quitada), igual se muestra
+    if (!lista.some((c) => c.codigo === actual)) lista.unshift({ codigo: actual, nombre: ajNombreDe(actual) });
+    sel.innerHTML = lista.map((c) => `<option value="${escapeHtml(c.codigo)}"${c.codigo === actual ? ' selected' : ''}>${escapeHtml(c.nombre)}</option>`).join('');
+    sel.value = actual;
+    $('gh-bd-nombre').textContent = ajNombreDe(actual);
+    wrap.style.display = 'inline-flex';
+    wrap.title = lista.length > 1 ? 'Cambiar de base de datos' : 'Base de datos en uso';
+  }
+  async function ghBDHeroIniciar() {
+    if (!$('gh-bd')) return;
+    if (!ghBDHeroEsAdmin()) { $('gh-bd').style.display = 'none'; return; }
+    try { await ajCargarCuentas(); } catch (e) {}
+    ghBDHeroPintar();
+  }
+  if ($('gh-bd-select')) {
+    $('gh-bd-select').addEventListener('change', async (e) => {
+      const sel = e.target;
+      const codigo = sel.value;
+      const actual = window.GH_GET_CUENTA();
+      if (codigo === actual) return;
+      if (!await gcConfirm(`¿Cambiar a la base de datos "${ajNombreDe(codigo)}"?`, { okText: 'Cambiar' })) { sel.value = actual; return; }
+      try { await window.GH_SET_CUENTA(codigo); }
+      catch (err) { sel.value = actual; toast('No se pudo cambiar de base de datos', 'error'); return; }
+      toast('Cambiando a ' + ajNombreDe(codigo) + '…', 'success');
+      setTimeout(() => location.reload(), 600);
+    });
+    // Al arrancar: esperar a saber el rol (con login en la nube) y pintar
+    if (typeof window.GH_ESPERAR_SESION === 'function') {
+      Promise.resolve(window.GH_ESPERAR_SESION()).catch(() => {}).then(ghBDHeroIniciar);
+    } else {
+      ghBDHeroIniciar();
+    }
   }
 
   async function ajCargarUsuarios() {
@@ -9898,6 +10243,11 @@
   }
   function fmtVisor(n) {
     return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  // (Este script es aparte: la versión de la app principal no se ve desde aquí)
+  function ghFechaLocal(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
   function diaCortoVisor(fechaStr) {
     const d = new Date(fechaStr + 'T00:00:00');
