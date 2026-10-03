@@ -1412,7 +1412,7 @@
 
     <!-- Carpeta: Invoices guardados (antes "Registro") -->
     <div class="mov-subpanel" id="mov-sub-invoices">
-      <div class="gc-note"><strong>Registro de invoices guardados.</strong> Aquí solo aparecen las semanas que ya guardaste como invoice desde Movimientos. Cada uno muestra el reparto <span class="socio-bonus">CRA HVAC</span> / <span class="socio-mitad">GUZMAN HVAC</span>. Usa "Ver" para el detalle o "Editar" para reabrirlo.</div>
+      <div class="gc-note"><strong>Registro de invoices guardados.</strong> Aquí solo aparecen las semanas que ya guardaste como invoice desde Movimientos. Cada uno muestra cómo se repartió esa semana. Usa "Ver" para el detalle o "Editar" para reabrirlo.</div>
       <div class="gc-card" style="margin-top:8px;">
         <p class="gc-card-title" data-i18n="invoices_guardados">Invoices guardados</p>
         <div id="reg-sel-host"></div>
@@ -2621,7 +2621,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v106 · 3 oct';
+  const APP_VERSION = 'v107 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -4681,8 +4681,13 @@
           }];
           const claveEmp = (cfgFacturaNombre || '').trim().toLowerCase();
           const socioReal = (cfgSocios || []).find((x) => x && x.nombre && x.nombre.trim().toLowerCase() !== claveEmp);
-          const nombreSocio = (socioReal && socioReal.nombre) || '';
-          if (nombreSocio && Number(inv.pagoCra) > 0) {
+          // Si ese socio ya no está en la lista (se quitó después), el pago
+          // que se le registró en esa semana igual debe verse: se muestra con
+          // su nombre de antes si se conoce, o simplemente como "Socio".
+          const aliasSocio = String(cfgSocioBonus || '').trim();
+          const aliasUtil = aliasSocio && aliasSocio.toLowerCase() !== claveEmp && !/^socio \d+$/i.test(aliasSocio) ? aliasSocio : '';
+          const nombreSocio = (socioReal && socioReal.nombre) || aliasUtil || 'Socio';
+          if (Number(inv.pagoCra) > 0) {
             arr.push({ nombre: nombreSocio, base: inv.mitad, ajuste: 0, bono: inv.bonoCra || 0, bonoPct: null, total: inv.pagoCra });
           }
           return arr;
