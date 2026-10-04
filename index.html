@@ -1660,6 +1660,31 @@
   :root[data-tema="oscuro"] .gh-tema-btn .sol { display: block; }
   :root[data-tema="oscuro"] .gh-tema-btn .luna { display: none; }
   @media (max-width: 860px) { .gc-header-right { gap: 8px; } .gc-date-badge { max-width: 40vw; } .gh-tema-btn { width: 32px; height: 32px; } }
+
+  /* Nómina → Trabajadores como tarjetas en el teléfono */
+  .trab-nombre-cel .trab-nombre-edit { white-space: nowrap; }
+  @media (max-width: 720px) {
+    #trab-nom-tbl { display: block; width: 100%; }
+    #trab-nom-tbl[style*="none"] { display: none !important; }
+    #trab-nom-tbl thead { display: none; }
+    #trab-nom-tbl tbody { display: flex; flex-direction: column; gap: 10px; }
+    #trab-nom-tbl tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; align-items: center;
+      background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 14px; padding: 12px 14px; content-visibility: visible; }
+    #trab-nom-tbl tbody tr:hover { background: var(--surface-2); }
+    #trab-nom-tbl tbody td { display: block; padding: 0 !important; border: 0 !important; background: none !important; min-width: 0; }
+    #trab-nom-tbl tbody td:nth-child(1) { grid-column: 1; grid-row: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; }
+    #trab-nom-tbl tbody td:nth-child(2) { grid-column: 2; grid-row: 1; font-size: 16px; text-align: right; }
+    #trab-nom-tbl tbody td:nth-child(3) { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 8px; }
+    #trab-nom-tbl tbody td:nth-child(3) input { flex: 1; width: auto !important; min-height: 40px; font-size: 16px !important; }
+    #trab-nom-tbl tbody td:nth-child(4) { grid-column: 1 / -1; grid-row: 3; display: flex; justify-content: flex-end; }
+    #trab-nom-tbl tbody td:nth-child(1):has(.trab-nombre-input) { grid-column: 1 / -1; }
+    #trab-nom-tbl tbody td:nth-child(1):has(.trab-nombre-input) + td { grid-row: 2; grid-column: 1 / -1; text-align: left; }
+    #trab-nom-tbl tbody tr:has(.trab-nombre-input) td:nth-child(3) { grid-row: 3; }
+    #trab-nom-tbl tbody tr:has(.trab-nombre-input) td:nth-child(4) { grid-row: 4; }
+    .trab-nombre-cel .trab-nombre-edit { padding: 6px 10px !important; }
+  }
+  /* Sin textos de descripción/ayuda (pedido del usuario) */
+  .gh-ayuda, #ajuste-info-text { display: none !important; }
   /* Selector de tema (Ajustes → Apariencia) */
   .gh-tema-seg { display: flex; background: var(--surface-3); border-radius: 12px; padding: 3px; gap: 3px; max-width: 420px; }
   .gh-tema-seg button { flex: 1; border: 0; background: transparent; color: var(--muted); font-family: var(--font-ui); font-weight: 700; font-size: 13px; padding: 10px 8px; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
@@ -1881,7 +1906,7 @@
 
     <!-- Carpeta: Invoices guardados (antes "Registro") -->
     <div class="mov-subpanel" id="mov-sub-invoices">
-      <div class="gc-note"><strong>Registro de invoices guardados.</strong> Aquí solo aparecen las semanas que ya guardaste como invoice desde Movimientos. Cada uno muestra cómo se repartió esa semana. Usa "Ver" para el detalle o "Editar" para reabrirlo.</div>
+      <div class="gc-note gh-ayuda"><strong>Registro de invoices guardados.</strong> Aquí solo aparecen las semanas que ya guardaste como invoice desde Movimientos. Cada uno muestra cómo se repartió esa semana. Usa "Ver" para el detalle o "Editar" para reabrirlo.</div>
       <div class="gc-card" style="margin-top:8px;">
         <p class="gc-card-title" data-i18n="invoices_guardados">Invoices guardados</p>
         <div id="reg-sel-host"></div>
@@ -1941,7 +1966,7 @@
         <button type="button" class="gc-action-btn" data-i18n="limpiar_fechas" id="b-limpiar-fechas">Limpiar fechas</button>
       </div>
     </div>
-    <p style="font-size:11px;color:var(--muted);margin:6px 2px 0;">Si eliges fechas, mandan sobre el filtro de "Año".</p>
+    <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin:6px 2px 0;">Si eliges fechas, mandan sobre el filtro de "Año".</p>
       <div class="gc-search-bar" style="margin-top:10px;">
         <div class="gc-field" style="min-width:120px;"><label>Monto desde</label><input type="text" id="b-min" inputmode="decimal" placeholder="0"></div>
         <div class="gc-field" style="min-width:120px;"><label>Monto hasta</label><input type="text" id="b-max" inputmode="decimal" placeholder="sin límite"></div>
@@ -1970,7 +1995,7 @@
     <!-- Resultados en el resto de la app (clientes, facturas, trabajos, planos…) -->
     <div class="gc-card" id="b-global-card" style="margin-bottom:24px;display:none;">
       <p class="gc-card-title" style="margin-bottom:6px;">También encontrado en la app</p>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Coincidencias fuera de Movimientos: facturas, clientes, colonias y nómina.</p>
+      <p class="gh-ayuda" style="font-size:12px;color:var(--muted);margin-bottom:14px;">Coincidencias fuera de Movimientos: facturas, clientes, colonias y nómina.</p>
       <div id="b-global-lista"></div>
     </div>
 
@@ -2008,7 +2033,7 @@
     <!-- Total pagado por socio -->
     <div class="gc-card" style="margin-bottom:24px;" id="card-total-socios">
       <p class="gc-card-title" data-i18n="total_pagado_por_socio">Total pagado por socio</p>
-      <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Suma de todos los invoices guardados del año seleccionado arriba ↓ (usa el mismo filtro de año que la tabla de abajo).</p>
+      <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Suma de todos los invoices guardados del año seleccionado arriba ↓ (usa el mismo filtro de año que la tabla de abajo).</p>
       <div id="total-socios-lista" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;"></div>
       <div class="gc-empty" id="empty-total-socios" style="display:none;">No hay invoices guardados aún.</div>
     </div>
@@ -2056,17 +2081,17 @@
 
     <!-- General: respaldo + opciones -->
     <div class="aj-subpanel active" id="aj-sub-general">
-      <div class="gc-note">Tus datos se guardan y sincronizan <strong>en la nube</strong> automáticamente con tu usuario. Aquí puedes descargar un respaldo extra (.json) en cualquier momento.</div>
+      <div class="gc-note gh-ayuda">Tus datos se guardan y sincronizan <strong>en la nube</strong> automáticamente con tu usuario. Aquí puedes descargar un respaldo extra (.json) en cualquier momento.</div>
       <div class="gc-resp-grid">
         <div class="gc-card">
           <p class="gc-card-title" data-i18n="descargar_respaldo">Descargar respaldo</p>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Descarga un archivo .json con TODA tu información: movimientos, categorías, invoices, empleados, papeles, facturas y nómina (pagos, trabajadores y recibos semanales).</p>
+          <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Descarga un archivo .json con TODA tu información: movimientos, categorías, invoices, empleados, papeles, facturas y nómina (pagos, trabajadores y recibos semanales).</p>
           <button class="gc-save-btn" data-i18n="descargar_respaldo_completo" id="btn-descargar-respaldo">Descargar respaldo completo</button>
           <p id="ultimo-respaldo-info" style="font-size:11.5px;color:var(--muted);margin-top:10px;"></p>
         </div>
         <div class="gc-card">
           <p class="gc-card-title" data-i18n="restaurar_respaldo">Restaurar respaldo</p>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Selecciona un archivo .json descargado antes. Esto reemplaza los datos actuales.</p>
+          <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Selecciona un archivo .json descargado antes. Esto reemplaza los datos actuales.</p>
           <input type="file" id="input-restaurar-respaldo" accept="application/json">
           <p id="status-restaurar" style="font-size:11.5px;color:var(--muted);margin-top:10px;"></p>
         </div>
@@ -2116,22 +2141,22 @@
 
     <!-- Avanzado (solo admin) -->
     <div class="aj-subpanel" id="aj-sub-avanzado">
-      <div class="gc-note">Esta sección solo la ve el <strong>admin</strong> — configuración sensible del negocio, no del día a día.</div>
+      <div class="gc-note gh-ayuda">Esta sección solo la ve el <strong>admin</strong> — configuración sensible del negocio, no del día a día.</div>
 
       <!-- Name of Company -->
       <div class="gc-card" style="margin-top:16px;">
         <p class="gc-card-title">Name of Company</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Estos datos salen en <strong>todas</strong> las facturas, los invoices de Registro y los recibos de nómina. Se guardan en la nube.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Estos datos salen en <strong>todas</strong> las facturas, los invoices de Registro y los recibos de nómina. Se guardan en la nube.</p>
         <p id="aj-factura-solo-admin-nota" style="display:none;font-size:12px;color:var(--muted);background:#F5F7FC;border-radius:8px;padding:8px 12px;margin-bottom:12px;">Solo el admin puede cambiar estos datos.</p>
         <div class="gc-field" style="margin-bottom:12px;" id="aj-factura-nombre-wrap"><label>Nombre de la empresa</label>
-          <input type="text" id="aj-factura-nombre" placeholder="GUZMAN HVAC" autocomplete="off">
+          <input type="text" id="aj-factura-nombre" placeholder="Nombre de tu compañía" autocomplete="off">
         </div>
         <div class="gc-field"><label>Dirección de la empresa</label>
           <input type="text" id="aj-direccion-empresa" placeholder="Calle, ciudad, estado, ZIP" autocomplete="off">
         </div>
         <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border-soft);">
           <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:block;margin-bottom:8px;">Logo para las facturas</label>
-          <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">Este logo sale en las facturas y recibos que ve el cliente. Es <strong>aparte</strong> del logo de la app (GH Manager), que no cambia. Si no subes ninguno, la factura sale solo con el nombre.</p>
+          <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">Este logo sale en las facturas y recibos que ve el cliente. Es <strong>aparte</strong> del logo de la app (GH Manager), que no cambia. Si no subes ninguno, la factura sale solo con el nombre.</p>
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
             <img id="aj-logo-preview" alt="" style="display:none;width:46px;height:46px;border-radius:12px;object-fit:cover;border:1px solid var(--border);">
             <input type="file" id="aj-logo-input" accept="image/*" style="max-width:220px;">
@@ -2147,7 +2172,7 @@
       <!-- Completion Sheets -->
       <div class="gc-card" style="margin-top:16px;">
         <p class="gc-card-title">Completion Sheets</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Muestra la carpeta <strong>Completion Sheets</strong> (Rough-In, Trim-Out y Pull Sheet de American Heating &amp; Cooling) dentro de Facturas. Se guarda para la base de datos que estás viendo.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Muestra la carpeta <strong>Completion Sheets</strong> (Rough-In, Trim-Out y Pull Sheet de American Heating &amp; Cooling) dentro de Facturas. Se guarda para la base de datos que estás viendo.</p>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
           <input type="checkbox" id="aj-cs-toggle" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
           <span style="font-size:13.5px;color:var(--ink);">Activar Completion Sheets</span>
@@ -2157,25 +2182,25 @@
       <!-- Idioma -->
       <div class="gc-card" style="margin-top:16px;">
         <p class="gc-card-title">Idioma / Language</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Cambia el idioma de los menús, títulos y botones de la app en este teléfono. / Changes the app's menus, titles and buttons on this phone.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Cambia el idioma de los menús, títulos y botones de la app en este teléfono. / Changes the app's menus, titles and buttons on this phone.</p>
         <div style="display:flex;gap:10px;">
           <button type="button" class="gc-action-btn gh-lang-btn" data-lang="es" style="flex:1;">Español</button>
           <button type="button" class="gc-action-btn gh-lang-btn" data-lang="en" style="flex:1;">English</button>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin-top:12px;">Por ahora esto traduce menús, títulos y botones — los mensajes de confirmación y textos de ayuda más específicos siguen en español. / For now this translates menus, titles and buttons — confirmation messages and finer help text are still in Spanish.</p>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:12px;">Por ahora esto traduce menús, títulos y botones — los mensajes de confirmación y textos de ayuda más específicos siguen en español. / For now this translates menus, titles and buttons — confirmation messages and finer help text are still in Spanish.</p>
       </div>
 
       <!-- Apariencia -->
       <div class="gc-card" style="margin-top:16px;">
         <p class="gc-card-title" data-i18n="apariencia">Apariencia</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige el color de acento de la app (botones y pestañas activas). Se guarda para la base de datos que estás viendo — cada base de datos puede tener su propio color, para distinguirlas de un vistazo.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige el color de acento de la app (botones y pestañas activas). Se guarda para la base de datos que estás viendo — cada base de datos puede tener su propio color, para distinguirlas de un vistazo.</p>
         <div id="aj-accent-picker" style="display:flex;gap:12px;flex-wrap:wrap;">
           <button type="button" class="aj-accent-sw" data-accent="cobre" title="Cobre" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C46E20,#A2560F);"></button>
           <button type="button" class="aj-accent-sw" data-accent="teal" title="Teal" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#0E8F82,#0B6F65);"></button>
           <button type="button" class="aj-accent-sw" data-accent="indigo" title="Índigo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4F6FA8,#3A5486);"></button>
           <button type="button" class="aj-accent-sw" data-accent="verde" title="Verde" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4E9350,#397239);"></button>
         </div>
-        <p style="font-size:13px;color:var(--muted);margin:20px 0 10px;">Tema de la app en este aparato. "Automático" sigue el modo claro/oscuro de tu teléfono.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin:20px 0 10px;">Tema de la app en este aparato. "Automático" sigue el modo claro/oscuro de tu teléfono.</p>
         <div class="gh-tema-seg">
           <button type="button" data-tema-opt="auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>Automático</button>
           <button type="button" data-tema-opt="claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Claro</button>
@@ -2186,12 +2211,12 @@
       <!-- Seguridad: bloqueo con Face ID / PIN (solo en este teléfono) -->
       <div class="gc-card" style="margin-top:16px;" id="aj-card-seguridad">
         <p class="gc-card-title" data-i18n="seguridad">Seguridad</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Pide Face ID (o un PIN) para abrir la app en este teléfono. No cambia tu usuario ni contraseña — es una capa extra que solo vive en este dispositivo.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Pide Face ID (o un PIN) para abrir la app en este teléfono. No cambia tu usuario ni contraseña — es una capa extra que solo vive en este dispositivo.</p>
         <label style="display:flex;align-items:center;gap:10px;margin-bottom:4px;cursor:pointer;">
           <input type="checkbox" id="aj-applock-toggle" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
           <span style="font-size:13.5px;color:var(--ink);">Pedir Face ID / PIN al abrir la app</span>
         </label>
-        <p style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">Para poder prenderlo, primero activa Face ID o guarda un PIN aquí abajo.</p>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">Para poder prenderlo, primero activa Face ID o guarda un PIN aquí abajo.</p>
         <div id="aj-applock-config" style="padding-top:14px;border-top:1px solid var(--border-soft);">
           <button type="button" class="gc-action-btn" data-i18n="activar_face_id_en_este_telefono" id="aj-applock-btn-faceid">Activar Face ID en este teléfono</button>
           <p id="aj-applock-faceid-estado" style="font-size:12px;color:var(--muted);margin-top:8px;margin-bottom:16px;"></p>
@@ -2200,14 +2225,14 @@
             <input type="password" id="aj-applock-pin-nuevo" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="••••" autocomplete="off">
           </div>
           <button type="button" class="gc-save-btn" data-i18n="guardar_pin" id="aj-applock-btn-guardar-pin" style="padding:9px 18px;font-size:13px;">Guardar PIN</button>
-          <p style="font-size:11.5px;color:var(--muted);margin-top:12px;">Face ID y el PIN solo quedan guardados en este teléfono — actívalos por separado en cada dispositivo donde uses la app. Si algún día quedas fuera, borra los datos del sitio en Safari (Ajustes → Safari → Avanzado → Datos de sitios web) para quitar el bloqueo.</p>
+          <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:12px;">Face ID y el PIN solo quedan guardados en este teléfono — actívalos por separado en cada dispositivo donde uses la app. Si algún día quedas fuera, borra los datos del sitio en Safari (Ajustes → Safari → Avanzado → Datos de sitios web) para quitar el bloqueo.</p>
         </div>
       </div>
 
       <!-- Cuentas (información separada) -->
       <div class="gc-card" style="margin-top:16px;" id="aj-card-cuentas">
         <p class="gc-card-title" data-i18n="base_de_datos_que_estas_viendo">Base de datos que estás viendo</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Cada base de datos guarda su <strong>propia</strong> información (movimientos, invoices, nómina, trabajadores, categorías). Estás viendo la marcada abajo.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Cada base de datos guarda su <strong>propia</strong> información (movimientos, invoices, nómina, trabajadores, categorías). Estás viendo la marcada abajo.</p>
         <div class="gc-field" style="margin-bottom:12px;"><label data-i18n="base_de_datos_actual">Base de datos actual</label>
           <input type="text" id="aj-cuenta-actual" readonly style="font-weight:600;background:#EEF2FF;">
         </div>
@@ -2218,18 +2243,18 @@
           <div style="display:flex;justify-content:flex-end;margin-top:12px;">
             <button class="gc-save-btn" data-i18n="ver_esta_base_de_datos" id="aj-btn-cambiar-cuenta">Ver esta base de datos</button>
           </div>
-          <p style="font-size:11px;color:var(--muted);margin-top:10px;">Al cambiar, la app se recargará para mostrar esa base de datos.</p>
+          <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin-top:10px;">Al cambiar, la app se recargará para mostrar esa base de datos.</p>
         </div>
       </div>
 
       <!-- Socios (reparto) -->
       <div class="gc-card" style="margin-top:8px;" id="aj-card-socios">
         <p class="gc-card-title" data-i18n="socios_reparto">Socios (reparto)</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;"><strong>Los socios son opcionales.</strong> Si no agregas ninguno, la empresa se lleva todo lo de la semana. Cada socio que agregues se lleva su parte igual (la semana se divide entre la empresa y los socios) más su porcentaje de tax. Los ajustes manuales (Movimientos → Ajuste) siempre son de la empresa.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;"><strong>Los socios son opcionales.</strong> Si no agregas ninguno, la empresa se lleva todo lo de la semana. Cada socio que agregues se lleva su parte igual (la semana se divide entre la empresa y los socios) más su porcentaje de tax. Los ajustes manuales (Movimientos → Ajuste) siempre son de la empresa.</p>
         <div class="gc-field" style="max-width:260px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border-soft);">
           <label>Tax de la semana (% de los ingresos)</label>
           <input type="text" id="aj-tasa-taxas" inputmode="decimal" placeholder="10" style="max-width:110px;">
-          <p style="font-size:11px;color:var(--muted);margin-top:6px;">Se aparta de cada semana antes de repartir entre los socios. Por defecto 10%.</p>
+          <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin-top:6px;">Se aparta de cada semana antes de repartir entre los socios. Por defecto 10%.</p>
         </div>
         <div id="aj-socios-lista"></div>
         <button type="button" class="gc-action-btn" data-i18n="agregar_socio" id="aj-btn-add-socio" style="margin-top:4px;">+ Agregar socio</button>
@@ -2241,7 +2266,7 @@
       <!-- Reportes y exportación -->
       <div class="gc-card" style="margin-top:16px;">
         <p class="gc-card-title" data-i18n="reportes_y_exportacion">Reportes y exportación</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">A diferencia del respaldo (que es un archivo técnico para restaurar), esto genera reportes para leer, imprimir o abrir en Excel.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">A diferencia del respaldo (que es un archivo técnico para restaurar), esto genera reportes para leer, imprimir o abrir en Excel.</p>
         <div class="gc-field" style="margin-bottom:14px;"><label data-i18n="rango_de_fechas_opcional_vacio_todo">Rango de fechas (opcional — vacío = todo)</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <input type="date" id="rep-desde" aria-label="Desde">
@@ -2261,13 +2286,13 @@
           <button class="gc-save-btn" data-i18n="descargar_excel_completo" id="btn-reporte-excel">Descargar Excel completo</button>
           <button class="gc-action-btn" data-i18n="descargar_reporte_en_pdf" id="btn-reporte-pdf">Descargar reporte en PDF</button>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin-top:10px;">El Excel trae una hoja por cada área (Movimientos, Invoices, Nómina, Empleados). El PDF es un resumen para imprimir o guardar.</p>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:10px;">El Excel trae una hoja por cada área (Movimientos, Invoices, Nómina, Empleados). El PDF es un resumen para imprimir o guardar.</p>
       </div>
 
       <!-- Bases de datos -->
       <div class="gc-card" style="margin-top:16px;" id="aj-card-bd">
         <p class="gc-card-title" data-i18n="bases_de_datos">Bases de datos</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Crea las bases de datos con el nombre que quieras (ej. <em>Guzman HVAC Airton</em>, <em>Guzman HVAC Estrada</em>). Luego, abajo, asignas cada usuario a una de ellas.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Crea las bases de datos con el nombre que quieras (ej. <em>Guzman HVAC Airton</em>, <em>Guzman HVAC Estrada</em>). Luego, abajo, asignas cada usuario a una de ellas.</p>
         <div id="aj-bd-lista" style="margin-bottom:14px;"></div>
         <div class="gc-field"><label data-i18n="nombre_de_la_nueva_base_de_datos">Nombre de la nueva base de datos</label>
           <div style="display:flex;gap:8px;">
@@ -2280,7 +2305,7 @@
       <!-- Administrar usuarios -->
       <div class="gc-card" style="margin-top:16px;" id="aj-card-admin">
         <p class="gc-card-title" data-i18n="usuarios_y_a_que_base_de_datos_entran">Usuarios y a qué base de datos entran</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige a qué base de datos entra cada usuario, apruébalos y define su rol. <strong>Los usuarios en la misma base de datos ven la misma información.</strong></p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige a qué base de datos entra cada usuario, apruébalos y define su rol. <strong>Los usuarios en la misma base de datos ven la misma información.</strong></p>
         <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
           <button class="gc-action-btn" data-i18n="actualizar_lista" id="aj-btn-refrescar-usuarios">Actualizar lista</button>
         </div>
@@ -2350,7 +2375,7 @@
         <p class="gc-card-title" id="nom-grid-sem-titulo" style="margin:0;text-align:center;"></p>
         <button type="button" id="nom-grid-sem-next" class="gc-action-btn" style="padding:8px 16px;font-size:16px;">›</button>
       </div>
-      <p style="font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:16px;">Toca los días que trabajó cada quien esta semana. El monto se calcula solo (días × sueldo), editable.</p>
+      <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:16px;">Toca los días que trabajó cada quien esta semana. El monto se calcula solo (días × sueldo), editable.</p>
 
       <!-- Agregar trabajador (escribe/busca; si es nuevo, lo crea) -->
       <div style="display:flex;gap:8px;margin-bottom:16px;">
@@ -2372,7 +2397,7 @@
 
   <!-- Recibo semanal -->
   <div class="nom-subpanel" id="nom-sub-semanal">
-    <div class="gc-note"><strong>Recibo semanal.</strong> Cada semana muestra a los trabajadores con los días que trabajaron y su total. Puedes ver el recibo completo o imprimirlo.</div>
+    <div class="gc-note gh-ayuda"><strong>Recibo semanal.</strong> Cada semana muestra a los trabajadores con los días que trabajaron y su total. Puedes ver el recibo completo o imprimirlo.</div>
     <div id="nom-semanas-cont"></div>
     <div class="gc-empty" id="nom-semanas-empty" style="display:none;">No hay pagos registrados aún. Registra pagos para verlos agrupados por semana.</div>
 
@@ -2431,7 +2456,7 @@
   <div class="nom-subpanel" id="nom-sub-trabajadores">
     <div class="gc-card">
       <p class="gc-card-title" data-i18n="trabajadores_y_sus_sueldos">Trabajadores y sus sueldos</p>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estos son los mismos trabajadores de <strong>Empleados</strong> (en Ajustes) — aquí defines su sueldo por día. Al registrar un pago, el monto se calcula solo (días × sueldo). Puedes aumentar o rebajar el sueldo cuando quieras.</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estos son los mismos trabajadores de <strong>Empleados</strong> (en Ajustes) — aquí defines su sueldo por día. Al registrar un pago, el monto se calcula solo (días × sueldo). Puedes aumentar o rebajar el sueldo cuando quieras.</p>
       <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:18px;align-items:end;">
         <div class="gc-field"><label data-i18n="nombre_del_trabajador">Nombre del trabajador</label>
           <input type="text" id="trab-nom-nuevo" placeholder="Nombre…" autocomplete="off">
@@ -2478,7 +2503,7 @@
         <div class="gc-field"><label data-i18n="invoice">Invoice #</label><input type="text" id="inv-num" inputmode="numeric" placeholder="1"></div>
         <div class="gc-field"><label data-i18n="fecha">Fecha</label><input type="date" id="inv-fecha"></div>
         <div class="gc-field"><label data-i18n="bill_to_nombre_compania">Bill To — Nombre / Compañía</label>
-          <input type="text" id="inv-cliente" list="dl-clientes" placeholder="Airtron o escribe otro cliente" autocomplete="off">
+          <input type="text" id="inv-cliente" list="dl-clientes" placeholder="Nombre del cliente" autocomplete="off">
           <datalist id="dl-clientes"></datalist>
         </div>
       </div>
@@ -2490,7 +2515,7 @@
           <input type="text" id="inv-cliente-direccion" placeholder="Dirección de quien paga" autocomplete="off">
         </div>
       </div>
-      <p style="font-size:11px;color:var(--muted);margin-top:8px;">Estos datos se recuerdan para la siguiente factura — solo cámbialos si son distintos.</p>
+      <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin-top:8px;">Estos datos se recuerdan para la siguiente factura — solo cámbialos si son distintos.</p>
     </div>
     <div class="gc-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
@@ -2571,7 +2596,7 @@
         </div>
       </div>
       <div id="cs-form-pull" style="display:none;">
-        <p style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">AHC Trim Out Pull Sheet — Standard Trim. Sale igual que el papel, en <strong>dos páginas</strong> (elige <em>Doble cara</em> al imprimir). Escribe directo en la hoja: los cuadros amarillos son los que se llenan (DATE, JOB, BUILDER, LOT/SUB, PULLER, INSTALLER, ORDER y SHIP). Usa <strong>+</strong> para agrandarla. <span id="ps-contador" style="font-weight:700;color:var(--accent-dk);"></span></p>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">AHC Trim Out Pull Sheet — Standard Trim. Sale igual que el papel, en <strong>dos páginas</strong> (elige <em>Doble cara</em> al imprimir). Escribe directo en la hoja: los cuadros amarillos son los que se llenan (DATE, JOB, BUILDER, LOT/SUB, PULLER, INSTALLER, ORDER y SHIP). Usa <strong>+</strong> para agrandarla. <span id="ps-contador" style="font-weight:700;color:var(--accent-dk);"></span></p>
         <div class="ps-zoom">
           <button type="button" class="gc-action-btn" id="ps-zoom-menos">−</button>
           <span id="ps-zoom-lbl">100%</span>
@@ -2589,13 +2614,13 @@
             <button type="button" class="gc-action-btn" data-psacc="seccion" id="ps-ed-seccion">▤ Hacer sección</button>
             <button type="button" class="gc-action-btn" id="ps-ed-restaurar" style="color:var(--ember);">↺ Original</button>
           </div>
-          <p style="font-size:11px;color:var(--muted);margin:6px 0 0;">Escribe directo en PART y DESCRIPTION para cambiar el texto. Un renglón vacío se vuelve parte en cuanto le escribes. Toca <strong>✓ Listo</strong> para volver a llenar cantidades.</p>
+          <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin:6px 0 0;">Escribe directo en PART y DESCRIPTION para cambiar el texto. Un renglón vacío se vuelve parte en cuanto le escribes. Toca <strong>✓ Listo</strong> para volver a llenar cantidades.</p>
         </div>
         <div class="ps-marco-hoja" id="ps-marco-hoja"><div id="ps-hoja"></div></div>
       </div>
 
       <div id="cs-form-check">
-      <p style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">American Heating &amp; Cooling — New Construction Completion Sheet. Cada hoja se llena por separado. <strong>Imprimir las dos</strong> saca Rough-In y Trim-Out en dos páginas: en la ventana de impresión elige <em>Doble cara</em> para que queden al frente y al reverso de la misma hoja.</p>
+      <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">American Heating &amp; Cooling — New Construction Completion Sheet. Cada hoja se llena por separado. <strong>Imprimir las dos</strong> saca Rough-In y Trim-Out en dos páginas: en la ventana de impresión elige <em>Doble cara</em> para que queden al frente y al reverso de la misma hoja.</p>
 
       <div class="gc-form-row">
         <div class="gc-field"><label>Date</label><input type="date" id="cs-fecha"></div>
@@ -2639,7 +2664,7 @@
   <div class="inv-subpanel" id="inv-sub-cobros">
     <div class="gc-card">
       <p class="gc-card-title" data-i18n="cobros_por_casa">Cobros por casa</p>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Cada trabajo de todas tus facturas aparece aquí como un cobro individual. Se llena solo cuando guardas una factura. Busca por Job #, colonia o lote.</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Cada trabajo de todas tus facturas aparece aquí como un cobro individual. Se llena solo cuando guardas una factura. Busca por Job #, colonia o lote.</p>
       <div style="margin-bottom:16px;">
         <input type="text" id="cobros-buscar" placeholder="Buscar por Job #, colonia, lote o trabajo…"
           style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
@@ -2666,7 +2691,7 @@
   <div class="inv-subpanel" id="inv-sub-clientes">
     <div class="gc-card">
       <p class="gc-card-title" data-i18n="base_de_datos_de_clientes">Base de datos de Clientes</p>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estos clientes aparecen como sugerencias en el campo <strong>Bill To</strong> de cada factura. También puedes escribir uno nuevo directo en el campo.</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estos clientes aparecen como sugerencias en el campo <strong>Bill To</strong> de cada factura. También puedes escribir uno nuevo directo en el campo.</p>
       <div style="display:flex;gap:10px;margin-bottom:18px;">
         <input type="text" id="cli-nueva" placeholder="Nombre del cliente o compañía…" style="flex:1;font-family:'Inter',sans-serif;font-size:13.5px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
         <button class="gc-save-btn" data-i18n="agregar" id="cli-btn-add">+ Agregar</button>
@@ -2680,7 +2705,7 @@
   <div class="inv-subpanel" id="inv-sub-trabajos">
     <div class="gc-card">
       <p class="gc-card-title" data-i18n="descripciones_de_trabajo">Descripciones de Trabajo</p>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estas descripciones aparecen como sugerencias en el campo <strong>Work Performed</strong>. Si le pones precio, al elegir el trabajo en una factura el monto se llena solo — y ahí lo puedes cambiar sin que se modifique este precio.</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estas descripciones aparecen como sugerencias en el campo <strong>Work Performed</strong>. Si le pones precio, al elegir el trabajo en una factura el monto se llena solo — y ahí lo puedes cambiar sin que se modifique este precio.</p>
       <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
         <input type="text" id="trab-nueva" placeholder="Descripción del trabajo" style="flex:1;min-width:200px;font-family:'Inter',sans-serif;font-size:13.5px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
         <input type="text" id="trab-precio" inputmode="decimal" placeholder="Precio" style="width:120px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13.5px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
@@ -2696,7 +2721,7 @@
   <div class="inv-subpanel" id="inv-sub-colonias">
     <div class="gc-card">
       <p class="gc-card-title" data-i18n="colonias_subdivisions">Colonias / Subdivisions</p>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estas colonias aparecen en el menú de <strong>JOB LOCATION</strong> de cada factura.</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estas colonias aparecen en el menú de <strong>JOB LOCATION</strong> de cada factura.</p>
       <div style="display:flex;gap:10px;margin-bottom:18px;">
         <input type="text" id="col-nueva" placeholder="Nombre de la colonia…" style="flex:1;font-family:'Inter',sans-serif;font-size:13.5px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
         <button class="gc-save-btn" data-i18n="agregar" id="col-btn-add">+ Agregar</button>
@@ -2719,7 +2744,7 @@
           <button type="button" class="gc-action-btn" id="cal-btn-next" style="padding:8px 13px;">›</button>
         </div>
       </div>
-      <p style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Agenda tus trabajos por día. Cada uno se puede mandar directo al Calendario del iPhone con el botón 📅.</p>
+      <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Agenda tus trabajos por día. Cada uno se puede mandar directo al Calendario del iPhone con el botón 📅.</p>
       <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
         <button type="button" class="gc-save-btn" data-i18n="cal_exportar_semana" id="cal-btn-exportar-semana" style="padding:9px 18px;font-size:13px;">📅 Exportar semana a Calendario</button>
       </div>
@@ -2748,7 +2773,7 @@
           Tomar foto / subir imagen
         </label>
         <input type="file" id="cal-f-fotos-input" accept="image/*" multiple style="display:none;">
-        <p style="font-size:10.5px;color:var(--muted-soft);margin-top:6px;">Se guardan comprimidas en este trabajo — mejor unas cuantas fotos clave que muchas.</p>
+        <p class="gh-ayuda" style="font-size:10.5px;color:var(--muted-soft);margin-top:6px;">Se guardan comprimidas en este trabajo — mejor unas cuantas fotos clave que muchas.</p>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
         <button type="button" class="gc-action-btn" data-i18n="cancelar" id="cal-modal-cancelar">Cancelar</button>
@@ -2771,7 +2796,7 @@
           <p class="gc-card-title" data-i18n="pln_planos_titulo" style="margin:0;">Planos</p>
           <button type="button" class="gc-save-btn" data-i18n="pln_agregar_plano" id="pln-btn-nuevo" style="padding:8px 16px;font-size:13px;">+ Agregar plano</button>
         </div>
-        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Toca un plano para ver la foto en grande. Para editar o borrar, ve a la pestaña "Editar / Borrar".</p>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Toca un plano para ver la foto en grande. Para editar o borrar, ve a la pestaña "Editar / Borrar".</p>
         <input type="text" id="pln-buscar" placeholder="Buscar por nombre de plano o constructor…" autocomplete="off"
           style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);margin-bottom:16px;box-sizing:border-box;">
         <div id="pln-sel-host"></div>
@@ -2784,7 +2809,7 @@
     <div class="pln-subpanel" id="pln-sub-editar">
       <div class="gc-card">
         <p class="gc-card-title" data-i18n="pln_editar_o_borrar_planos" style="margin-bottom:4px;">Editar o borrar planos</p>
-        <p style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Toca el lápiz para editar un plano, o la ✕ para borrarlo.</p>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Toca el lápiz para editar un plano, o la ✕ para borrarlo.</p>
         <input type="text" id="pln-buscar-editar" placeholder="Buscar por nombre de plano o constructor…" autocomplete="off"
           style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);margin-bottom:16px;box-sizing:border-box;">
         <div class="gc-empty" id="pln-empty-editar" style="display:none;">No hay planos guardados todavía.</div>
@@ -2822,7 +2847,7 @@
           Tomar foto / subir imagen
         </label>
         <input type="file" id="pln-f-fotos-input" accept="image/*" multiple style="display:none;">
-        <p style="font-size:10.5px;color:var(--muted-soft);margin-top:6px;margin-bottom:14px;">Sube la foto primero — así puedes verla mientras escribes el nombre y el constructor.</p>
+        <p class="gh-ayuda" style="font-size:10.5px;color:var(--muted-soft);margin-top:6px;margin-bottom:14px;">Sube la foto primero — así puedes verla mientras escribes el nombre y el constructor.</p>
       </div>
       <div class="gc-field" style="margin-bottom:12px;"><label data-i18n="pln_nombre_del_plano">Nombre del plano</label><input type="text" id="pln-f-nombre" placeholder="Ej. Plan 2140 — elevación B" autocomplete="off"></div>
       <div class="gc-field" style="margin-bottom:14px;"><label data-i18n="pln_constructor">Constructor</label><input type="text" id="pln-f-constructor" list="dl-planos-constructores" placeholder="Nombre del constructor" autocomplete="off"></div>
@@ -3076,6 +3101,26 @@
     try { toast('No se pudo completar una acción (problema de conexión o datos). Intenta de nuevo.', 'error', 4000); } catch (err) {}
   });
 
+  // ¿Estamos en la base de datos original ("principal")? Las demás bases
+  // empiezan vacías: sin categorías, colonias, clientes ni nombres de ejemplo.
+  function ghEsBasePrincipal() {
+    try { return !window.GH_GET_CUENTA || (window.GH_GET_CUENTA() || 'principal') === 'principal'; } catch (e) { return true; }
+  }
+  // Clave de este aparato separada por base de datos (borradores de hojas,
+  // etc.), para que lo de una base no aparezca en otra. La principal usa la
+  // clave de siempre, así no se pierde nada de lo que ya estaba guardado.
+  function ghLK(k) {
+    return ghEsBasePrincipal() ? k : (k + '@' + window.GH_GET_CUENTA());
+  }
+  // Categorías para una base que nunca guardó su lista: la principal usa las
+  // de siempre; las demás solo las que ya usan sus propios movimientos.
+  function ghCatsIniciales(tipo, defecto) {
+    if (ghEsBasePrincipal()) return defecto.slice();
+    const set = new Set();
+    (movimientos || []).forEach((m) => { if (m && m.tipo === tipo && m.cat) set.add(m.cat); });
+    return [...set];
+  }
+
   const DEFAULT_GASTOS = [
     "Harbor Freight","Home Depot","Gas","Comestibles","Liability Insurance","Work Compensation",
     "Herramientas","Ariel Chirinos","Utilidades","Mantenimiento","Nacional General","Material",
@@ -3096,7 +3141,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v108 · 3 oct';
+  const APP_VERSION = 'v110 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -3357,8 +3402,15 @@
     } catch (e) {
       // No hay configuración ni en la nube ni en este teléfono: base de datos nueva.
       cfgCargada = true;
-      // Migración: si había una dirección vieja en localStorage, usarla
-      try { const d = localStorage.getItem('cra-direccion'); if (d) cfgFacturaDireccion = d; } catch (e2) {}
+      if (ghEsBasePrincipal()) {
+        // Migración: si había una dirección vieja en localStorage, usarla
+        try { const d = localStorage.getItem('cra-direccion'); if (d) cfgFacturaDireccion = d; } catch (e2) {}
+      } else {
+        // Base de datos nueva: empieza en blanco (el nombre de la compañía
+        // se pone en Ajustes). Nada se copia de otra base.
+        cfgFacturaNombre = ''; cfgFacturaDireccion = ''; cfgSocios = []; cfgUltimoCliente = ''; cfgUltimoClienteDir = '';
+        cfgLogoDataUrl = '';
+      }
     }
     // Si el nombre de factura sigue al socio, mantenerlo sincronizado
     // Antes la empresa era "el Socio 2" de la lista. Ahora la empresa va
@@ -3523,8 +3575,8 @@
       cargarConfig(), // nombres de socios + factura (nube)
     ]);
     try { movimientos = rMov && rMov.value ? JSON.parse(rMov.value) : []; } catch (e) { movimientos = []; }
-    try { catGastos = rGas && rGas.value ? JSON.parse(rGas.value) : DEFAULT_GASTOS.slice(); } catch (e) { catGastos = DEFAULT_GASTOS.slice(); }
-    try { catIngresos = rIng && rIng.value ? JSON.parse(rIng.value) : DEFAULT_INGRESOS.slice(); } catch (e) { catIngresos = DEFAULT_INGRESOS.slice(); }
+    try { catGastos = rGas && rGas.value ? JSON.parse(rGas.value) : ghCatsIniciales('gasto', DEFAULT_GASTOS); } catch (e) { catGastos = ghCatsIniciales('gasto', DEFAULT_GASTOS); }
+    try { catIngresos = rIng && rIng.value ? JSON.parse(rIng.value) : ghCatsIniciales('ingreso', DEFAULT_INGRESOS); } catch (e) { catIngresos = ghCatsIniciales('ingreso', DEFAULT_INGRESOS); }
     try { invoicesGuardados = rInv && rInv.value ? JSON.parse(rInv.value) : []; } catch (e) { invoicesGuardados = []; }
 
     aplicarNombresEstaticos();
@@ -7810,10 +7862,10 @@
 
   const CAL_ULTIMO_KEY = 'gh-cal-ultimo-trabajo';
   function calObtenerUltimo() {
-    try { return JSON.parse(localStorage.getItem(CAL_ULTIMO_KEY)) || {}; } catch (e) { return {}; }
+    try { return JSON.parse(localStorage.getItem(ghLK(CAL_ULTIMO_KEY))) || {}; } catch (e) { return {}; }
   }
   function calGuardarUltimo(datos) {
-    try { localStorage.setItem(CAL_ULTIMO_KEY, JSON.stringify({ cliente: datos.cliente, jobNum: datos.jobNum, loc: datos.loc })); } catch (e) {}
+    try { localStorage.setItem(ghLK(CAL_ULTIMO_KEY), JSON.stringify({ cliente: datos.cliente, jobNum: datos.jobNum, loc: datos.loc })); } catch (e) {}
   }
 
   function calAbrirModal(cita, fechaPredeterminada) {
@@ -8326,7 +8378,7 @@
   // sola como borrador en el teléfono, y se pueden imprimir juntas en dos
   // páginas para frente y vuelta.
   // ====================================================================
-  const CS_KEY = (tipo) => 'gh-cs-' + tipo;
+  const CS_KEY = (tipo) => ghLK('gh-cs-' + tipo);
   const CS_HOJAS = {
     rough: {
       titulo: 'ROUGH-IN', nombre: 'Rough-In',
@@ -8490,7 +8542,7 @@
     lote = lote || '';
     CS_HOJAS_LIGADAS.forEach((t) => {
       if (t === origen) return;
-      const clave = t === 'pull' ? 'gh-cs-pull' : CS_KEY(t);
+      const clave = t === 'pull' ? ghLK('gh-cs-pull') : CS_KEY(t);
       try {
         const d = JSON.parse(localStorage.getItem(clave) || '{}') || {};
         if ((d.lote || '') === lote) return;
@@ -8505,7 +8557,7 @@
   function csAplicarDesdeFactura(lote, fecha) {
     if (csTipo === 'pull') psGuardarBorrador(); else csGuardarBorrador();
     CS_HOJAS_LIGADAS.forEach((t) => {
-      const clave = t === 'pull' ? 'gh-cs-pull' : CS_KEY(t);
+      const clave = t === 'pull' ? ghLK('gh-cs-pull') : CS_KEY(t);
       try {
         const d = JSON.parse(localStorage.getItem(clave) || '{}') || {};
         d.lote = lote;
@@ -8715,7 +8767,7 @@
     $('cs-btn-limpiar').addEventListener('click', async () => {
       if (csTipo === 'pull') {
         if (!await gcConfirm('¿Limpiar el Pull Sheet para empezar uno nuevo?', { okText: 'Limpiar' })) return;
-        try { localStorage.removeItem(PS_KEY); } catch (e) {}
+        try { localStorage.removeItem(ghLK(PS_KEY)); } catch (e) {}
         psLlenar({});
         toast('Hoja limpia', 'info', 1500);
         return;
@@ -8850,23 +8902,32 @@
     if (!Array.isArray(lay) || lay.length !== PS_PAGINAS.length) return psLayoutOriginal();
     return lay.map((pg) => ({ L: psCopiarCol((pg && pg.L) || []), R: psCopiarCol((pg && pg.R) || []) }));
   }
-  let psLayout = (() => { try { return psNormalizar(JSON.parse(localStorage.getItem(PS_LAYOUT_KEY))); } catch (e) { return psLayoutOriginal(); } })();
+  let psLayout = (() => { try { return psNormalizar(JSON.parse(localStorage.getItem(ghLK(PS_LAYOUT_KEY)))); } catch (e) { return psLayoutOriginal(); } })();
   let psModo = 'llenar';     // 'llenar' (cantidades) o 'editar' (textos y orden)
   let psSel = null;          // renglón elegido en modo editar: {n, lado, i}
   let psGuardarLayoutT = null;
   function psGuardarLayout() {
-    try { localStorage.setItem(PS_LAYOUT_KEY, JSON.stringify(psLayout)); } catch (e) {}
+    try { localStorage.setItem(ghLK(PS_LAYOUT_KEY), JSON.stringify(psLayout)); } catch (e) {}
     clearTimeout(psGuardarLayoutT);
     psGuardarLayoutT = setTimeout(async () => { try { await window.storage.set(PS_LAYOUT_KEY, JSON.stringify(psLayout)); } catch (e) {} }, 600);
   }
   async function psCargarLayoutNube() {
+    // Ya con la sesión lista se sabe qué base es: vuelve a leer las hojas
+    // con las claves de ESTA base (al abrir se leyeron antes de saberlo).
+    if (typeof window.GH_ESPERAR_SESION === 'function') { try { await window.GH_ESPERAR_SESION(); } catch (e) {} }
+    try {
+      const local = (() => { try { return psNormalizar(JSON.parse(localStorage.getItem(ghLK(PS_LAYOUT_KEY)))); } catch (e) { return psLayoutOriginal(); } })();
+      if (JSON.stringify(local) !== JSON.stringify(psLayout)) psLayout = local;
+      if (csTipo === 'pull') { if ($('ps-hoja') && psModo === 'llenar') psLlenar(psLeerGuardado()); }
+      else csLlenar(csLeerGuardado(csTipo));
+    } catch (e) {}
     try {
       const r = await window.storage.get(PS_LAYOUT_KEY);
       if (r && r.value) {
         const nube = psNormalizar(JSON.parse(r.value));
         if (JSON.stringify(nube) !== JSON.stringify(psLayout)) {
           psLayout = nube;
-          try { localStorage.setItem(PS_LAYOUT_KEY, JSON.stringify(psLayout)); } catch (e) {}
+          try { localStorage.setItem(ghLK(PS_LAYOUT_KEY), JSON.stringify(psLayout)); } catch (e) {}
           if ($('ps-hoja') && psModo === 'llenar') psLlenar(psLeerGuardado());
         }
       }
@@ -8885,7 +8946,7 @@
       ['o', 's'].forEach((c) => { const v = q[psClave(n, lado, k) + c]; if (v) nq[psClave(n, lado, j) + c] = v; });
     });
     d.q = nq;
-    try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
+    try { localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d)); } catch (e) {}
     psGuardarLayout();
   }
   const psIdent = () => Array.from({ length: PS_FILAS }, (_, j) => j);
@@ -8912,7 +8973,7 @@
       else {
         col[i] = { s: (f && (f.p || f.d)) || 'NEW SECTION' };
         const d = psLeerGuardado(); if (d.q) { delete d.q[psClave(n, lado, i) + 'o']; delete d.q[psClave(n, lado, i) + 's']; }
-        try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
+        try { localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d)); } catch (e) {}
       }
       psGuardarLayout();
     }
@@ -8944,7 +9005,7 @@
   }
 
   function psLeerGuardado() {
-    try { return JSON.parse(localStorage.getItem(PS_KEY) || '{}') || {}; } catch (e) { return {}; }
+    try { return JSON.parse(localStorage.getItem(ghLK(PS_KEY)) || '{}') || {}; } catch (e) { return {}; }
   }
   function psLeer() {
     const q = {};
@@ -8955,7 +9016,7 @@
   function psGuardarBorrador() {
     if (psModo === 'editar') return;   // en modo editar no hay casillas de cantidades en pantalla
     const d = psLeer();
-    try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
+    try { localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d)); } catch (e) {}
     csCompartirLote(d.lote, 'pull');
     psContar();
   }
@@ -9131,7 +9192,7 @@
     if (!$('ps-hoja')) return;
     try {
       if (!localStorage.getItem('gh-ps-fecha-limpia')) {
-        const d0 = psLeerGuardado(); if (d0.fecha) { delete d0.fecha; localStorage.setItem(PS_KEY, JSON.stringify(d0)); }
+        const d0 = psLeerGuardado(); if (d0.fecha) { delete d0.fecha; localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d0)); }
         localStorage.setItem('gh-ps-fecha-limpia', '1');
       }
     } catch (e) {}
@@ -9145,7 +9206,7 @@
     $('ps-ed-restaurar').addEventListener('click', async () => {
       if (!await gcConfirm('¿Regresar el Pull Sheet a como viene en el papel? Se pierden los cambios de textos y orden (las cantidades que escribiste también se borran).', { okText: 'Restaurar', danger: true })) return;
       psLayout = psLayoutOriginal(); psGuardarLayout();
-      const d = psLeerGuardado(); d.q = {}; try { localStorage.setItem(PS_KEY, JSON.stringify(d)); } catch (e) {}
+      const d = psLeerGuardado(); d.q = {}; try { localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d)); } catch (e) {}
       psSel = null; psLlenar(psLeerGuardado());
       toast('Pull Sheet como el original ✓', 'info', 2000);
     });
@@ -9993,9 +10054,10 @@
             window.storage.get(TRB_KEY).catch(() => null),
           ]);
           try { invDocs = JSON.parse(rInv.value); } catch (e) { invDocs = []; }
-          try { invColonias = JSON.parse(rCol.value); } catch (e) { invColonias = [...INV_COL_DEFAULT]; await invSaveCol(); }
-          try { invClientes = JSON.parse(rCli.value); } catch (e) { invClientes = [...INV_CLI_DEFAULT]; await invSaveCli(); }
-          try { invTrabajos = JSON.parse(rTrb.value); } catch (e) { invTrabajos = [...INV_TRB_DEFAULT]; await invSaveTrb(); }
+          const invBaseNueva = !ghEsBasePrincipal();
+          try { invColonias = JSON.parse(rCol.value); } catch (e) { invColonias = invBaseNueva ? [] : [...INV_COL_DEFAULT]; await invSaveCol(); }
+          try { invClientes = JSON.parse(rCli.value); } catch (e) { invClientes = invBaseNueva ? [] : [...INV_CLI_DEFAULT]; await invSaveCli(); }
+          try { invTrabajos = JSON.parse(rTrb.value); } catch (e) { invTrabajos = invBaseNueva ? [] : [...INV_TRB_DEFAULT]; await invSaveTrb(); }
           invRefreshDlClientes(); invRefreshDlTrabajos(); invRefreshDlColonias();
           $('inv-num').value = invAutoNum();   // siguiente número, según las facturas ya guardadas
           $('inv-fecha').value = invToday();
@@ -10665,7 +10727,10 @@
     activos.forEach((emp) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td style="font-weight:500;">${escapeHtml(empNombreCompleto(emp))}</td>
+        <td class="trab-nombre-cel" data-id="${emp.id}" style="font-weight:600;">
+          <span class="trab-nombre-txt">${escapeHtml(empNombreCompleto(emp))}</span>
+          <button type="button" class="gc-action-btn trab-nombre-edit" data-id="${emp.id}" title="Cambiar el nombre" style="padding:4px 10px;font-size:11.5px;margin-left:6px;">✎ Nombre</button>
+        </td>
         <td class="num" style="font-weight:700;color:var(--teal);">${nomFmt(emp.sueldo)}</td>
         <td style="white-space:nowrap;">
           <input type="text" inputmode="decimal" class="trab-sueldo-input" data-id="${emp.id}" placeholder="Nuevo sueldo $" style="width:110px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;">
@@ -10673,6 +10738,48 @@
         </td>
         <td><button class="gc-action-btn trab-nom-del" data-i18n="inactivo" data-id="${emp.id}" style="padding:5px 10px;font-size:11px;" title="Marcar inactivo (no se borra su información)">Inactivo</button></td>`;
       tbody.appendChild(tr);
+    });
+
+    // ✎ Nombre: se edita ahí mismo; al guardar, el nombre nuevo también se
+    // pone en los pagos ya registrados de esa persona (historial, recibos,
+    // buscar por persona), para que no quede "partida" en dos nombres.
+    tbody.querySelectorAll('.trab-nombre-edit').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const emp = empleados.find((e) => e.id === id);
+        const cel = tbody.querySelector(`.trab-nombre-cel[data-id="${id}"]`);
+        if (!emp || !cel) return;
+        const viejo = empNombreCompleto(emp);
+        cel.innerHTML = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <input type="text" class="trab-nombre-input" value="${escapeHtml(viejo)}" autocomplete="off" style="flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;">
+          <button type="button" class="gc-save-btn trab-nombre-ok" style="padding:8px 14px;font-size:12.5px;">Guardar</button>
+          <button type="button" class="gc-action-btn trab-nombre-no" style="padding:7px 12px;font-size:12.5px;">Cancelar</button></div>`;
+        const inp = cel.querySelector('.trab-nombre-input');
+        inp.focus(); inp.select();
+        const cancelar = () => nomRenderTrabajadores();
+        const guardar = async () => {
+          const nuevo = inp.value.replace(/\s+/g, ' ').trim();
+          if (!nuevo) { toast('Escribe un nombre', 'error'); inp.focus(); return; }
+          if (nuevo === viejo) { cancelar(); return; }
+          const otro = nomBuscarTrab(nuevo);
+          if (otro && otro.id !== id) { toast(`Ya hay un trabajador llamado "${nuevo}"`, 'error'); inp.focus(); return; }
+          const pagos = nomDocs.filter((n) => (n.trabajador || '').trim().toLowerCase() === viejo.toLowerCase());
+          if (pagos.length && !await gcConfirm(`¿Cambiar "${viejo}" por "${nuevo}"?\n\nTambién se cambia en sus ${pagos.length} pago(s) ya registrado(s), para que su historial siga junto.`, { okText: 'Cambiar nombre' })) return;
+          emp.nombre = nuevo; emp.apellido = '';
+          pagos.forEach((n) => { n.trabajador = nuevo; });
+          nomGridFilas.forEach((f) => { if ((f.nombre || '').trim().toLowerCase() === viejo.toLowerCase()) f.nombre = nuevo; });
+          await saveEmpleados();
+          if (pagos.length) await nomSaveDocs();
+          nomRefreshDl();
+          nomRenderTrabajadores();
+          try { nomGridRender(); nomRenderHist(); nomRenderRegLedger(); nomRenderSemanal(); nomRenderBuscar(); } catch (e) {}
+          try { if (typeof renderEmpleados === 'function') renderEmpleados(); } catch (e) {}
+          toast('Nombre actualizado ✓', 'success');
+        };
+        cel.querySelector('.trab-nombre-ok').addEventListener('click', guardar);
+        cel.querySelector('.trab-nombre-no').addEventListener('click', cancelar);
+        inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); guardar(); } if (e.key === 'Escape') cancelar(); });
+      });
     });
 
     tbody.querySelectorAll('.trab-sueldo-set').forEach((btn) => {
@@ -11210,14 +11317,14 @@
     panelAjustes.innerHTML = `
       <div class="gc-card">
         <p class="gc-card-title" data-i18n="apariencia">Apariencia</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige el color de acento de la app.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige el color de acento de la app.</p>
         <div id="visor-accent-picker" style="display:flex;gap:12px;flex-wrap:wrap;">
           <button type="button" class="visor-accent-sw" data-accent="cobre" title="Cobre" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C46E20,#A2560F);"></button>
           <button type="button" class="visor-accent-sw" data-accent="teal" title="Teal" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#0E8F82,#0B6F65);"></button>
           <button type="button" class="visor-accent-sw" data-accent="indigo" title="Índigo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4F6FA8,#3A5486);"></button>
           <button type="button" class="visor-accent-sw" data-accent="verde" title="Verde" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4E9350,#397239);"></button>
         </div>
-        <p style="font-size:13px;color:var(--muted);margin:20px 0 10px;">Tema de la app en este aparato. "Automático" sigue el modo claro/oscuro de tu teléfono.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin:20px 0 10px;">Tema de la app en este aparato. "Automático" sigue el modo claro/oscuro de tu teléfono.</p>
         <div class="gh-tema-seg">
           <button type="button" data-tema-opt="auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>Automático</button>
           <button type="button" data-tema-opt="claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Claro</button>
