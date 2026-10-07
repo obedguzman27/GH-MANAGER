@@ -130,14 +130,20 @@
         <div style="font-family:'Zilla Slab',serif; font-weight:700; font-size:20px; color:#0E1830; margin-bottom:4px;">GH Manager</div>
         <div id="gh-login-subtitulo" style="font-size:12.5px; color:#5A6A88; margin-bottom:6px;">Inicia sesión</div>
         <div style="font-size:11px; color:#9AA6BE; margin-bottom:16px;">El usuario NO es tu correo — solo un nombre corto (ej. "juan")</div>
-        <input id="gh-usuario-input" type="text" placeholder="Usuario (no es tu correo)" autocomplete="username"
-          style="width:100%; padding:12px 14px; border:1.5px solid #D0D8E8; border-radius:9px; font-size:15px; margin-bottom:10px; box-sizing:border-box;">
-        <input id="gh-clave-input" type="password" placeholder="Contraseña" autocomplete="current-password"
-          style="width:100%; padding:12px 14px; border:1.5px solid #D0D8E8; border-radius:9px; font-size:15px; margin-bottom:4px; box-sizing:border-box;">
+        <!-- Formulario de verdad (con name, autocomplete y botón submit): así el
+             iPhone, Chrome y los gestores de contraseñas ofrecen guardar y
+             rellenar el usuario y la contraseña. -->
+        <form id="gh-login-form" method="post" action="#" autocomplete="on" novalidate style="margin:0;">
+        <input id="gh-usuario-input" name="username" type="text" placeholder="Usuario (no es tu correo)" autocomplete="username"
+          autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text"
+          style="width:100%; padding:12px 14px; border:1.5px solid #D0D8E8; border-radius:9px; font-size:16px; margin-bottom:10px; box-sizing:border-box;">
+        <input id="gh-clave-input" name="password" type="password" placeholder="Contraseña" autocomplete="current-password"
+          style="width:100%; padding:12px 14px; border:1.5px solid #D0D8E8; border-radius:9px; font-size:16px; margin-bottom:4px; box-sizing:border-box;">
         <div id="gh-clave-pista" style="display:none; font-size:11px; color:#8A93A6; margin-bottom:10px; text-align:left;">Debe tener al menos 6 caracteres, con letras y números.</div>
         <div id="gh-login-error" style="color:#C8511A; font-size:12.5px; min-height:16px; margin-bottom:10px;">${mensajeError || ''}</div>
-        <button id="gh-login-btn" style="width:100%; padding:12px; background:#0E1830; color:#fff; border:none; border-radius:9px; font-weight:600; font-size:14px; cursor:pointer; margin-bottom:10px;">Entrar</button>
-        <button id="gh-modo-btn" style="width:100%; padding:10px; background:none; color:#5A6A88; border:none; font-size:12.5px; cursor:pointer; text-decoration:underline;">¿No tienes cuenta? Crear cuenta</button>
+        <button id="gh-login-btn" type="submit" style="width:100%; padding:12px; background:#0E1830; color:#fff; border:none; border-radius:9px; font-weight:600; font-size:14px; cursor:pointer; margin-bottom:10px;">Entrar</button>
+        </form>
+        <button id="gh-modo-btn" type="button" style="width:100%; padding:10px; background:none; color:#5A6A88; border:none; font-size:12.5px; cursor:pointer; text-decoration:underline;">¿No tienes cuenta? Crear cuenta</button>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -154,6 +160,8 @@
     modoBtn.addEventListener('click', () => {
       modoRegistro = !modoRegistro;
       const pista = document.getElementById('gh-clave-pista');
+      // Al crear cuenta el teléfono puede sugerir una contraseña nueva; al entrar, rellena la guardada
+      claveInput.setAttribute('autocomplete', modoRegistro ? 'new-password' : 'current-password');
       if (modoRegistro) {
         subtitulo.textContent = 'Crea tu cuenta';
         btn.textContent = 'Crear cuenta';
@@ -233,8 +241,14 @@
       }
     }
 
-    btn.addEventListener('click', intentar);
-    claveInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') intentar(); });
+    const formLogin = document.getElementById('gh-login-form');
+    let enviando = false;
+    formLogin.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (enviando) return;
+      enviando = true;
+      try { await intentar(); } finally { enviando = false; }
+    });
   }
 
   async function iniciarSesion() {
