@@ -6,7 +6,7 @@
   <title>GH Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Carlito:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 
   <!-- PWA: instalación en iPhone (Compartir → Agregar a pantalla de inicio) -->
   <link rel="manifest" href="manifest.json">
@@ -3386,7 +3386,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v112 · 7 oct';
+  const APP_VERSION = 'v113 · 7 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -6594,24 +6594,32 @@
   // Su nombre y si está oculta se guardan en la misma lista, como una
   // entrada más con codigo 'principal'. (Sus datos nunca se borran.)
   let ajPrincipal = { codigo: 'principal', nombre: 'Principal (información original)', oculta: false };
+  // Se arma la lista nueva aparte y se cambia de una sola vez al final: antes
+  // se vaciaba y se llenaba con pausas en medio, y si dos partes de la app la
+  // cargaban al mismo tiempo (Ajustes y el selector de Principal) las bases
+  // salían repetidas un momento.
   async function ajCargarCuentas() {
-    ajCuentas = [];
+    const nuevas = [];
     let guardadas = null;
     try { const r = await window.storage.get('__cuentas_lista'); guardadas = JSON.parse(r.value); } catch (e) {}
     if (!Array.isArray(guardadas)) { try { guardadas = JSON.parse(localStorage.getItem('gh-cuentas-cache') || 'null'); } catch (e) {} }
     else { try { localStorage.setItem('gh-cuentas-cache', JSON.stringify(guardadas)); } catch (e) {} }
     const pr = Array.isArray(guardadas) ? guardadas.find((c) => c && c.codigo === 'principal') : null;
     ajPrincipal = { codigo: 'principal', nombre: (pr && pr.nombre) || 'Principal (información original)', oculta: !!(pr && pr.oculta) };
-    if (!ajPrincipal.oculta) ajCuentas.push({ codigo: 'principal', nombre: ajPrincipal.nombre });
-    if (Array.isArray(guardadas)) guardadas.forEach((c) => { if (c && c.codigo && c.codigo !== 'principal') ajCuentas.push({ codigo: c.codigo, nombre: c.nombre || c.codigo }); });
+    if (!ajPrincipal.oculta) nuevas.push({ codigo: 'principal', nombre: ajPrincipal.nombre });
+    if (Array.isArray(guardadas)) guardadas.forEach((c) => {
+      if (c && c.codigo && c.codigo !== 'principal' && !nuevas.some((x) => x.codigo === c.codigo)) nuevas.push({ codigo: c.codigo, nombre: c.nombre || c.codigo });
+    });
+    ajCuentas = nuevas;
     return ajCuentas;
   }
   async function ajGuardarCuentas() {
     const enLista = ajCuentas.find((c) => c.codigo === 'principal');
     if (enLista) ajPrincipal.nombre = enLista.nombre;
     ajPrincipal.oculta = !enLista;
+    const vistos = new Set(['principal']);
     const guardar = [{ codigo: 'principal', nombre: ajPrincipal.nombre, oculta: ajPrincipal.oculta },
-      ...ajCuentas.filter((c) => c.codigo !== 'principal')];
+      ...ajCuentas.filter((c) => c.codigo !== 'principal' && !vistos.has(c.codigo) && vistos.add(c.codigo))];
     await window.storage.set('__cuentas_lista', JSON.stringify(guardar));
     try { localStorage.setItem('gh-cuentas-cache', JSON.stringify(guardar)); } catch (e) {}
   }
@@ -6667,8 +6675,19 @@
     cont.querySelectorAll('.aj-bd-del').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const cod = btn.dataset.codigo;
-        if (cod === actual) { toast('Estás usando esta base de datos. Cámbiate a otra primero (arriba, "Cambiar") y luego quítala.', 'error', 5000); return; }
         if (ajCuentas.length <= 1) { toast('Tiene que quedar al menos una base de datos', 'error'); return; }
+        if (cod === actual) {
+          // Es la que estás usando: se quita de la lista y te cambias a otra en el mismo paso
+          const otra = ajCuentas.find((c) => c.codigo !== cod);
+          if (typeof window.GH_SET_CUENTA !== 'function') { toast('Solo funciona con sesión en la nube', 'info'); return; }
+          if (!await gcConfirm(`Estás usando "${ajNombreDe(cod)}". ¿Quitarla de la lista y cambiarte a "${otra.nombre}"?\n\nSu información no se borra; la puedes volver a poner en la lista cuando quieras.`, { okText: 'Quitar y cambiar', danger: true })) return;
+          ajCuentas = ajCuentas.filter((c) => c.codigo !== cod);
+          try { await ajGuardarCuentas(); await window.GH_SET_CUENTA(otra.codigo); }
+          catch (e) { toast('No se pudo quitar: ' + ((e && e.message) || e), 'error', 5000); await ajCargarCuentas(); ajRenderBD(); return; }
+          toast('Quitada. Cambiando a ' + otra.nombre + '…', 'success');
+          setTimeout(() => location.reload(), 700);
+          return;
+        }
         if (!await gcConfirm(`¿Quitar la base de datos "${ajNombreDe(cod)}" de la lista? La información no se borra, pero dejará de aparecer para elegir o asignar.`, { okText: 'Quitar', danger: true })) return;
         ajCuentas = ajCuentas.filter((c) => c.codigo !== cod);
         await ajGuardarCuentas();
@@ -9405,6 +9424,21 @@
     .ps-marco { position: absolute; border: 1.2pt solid #111; pointer-events: none; }
   `;
 
+  // Mide cuánto ocupa un texto con la letra de la hoja (pulgadas)
+  let psCtx = null;
+  function psMedir(texto, negrita) {
+    try {
+      psCtx = psCtx || document.createElement('canvas').getContext('2d');
+      psCtx.font = `${negrita ? '700 ' : ''}8.9pt Carlito, Calibri, Arial, sans-serif`;
+      return psCtx.measureText(String(texto)).width / 96;
+    } catch (e) { return String(texto).length * 0.055; }
+  }
+  // Cuando termina de cargar la letra de la hoja, se vuelve a dibujar (para medir bien)
+  try {
+    if (document.fonts && document.fonts.load) Promise.all([document.fonts.load('8.9pt Carlito'), document.fonts.load('700 8.9pt Carlito')]).then(() => {
+      if ($('ps-hoja') && $('ps-hoja').innerHTML && typeof psLlenar === 'function' && psModo === 'llenar') { psGuardarBorrador(); psLlenar(psLeerGuardado()); }
+    }).catch(() => {});
+  } catch (e) {}
   function psBuildPrint(d, editable) {
     d = d || {};
     const modoEditar = editable === 'editar';
@@ -9413,26 +9447,43 @@
     return PS_PAGINAS.map((pg, n) => {
       const x = pg.x, nc = x.length - 1;
       const anchos = x.slice(1).map((v, i) => (v - x[i]).toFixed(3));
+      const anchosN = anchos.map(Number);
       const cols = anchos.map((w) => `<col style="width:${w}in">`).join('');
       // Una fila de la tabla: arreglo de {c: columna, t: texto, cls, span}
       const fila = (celdas) => {
         let out = '<tr>', c = 0;
         const porCol = {}; celdas.forEach((x2) => { if (!x2.soloR) porCol[x2.c] = x2; });
         const rPorCol = {}; celdas.forEach((x2) => { if (x2.soloR) rPorCol[x2.c] = x2.r; });
+        // Como en el papel: si el texto no cabe en su casilla, sigue sobre las
+        // casillas vacías de al lado y la raya desaparece solo en ese tramo.
+        // Si choca con una casilla ocupada, la letra se hace un poco más chica.
+        const ocupada = new Set();
+        celdas.forEach((x2) => { if (x2.soloR) return; const tiene = (x2.t != null && x2.t !== '') || x2.e || (x2.k && (editable === true || (x2.raw != null && x2.raw !== ''))); if (tiene) for (let j = x2.c; j < x2.c + (x2.span || 1); j++) ocupada.add(j); });
+        const sinRaya = new Set(), achicar = {};
+        celdas.forEach((x2) => {
+          if (x2.soloR || x2.k || x2.e || !x2.t || /\bv\b/.test(x2.cls || '')) return;
+          const span = x2.span || 1;
+          const necesita = psMedir(x2.t, /\bb\b/.test(x2.cls || '')) + 0.03;
+          let hay = 0; for (let j = x2.c; j < x2.c + span; j++) hay += anchosN[j] || 0;
+          let j = x2.c + span;
+          while (necesita > hay && j < nc && !ocupada.has(j)) { sinRaya.add(j - 1); hay += anchosN[j]; j++; }
+          if (necesita > hay) achicar[x2.c] = Math.max(0.72, hay / necesita);
+        });
+        const raya = (col) => (sinRaya.has(col) ? ' style="border-right-style:hidden"' : '');
         while (c < nc) {
           const cel = porCol[c];
           if (cel) {
             const span = cel.span || 1;
-            let txt = cel.t ? `<span>${escapeHtml(cel.t)}</span>` : '';
+            let txt = cel.t ? `<span${achicar[c] ? ` style="font-size:${(8.9 * achicar[c]).toFixed(2)}pt"` : ''}>${escapeHtml(cel.t)}</span>` : '';
             if (modoEditar && cel.e) {
               txt = `<input type="text" class="ps-e" data-e="${cel.e}" value="${escapeHtml(cel.raw || '')}" autocomplete="off" autocapitalize="characters" spellcheck="false">`;
             } else if (editable === true && cel.k) {
               const val = cel.k === 'h:fecha' ? (d.fecha || '') : (cel.raw || '');
               txt = `<input type="${cel.k === 'h:fecha' ? 'date' : 'text'}" ${cel.k.startsWith('h:') ? `data-h="${cel.k.slice(2)}"` : `data-ps="${cel.k}" inputmode="decimal"`} value="${escapeHtml(val)}" autocomplete="off">`;
             }
-            out += `<td class="ov ${cel.cls || ''}"${span > 1 ? ` colspan="${span}"` : ''}${cel.r ? ` data-r="${cel.r}"` : ''}>${txt}</td>`;
+            out += `<td class="ov ${cel.cls || ''}"${span > 1 ? ` colspan="${span}"` : ''}${cel.r ? ` data-r="${cel.r}"` : ''}${raya(c + span - 1)}>${txt}</td>`;
             c += span;
-          } else { out += `<td${rPorCol[c] ? ` data-r="${rPorCol[c]}"` : ''}></td>`; c++; }
+          } else { out += `<td${rPorCol[c] ? ` data-r="${rPorCol[c]}"` : ''}${raya(c)}></td>`; c++; }
         }
         return out + '</tr>';
       };
