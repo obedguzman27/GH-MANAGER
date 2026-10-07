@@ -1747,6 +1747,13 @@
     #nom-sub-cheques .gc-btn-row .gc-save-btn { flex: 1 1 100%; order: -1; }
     #nom-sub-cheques .gc-btn-row .gc-action-btn { flex: 1 1 auto; }
   }
+
+  /* Pull Sheet: configuraciones de material */
+  .ps-cfg { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+  .ps-cfg select, .ps-cfg input { flex: 1 1 200px; min-width: 0; font-family: var(--font-ui); font-size: 14px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); }
+  .ps-cfg .gc-save-btn, .ps-cfg .gc-action-btn { padding: 9px 14px; font-size: 13px; }
+  @media (max-width: 720px) { .ps-cfg select, .ps-cfg input { font-size: 16px; flex-basis: 100%; } }
+  #ps-hoja input:focus { outline: 2px solid var(--accent); outline-offset: -2px; background: #FFF7E6 !important; }
   /* Selector de tema (Ajustes → Apariencia) */
   .gh-tema-seg { display: flex; background: var(--surface-3); border-radius: 12px; padding: 3px; gap: 3px; max-width: 420px; }
   .gh-tema-seg button { flex: 1; border: 0; background: transparent; color: var(--muted); font-family: var(--font-ui); font-weight: 700; font-size: 13px; padding: 10px 8px; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
@@ -2830,6 +2837,18 @@
           <button type="button" class="gc-action-btn" id="ps-zoom-ajustar">Ajustar</button>
           <button type="button" class="gc-action-btn" id="ps-btn-editar" style="margin-left:auto;">✎ Editar hoja</button>
         </div>
+        <div class="ps-cfg" id="ps-cfg">
+          <select id="ps-cfg-sel" aria-label="Configuración de material"><option value="">Configuración de material…</option></select>
+          <button type="button" class="gc-save-btn" id="ps-cfg-aplicar">Aplicar</button>
+          <button type="button" class="gc-action-btn" id="ps-cfg-nueva-btn">＋ Guardar como…</button>
+          <button type="button" class="gc-action-btn" id="ps-cfg-limpiar">Limpiar cantidades</button>
+          <button type="button" class="gc-del" id="ps-cfg-borrar" title="Borrar esta configuración">✕</button>
+        </div>
+        <div class="ps-cfg" id="ps-cfg-nueva" style="display:none;">
+          <input type="text" id="ps-cfg-nombre" placeholder="Nombre (ej. Casa de gas)" autocomplete="off" maxlength="40">
+          <button type="button" class="gc-save-btn" id="ps-cfg-nueva-ok">Guardar</button>
+          <button type="button" class="gc-action-btn" id="ps-cfg-nueva-no">Cancelar</button>
+        </div>
         <div id="ps-editbar" style="display:none;">
           <p id="ps-sel-info">Toca un renglón de la hoja para moverlo o cambiarlo</p>
           <div class="ps-editbtns">
@@ -3367,7 +3386,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v111 · 3 oct';
+  const APP_VERSION = 'v112 · 7 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -9030,55 +9049,18 @@
   const PS_KEY = 'gh-cs-pull';
   const _S = (t) => ({ s: t }), _B = null;
   const _I = (p, d) => ({ p, d });
+  // Papel actualizado (oct 2026): la página de PIPE va primero y la de GAS PIPE después.
   const PS_PAGINAS = [
     {
       // Columnas medidas sobre el escaneo (pulgadas, desde el borde de la hoja)
-      x: [0.215, 1.215, 1.43, 2.335, 2.555, 2.94, 3.155, 3.665, 3.945, 4.71, 4.925, 5.75, 5.965, 6.525, 6.74, 7.25],
-      top: 0.30, tituloX: 3.775, subX: 4.025, titulo: 'AHC TRIM OUT PULL SHEET',
-      // índices de columna: [part, desc, order, ship] de cada lado
-      izq: [0, 2, 4, 6], der: [8, 10, 12, 14],
-      L: [
-        _S('GAS PIPE'),
-        _I('BP11421', '1 1/4" gas pipe'), _I('BP121', '1" gas pipe'), _I('BP3421', '3/4" gas pipe'), _I('BP1221', '1/2" gas pipe'),
-        _I('BP11490', '1 1/4" 90 degree'), _I('BP114C', '1 1/4" cap'), _I('BP114CP', '1 1/4" coupling'), _I('BP114T', '1 1/4" tee'),
-        _I('BP114X6N', '1 1/4"x6" nipple'), _I('BP114X1BR', '1 1/4"x1" bell reducer'), _I('BP190', '1" 90 degree'), _I('BP1C', '1" cap'),
-        _I('BP1CP', '1" coupling'), _I('BP1T', '1" tee'), _I('BP1X2N', '1"x2" nipple'), _I('BP1X6N', '1"x6" nipple'),
-        _I('BP1X34BR', '1"x3/4" bell reducer'), _I('BP3490', '3/4" 90 degree'), _I('BP34C', '3/4" cap'), _I('BP34CP', '3/4" coupling'),
-        _I('BP34T', '3/4" tee'), _I('BP34UN', '3/4" union'), _I('BP34GV', '3/4" gas valve'), _I('BP34X2N', '3/4"x2" nipple'),
-        _I('BP34X6N', '3/4"x6" nipple'), _I('BP34X12BR', '3/4"x1/2" bell reducer'), _I('BP1290', '1/2" 90 degree'), _I('BP12C', '1/2" cap'),
-        _I('BP12CP', '1/2" coupling'), _I('BP12T', '1/2" tee'), _I('BP12GV', '1/2" gas valve'), _I('BP12UN', '1/2" union'),
-        _I('BP12X2N', '1/2"x2" nipple'), _I('BP12X3N', '1/2"x3" nipple'), _I('BP12X4N', '1/2"x4" nipple'), _I('BP12X5N', '1/2"x5" nipple'),
-        _I('BP12X6N', '1/2"x6" nipple'), _I('TEST GUAGE', 'test gauge'), _I('BP3812MPT', '3/8"x1/2" mpt fitt'), _I('BP38FN', '3/8" flare nut'),
-        _I('BPCHRKEYWALLST', 'chrome wall key'), _I('BPCHRKEYFLOOAGL', 'chrome floor key'), _I('FLEXGASHOSE', '1/2" flex gas hose'),
-        _I('BP12TP', '1/2" trac pipe'), _I('BP12TPF', '1/2" trac pipe fitting')
-      ],
-      R: [
-        _S('MISC'),
-        _I('FLEXTAPE', 'flex tape'), _I('M SEAL FLOSS', 'sealfloss'), _I('6AL', '6" alum flex'), _I('M CAULK L', 'latex caulk'),
-        _I('M CAULK S', 'silicone caulk'), _I('6JENNAIR', '6" jenn-air cap'), _I('DVC4', 'white dryer vent cap'), _I('4EVECAP', 'white eve cap'),
-        _I('DVC4B', 'brown dryer vent cap'), _I('4BROWNEVECAP', 'brown eve cap'), _I('FLSW', 'float switch'), _I('LOCKINGPORTCAP', 'locking service port caps'),
-        _B,
-        _S('SHEET METAL'),
-        _I('SM PB U14', '#14 plenum box'), _I('SM PB U17', '#17 plenum box'), _I('SM PB U21', '#21 plenum box'), _I('SMDP18 30X72', 'large drain pan'),
-        _I('SMDP17', 'small drain pan'), _I('SM3696', 'sheet metal'), _I('SM UNIT FL 7', 'angle flashing'), _I('SM UNIT FL 4', 'unit flashing'),
-        _I('SR2 G', '14" sq to rnd- set'), _I('SR2.5-3.5 G', '16" sq to rnd- set'), _I('SR4 G', '18" sq to rnd- set'), _I('SR5 G', '20" sq to rnd- set'),
-        _B,
-        _S('DOUBLE WALL'),
-        _I('4RD F', '4RD flashing'), _I('4RD SC', '4RD storm collar'), _I('4RD C', '4RD cap'), _I('4RD 60', '4RD 60"'), _I('4RD 36', '4RD 36"'),
-        _I('4RD 24', '4RD 24"'), _I('4RD 18', '4RD 18"'), _I('4RD 12', '4RD 12"'), _I('4RD 90', '4RD 90 degree'), _I('4RD AJ12', '4RD 12" adjust'),
-        _B,
-        _S('MISC'),
-        _I('6EVECAP', 'white eve cap'), _I('6BROWNEVE', 'brown eve cap'), _I('', 'Trim Rings')
-      ]
-    },
-    {
       x: [0.165, 1.29, 1.505, 2.355, 2.57, 2.96, 3.175, 3.685, 4.205, 5.2, 5.415, 6.525, 6.74, 7.135, 7.35, 7.86, 8.085],
       top: 0.29, tituloX: 4.15, subX: 4.425, titulo: 'AHC TRIM OUT PULL SHEET',
+      // índices de columna: [part, desc, order, ship] de cada lado
       izq: [0, 2, 4, 6], der: [8, 10, 12, 14],
       L: [
         _S('PIPE'),
         _I('RMP20', '20" round pipe'), _I('RMP18', '18" round pipe'), _I('RMP16', '16" round pipe'), _I('RMP14', '14" round pipe'),
-        _I('RMP12', '12" round pipe'), _I('RMP10', '10" round pipe'), _I('RMP6', '6" round pipe'), _I('RMP4', '4" round pipe'),
+        _I('RMP12', '12" round pipe'), _I('RMP10', '10" round pipe'), _I('RMP6', '6" round pipe'), _I('RMP428GA', '4" round pipe'),
         _B,
         _S('90 DEGREE'),
         _I('90MP6', '6" 90'), _I('90MP4', '4" 90'),
@@ -9094,7 +9076,7 @@
         _I('C3490', '3/4" copper 90'),
         _B,
         _S('THERMOSTATS'),
-        _I('TH4110U2005AMER', 'T4 prog gas stat'), _I('TH4210U2002AMER', 'T4 prog H/P stat'),
+        _I('TH2110U4004', 'HW PROS200 gas stat'), _I('TH2210U4005', 'HW PROS200 H/P stat'), _I('ECOBEE6 (NVR)', 'Ecobee 6 stat'), _I('ECOBEE3LITE', 'Ecobee 3 lite stat'),
         _B,
         _S('FLEX'),
         _I('FD20R8', '20" R8 Flex'), _I('FD18R8', '18" R8 Flex'), _I('FD16R8', '16" R8 Flex'), _I('FD14R8', '14" R8 Flex'), _I('FD12R8', '12" R8 Flex'),
@@ -9114,21 +9096,63 @@
         _I('F24361', '24x36 1" filter'),
         _B,
         _S('FLOOR REGISTERS'),
-        _I('FR4X10302', '4x10'), _I('FR4X12302', '4x12'), _I('FR4X14302', '4x14'),
+        _I('FR4X10302', '4x10 Floor grill'), _I('FR4X12302', '4x12 Floor grill'), _I('FR4X14302', '4x14 Floor grill'),
         _B,
         _S('CEILING REGISTERS'),
         _I('4X10 140', '4x10 three way'), _I('4X12 140', '4x12 three way'), _I('4X14 140', '4x14 three way'),
         _B,
+        _S('ONE WAY CEILING(NVR)'),
+        _I('4X10 ONEWAY', '4x10 One way grill'), _I('4X12 ONEWAY', '4x12 One way grill'), _I('4X14 ONEWAY', '4x14 One way grill'),
+        _B,
         _S('BARRIER POSTS'),
-        _I('WHP', 'water heater post'), _I('WHP4', 'water heater post'), _I('TITANHDANCHOR', 'drive anchor'),
+        _I('WHP4', 'water heater post'), _I('TITANHDANCHOR', 'drive anchor'),
         _B,
         _S('PVC'),
         _I('PVC34PIPE', '3/4" pvc pipe'), _I('PVC3490', '3/4" pvc 90'), _I('PVC34MA', '3/4" pvc male adapt'), _I('PVC34C', '3/4" pvc coupling'),
         _I('PVC34PT', '3/4" pvc p-trap')
       ]
+    },
+    {
+      x: [0.215, 1.215, 1.43, 2.335, 2.555, 2.94, 3.155, 3.665, 3.945, 4.71, 4.925, 5.75, 5.965, 6.525, 6.74, 7.25],
+      top: 0.30, tituloX: 3.775, subX: 4.025, titulo: 'AHC TRIM OUT PULL SHEET',
+      izq: [0, 2, 4, 6], der: [8, 10, 12, 14],
+      L: [
+        _S('GAS PIPE'),
+        _I('BP11421', '1 1/4" gas pipe'), _I('BP121', '1" gas pipe'), _I('BP3421', '3/4" gas pipe'), _I('BP1221', '1/2" gas pipe'),
+        _I('BP11490', '1 1/4" 90 degree'), _I('BP114C', '1 1/4" cap'), _I('BP114CP', '1 1/4" coupling'), _I('BP114T', '1 1/4" tee'),
+        _I('BP114X6N', '1 1/4"x6" nipple'), _I('BP114X1BR', '1 1/4"x1" bell reducer'), _I('BP190', '1" 90 degree'), _I('BP1C', '1" cap'),
+        _I('BP1CP', '1" coupling'), _I('BP1T', '1" tee'), _I('BP1X2N', '1"x2" nipple'), _I('BP1X6N', '1"x6" nipple'),
+        _I('BP1X34BR', '1"x3/4" bell reducer'), _I('BP3490', '3/4" 90 degree'), _I('BP34C', '3/4" cap'), _I('BP34CP', '3/4" coupling'),
+        _I('BP34T', '3/4" tee'), _I('BP34UN', '3/4" union'), _I('BP34GV', '3/4" gas valve'), _I('BP34X2N', '3/4"x2" nipple'),
+        _I('BP34X6N', '3/4"x6" nipple'), _I('BP34X12BR', '3/4"x1/2" bell reducer'), _I('BP1290', '1/2" 90 degree'), _I('BP12C', '1/2" cap'),
+        _I('BP12CP', '1/2" coupling'), _I('BP12T', '1/2" tee'), _I('BP12GV', '1/2" gas valve'), _I('BP12UN', '1/2" union'),
+        _I('BP12X2N', '1/2"x2" nipple'), _I('BP12X3N', '1/2"x3" nipple'), _I('BP12X4N', '1/2"x4" nipple'), _I('BP12X5N', '1/2"x5" nipple'),
+        _I('BP12X6N', '1/2"x6" nipple'), _I('TEST GUAGE', 'test gauge'), _I('BP3812MPT', '3/8"x1/2" mpt fitt'), _I('BP38FN', '3/8" flare nut'),
+        _I('BPCHRKEYWALLST', 'chrome wall key'), _I('BPCHRKEYFLOOAGL', 'chrome floor key'), _I('FLEXGASHOSE', '1/2" flex gas hose'),
+        _I('BP12TP', '1/2" trac pipe'), _I('BP12TPF', '1/2" trac pipe fitting')
+      ],
+      R: [
+        _S('MISC'),
+        _I('FLEXTAPE', 'flex tape'), _I('M SEAL FLOSS', 'sealfloss'), _I('6AL', '6" alum flex'), _I('8AL', '8" alum flex'),
+        _I('M CAULK L', 'latex caulk'), _I('M CAULK S', 'silicone caulk'), _I('6JENNAIR', '6" jenn-air cap'), _I('8JENAIR', '8" Jenn air cap'),
+        _I('DVC4', 'white dryer vent cap'), _I('4EVECAP', 'white eve cap'), _I('DVC4B', 'brown dryer vent cap'), _I('4BROWNEVECAP', 'brown eve cap'),
+        _I('CS3', 'Drain pan float switch'), _I('LOCKINGPORTCAP', 'locking service port caps'), _I('M 8X2 SCREWS', '8X2 White screws'),
+        _I('6EVECAP', 'white eve cap'), _I('6BROWNEVE', 'brown eve cap'), _I('DRYERBOXRING', 'Dryer Trim Ring'), _I('PAD3636', '36X36 AC PAD'),
+        _I('6302K', 'AprilAire Zoneboard'), _I('6X14 170', '6X14 Tranfer Grill'), _I('M DRIVEPINS', '1 1/4 Drive pins'), _I('ANCHOR KIT', 'Plastic anchor kit'),
+        _I('COPU', 'Condensate Pump'), _I('WN72B', 'Blue wire nuts'), _I('WN73B', 'Orange wire nuts'),
+        _B,
+        _S('SHEET METAL'),
+        _I('SM PB U14', '#14 plenum box'), _I('SM PB U17', '#17 plenum box'), _I('SM PB U21', '#21 plenum box'), _I('SMDP18 30X72', 'large drain pan'),
+        _I('SMDP17', 'small drain pan'), _I('SM3696', 'sheet metal'), _I('SM UNIT FL 7', 'angle flashing'), _I('SM UNIT FL 4', 'unit flashing'),
+        _I('SR2 G', '14" sq to rnd- set'), _I('SR2.5-3.5 G', '16" sq to rnd- set'), _I('SR4 G', '18" sq to rnd- set'), _I('SR5 G', '20" sq to rnd- set'),
+        _B,
+        _S('DOUBLE WALL'),
+        _I('4RD F', '4RD flashing'), _I('4RD SC', '4RD storm collar'), _I('4RD C', '4RD cap'), _I('4RD 60', '4RD 60"'), _I('4RD 36', '4RD 36"'),
+        _I('4RD 24', '4RD 24"'), _I('4RD 18', '4RD 18"'), _I('4RD 12', '4RD 12"'), _I('4RD 90', '4RD 90 degree'), _I('4RD AJ12', '4RD 12" adjust')
+      ]
     }
   ];
-  const PS_FILAS = 53;            // renglones de partes por lado (igual que el papel)
+  const PS_FILAS = 56;            // renglones de partes por lado (igual que el papel nuevo)
   const PS_ALTO = 0.15625;        // alto de cada renglón en pulgadas
   const psClave = (pg, lado, i) => `${pg}${lado}${i}`;
 
@@ -9138,23 +9162,63 @@
   const PS_LAYOUT_KEY = 'gh-ps-layout';
   const psCopiarCol = (col) => Array.from({ length: PS_FILAS }, (_, i) => (col[i] ? { ...col[i] } : null));
   const psLayoutOriginal = () => PS_PAGINAS.map((pg) => ({ L: psCopiarCol(pg.L), R: psCopiarCol(pg.R) }));
+  // v2 = papel de oct 2026. Los arreglos sin versión son del papel anterior:
+  // se cambian por el papel nuevo y las cantidades se pasan por código de parte.
+  const PS_LAYOUT_VER = 2;
+  const PS_V1_CODIGOS = [{"L":[null,"BP11421","BP121","BP3421","BP1221","BP11490","BP114C","BP114CP","BP114T","BP114X6N","BP114X1BR","BP190","BP1C","BP1CP","BP1T","BP1X2N","BP1X6N","BP1X34BR","BP3490","BP34C","BP34CP","BP34T","BP34UN","BP34GV","BP34X2N","BP34X6N","BP34X12BR","BP1290","BP12C","BP12CP","BP12T","BP12GV","BP12UN","BP12X2N","BP12X3N","BP12X4N","BP12X5N","BP12X6N","TEST GUAGE","BP3812MPT","BP38FN","BPCHRKEYWALLST","BPCHRKEYFLOOAGL","FLEXGASHOSE","BP12TP","BP12TPF"],"R":[null,"FLEXTAPE","M SEAL FLOSS","6AL","M CAULK L","M CAULK S","6JENNAIR","DVC4","4EVECAP","DVC4B","4BROWNEVECAP","FLSW","LOCKINGPORTCAP",null,null,"SM PB U14","SM PB U17","SM PB U21","SMDP18 30X72","SMDP17","SM3696","SM UNIT FL 7","SM UNIT FL 4","SR2 G","SR2.5-3.5 G","SR4 G","SR5 G",null,null,"4RD F","4RD SC","4RD C","4RD 60","4RD 36","4RD 24","4RD 18","4RD 12","4RD 90","4RD AJ12",null,null,"6EVECAP","6BROWNEVE",""]},{"L":[null,"RMP20","RMP18","RMP16","RMP14","RMP12","RMP10","RMP6","RMP4",null,null,"90MP6","90MP4",null,null,"E 34 SEAL","E 34 SEALC90","E 34 SEALCST","E 34 RS","E 12 SEAL","E 12 SEALC90","E 12 SEALCST","E 12 RS","E TOG","E COV","E 24 HB","WTHHN10B","WTHHN10G","WTHHN8B","WTHHN6B",null,null,"LS7838","C7890","A7834","LS3438","C3490",null,null,"TH4110U2005AMER","TH4210U2002AMER",null,null,"FD20R8","FD18R8","FD16R8","FD14R8","FD12R8","FD10R8","FD8R8","FD7R8","FD6R8","FD5R8"],"R":[null,"FG1212 170FF","FG1414 170FF","FG1616 170FF","FG1818 170FF","FG1420170FF","FG1425170FF","FG1430170FF","FG1630 170FF","FG2020170FF","FG2025170FF","FG2030170FF","FG3020170FF","FG2430170FF","FG2436170FF",null,null,"F12121","F1414 1","F16161","F1818 1","F14201","F14251","F14301","F1630 1","F20201","F20251","F20301","F24301","F24361",null,null,"FR4X10302","FR4X12302","FR4X14302",null,null,"4X10 140","4X12 140","4X14 140",null,null,"WHP","WHP4","TITANHDANCHOR",null,null,"PVC34PIPE","PVC3490","PVC34MA","PVC34C","PVC34PT"]}];
+  const PS_ALIAS = { 'RMP4': 'RMP428GA', 'FLSW': 'CS3' };
   function psNormalizar(lay) {
-    if (!Array.isArray(lay) || lay.length !== PS_PAGINAS.length) return psLayoutOriginal();
-    return lay.map((pg) => ({ L: psCopiarCol((pg && pg.L) || []), R: psCopiarCol((pg && pg.R) || []) }));
+    if (lay && !Array.isArray(lay) && lay.v === PS_LAYOUT_VER && Array.isArray(lay.p) && lay.p.length === PS_PAGINAS.length) {
+      return lay.p.map((pg) => ({ L: psCopiarCol((pg && pg.L) || []), R: psCopiarCol((pg && pg.R) || []) }));
+    }
+    return psLayoutOriginal();
+  }
+  const psLayoutJSON = () => JSON.stringify({ v: PS_LAYOUT_VER, p: psLayout });
+  // Pasa las cantidades de un borrador del papel viejo a los renglones del
+  // papel nuevo (mismo código de parte). Corre una sola vez por borrador.
+  function psMigrarBorrador() {
+    try {
+      const d = JSON.parse(localStorage.getItem(ghLK(PS_KEY)) || 'null');
+      if (!d || d.qv === PS_LAYOUT_VER) return;
+      const q = d.q || {};
+      if (Object.keys(q).length) {
+        let ref = PS_V1_CODIGOS;
+        try {
+          const crudo = JSON.parse(localStorage.getItem(ghLK(PS_LAYOUT_KEY)) || 'null');
+          if (Array.isArray(crudo) && crudo.length === 2) ref = crudo.map((pg) => ({ L: (pg.L || []).map((f) => (f && !f.s ? f.p : null)), R: (pg.R || []).map((f) => (f && !f.s ? f.p : null)) }));
+        } catch (e) {}
+        const norm = (c) => { const k = String(c || '').trim().toUpperCase(); return PS_ALIAS[k] || k; };
+        const pos = new Map();
+        psLayoutOriginal().forEach((pg, n) => ['L', 'R'].forEach((l) => pg[l].forEach((f, i) => {
+          if (!f || f.s || !f.p) return; const k = norm(f.p); if (!pos.has(k)) pos.set(k, []); pos.get(k).push(psClave(n, l, i));
+        })));
+        const usados = {}, nq = {};
+        ref.forEach((pg, n) => ['L', 'R'].forEach((l) => ((pg && pg[l]) || []).forEach((cod, i) => {
+          if (!cod) return; const k = norm(cod); const lst = pos.get(k); if (!lst) return;
+          const u = usados[k] || 0; const dest = lst[u]; if (!dest) return; usados[k] = u + 1;
+          ['o', 's'].forEach((c) => { const v = q[psClave(n, l, i) + c]; if (v) nq[dest + c] = v; });
+        })));
+        d.q = nq;
+      }
+      d.qv = PS_LAYOUT_VER;
+      localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d));
+    } catch (e) {}
   }
   let psLayout = (() => { try { return psNormalizar(JSON.parse(localStorage.getItem(ghLK(PS_LAYOUT_KEY)))); } catch (e) { return psLayoutOriginal(); } })();
   let psModo = 'llenar';     // 'llenar' (cantidades) o 'editar' (textos y orden)
   let psSel = null;          // renglón elegido en modo editar: {n, lado, i}
   let psGuardarLayoutT = null;
   function psGuardarLayout() {
-    try { localStorage.setItem(ghLK(PS_LAYOUT_KEY), JSON.stringify(psLayout)); } catch (e) {}
+    try { localStorage.setItem(ghLK(PS_LAYOUT_KEY), psLayoutJSON()); } catch (e) {}
     clearTimeout(psGuardarLayoutT);
-    psGuardarLayoutT = setTimeout(async () => { try { await window.storage.set(PS_LAYOUT_KEY, JSON.stringify(psLayout)); } catch (e) {} }, 600);
+    psGuardarLayoutT = setTimeout(async () => { try { await window.storage.set(PS_LAYOUT_KEY, psLayoutJSON()); } catch (e) {} }, 600);
   }
   async function psCargarLayoutNube() {
     // Ya con la sesión lista se sabe qué base es: vuelve a leer las hojas
     // con las claves de ESTA base (al abrir se leyeron antes de saberlo).
     if (typeof window.GH_ESPERAR_SESION === 'function') { try { await window.GH_ESPERAR_SESION(); } catch (e) {} }
+    psMigrarBorrador();
+    psCfgCargar();
     try {
       const local = (() => { try { return psNormalizar(JSON.parse(localStorage.getItem(ghLK(PS_LAYOUT_KEY)))); } catch (e) { return psLayoutOriginal(); } })();
       if (JSON.stringify(local) !== JSON.stringify(psLayout)) psLayout = local;
@@ -9167,7 +9231,7 @@
         const nube = psNormalizar(JSON.parse(r.value));
         if (JSON.stringify(nube) !== JSON.stringify(psLayout)) {
           psLayout = nube;
-          try { localStorage.setItem(ghLK(PS_LAYOUT_KEY), JSON.stringify(psLayout)); } catch (e) {}
+          try { localStorage.setItem(ghLK(PS_LAYOUT_KEY), psLayoutJSON()); } catch (e) {}
           if ($('ps-hoja') && psModo === 'llenar') psLlenar(psLeerGuardado());
         }
       }
@@ -9251,7 +9315,7 @@
     const q = {};
     document.querySelectorAll('#ps-hoja input[data-ps]').forEach((i) => { if (i.value.trim()) q[i.dataset.ps] = i.value.trim(); });
     const h = (k) => { const el = document.querySelector(`#ps-hoja input[data-h="${k}"]`); return el ? el.value.trim() : ''; };
-    return { fecha: h('fecha'), job: h('job'), builder: h('builder'), lote: h('lote'), puller: h('puller'), installer: h('installer'), q };
+    return { fecha: h('fecha'), job: h('job'), builder: h('builder'), lote: h('lote'), puller: h('puller'), installer: h('installer'), q, qv: PS_LAYOUT_VER };
   }
   function psGuardarBorrador() {
     if (psModo === 'editar') return;   // en modo editar no hay casillas de cantidades en pantalla
@@ -9428,14 +9492,174 @@
       <style>${PS_PRINT_CSS}</style></head><body>${psBuildPrint(psLeerGuardado())}</body></html>`;
   }
 
+  // ---- Configuraciones de material (ej. "Casa de gas") ----
+  // Guardan las cantidades de ORDER por código de parte, así siguen sirviendo
+  // aunque muevas renglones o cambie el papel. Viven en la base de datos.
+  const PS_CFG_KEY = 'gh-ps-config';
+  let psCfgs = [];
+  const psCodigo = (c) => String(c || '').trim().toUpperCase();
+  async function psCfgCargar() {
+    let lista = null;
+    try { const r = await window.storage.get(PS_CFG_KEY); lista = r && r.value ? JSON.parse(r.value) : null; } catch (e) { lista = null; }
+    if (!Array.isArray(lista)) {
+      // Solo la base principal empieza con un ejemplo (lo marcado en tu hoja de papel)
+      lista = ghEsBasePrincipal() ? [{ id: 'cfg-ejemplo', nombre: 'Casa de gas (ejemplo de tu hoja)', items: { 'TH2110U4004': { o: '2' }, '4X10 140': { o: '3' }, '4X12 140': { o: '4' }, '4X14 140': { o: '4' }, 'DRYERBOXRING': { o: '1' } } }] : [];
+    }
+    psCfgs = lista;
+    psCfgPintar();
+  }
+  async function psCfgGuardar() { try { await window.storage.set(PS_CFG_KEY, JSON.stringify(psCfgs)); } catch (e) { toast('No se pudo guardar la configuración', 'error'); } }
+  function psCfgPintar() {
+    const sel = $('ps-cfg-sel'); if (!sel) return;
+    const v = sel.value;
+    sel.innerHTML = '<option value="">Configuración de material…</option>' + psCfgs.map((c) => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.nombre)} (${Object.keys(c.items || {}).length})</option>`).join('');
+    if (psCfgs.some((c) => c.id === v)) sel.value = v;
+  }
+  // Posiciones (claves de casilla) de cada código en la hoja actual
+  function psPosiciones() {
+    const m = new Map();
+    psLayout.forEach((pg, n) => ['L', 'R'].forEach((l) => pg[l].forEach((f, i) => {
+      if (!f || f.s || !f.p) return; const k = psCodigo(f.p); if (!m.has(k)) m.set(k, []); m.get(k).push(psClave(n, l, i));
+    })));
+    return m;
+  }
+  function psCfgDesdeHoja() {
+    if (psModo === 'editar') psCambiarModo('llenar');
+    psGuardarBorrador();
+    const q = (psLeerGuardado().q) || {};
+    const items = {};
+    psLayout.forEach((pg, n) => ['L', 'R'].forEach((l) => pg[l].forEach((f, i) => {
+      if (!f || f.s || !f.p) return;
+      const o = q[psClave(n, l, i) + 'o']; if (o) items[psCodigo(f.p)] = { o };
+    })));
+    return items;
+  }
+  async function psCfgAplicar(cfg) {
+    if (psModo === 'editar') psCambiarModo('llenar');
+    psGuardarBorrador();
+    const d = psLeerGuardado(); const q = d.q || {};
+    const hay = Object.keys(q).some((k) => k.endsWith('o') && q[k]);
+    if (hay && !await gcConfirm(`¿Aplicar "${cfg.nombre}"? Se reemplazan las cantidades de ORDER que ya tiene la hoja (SHIP y el encabezado no se tocan).`, { okText: 'Aplicar' })) return;
+    Object.keys(q).forEach((k) => { if (k.endsWith('o')) delete q[k]; });
+    const pos = psPosiciones(); let puestos = 0; const faltan = [];
+    Object.entries(cfg.items || {}).forEach(([cod, v]) => {
+      const lst = pos.get(psCodigo(cod));
+      if (!lst || !lst.length || !v || !v.o) { if (v && v.o) faltan.push(cod); return; }
+      q[lst[0] + 'o'] = v.o; puestos++;
+    });
+    d.q = q; d.qv = PS_LAYOUT_VER;
+    try { localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d)); } catch (e) {}
+    psLlenar(psLeerGuardado());
+    toast(`"${cfg.nombre}" aplicada: ${puestos} parte(s)` + (faltan.length ? ` · no están en la hoja: ${faltan.slice(0, 4).join(', ')}` : ''), faltan.length ? 'info' : 'success', 4000);
+  }
+  function psCfgIniciar() {
+    if (!$('ps-cfg')) return;
+    $('ps-cfg-aplicar').addEventListener('click', () => {
+      const c = psCfgs.find((x) => x.id === $('ps-cfg-sel').value);
+      if (!c) { toast('Elige una configuración', 'info'); $('ps-cfg-sel').focus(); return; }
+      psCfgAplicar(c);
+    });
+    const abrir = (si) => { $('ps-cfg-nueva').style.display = si ? '' : 'none'; if (si) { const c = psCfgs.find((x) => x.id === $('ps-cfg-sel').value); $('ps-cfg-nombre').value = c ? c.nombre : ''; $('ps-cfg-nombre').focus(); } };
+    $('ps-cfg-nueva-btn').addEventListener('click', () => abrir($('ps-cfg-nueva').style.display === 'none'));
+    $('ps-cfg-nueva-no').addEventListener('click', () => abrir(false));
+    const guardar = async () => {
+      const nombre = $('ps-cfg-nombre').value.replace(/\s+/g, ' ').trim();
+      if (!nombre) { toast('Ponle nombre (ej. Casa de gas)', 'error'); $('ps-cfg-nombre').focus(); return; }
+      const items = psCfgDesdeHoja();
+      if (!Object.keys(items).length) { toast('Primero escribe cantidades en ORDER de la hoja', 'error'); return; }
+      const existe = psCfgs.find((x) => x.nombre.toLowerCase() === nombre.toLowerCase());
+      if (existe) {
+        if (!await gcConfirm(`Ya hay una configuración "${existe.nombre}". ¿Reemplazarla con lo que tiene la hoja ahora?`, { okText: 'Reemplazar' })) return;
+        existe.items = items;
+      } else psCfgs.push({ id: 'cfg-' + Date.now(), nombre, items });
+      await psCfgGuardar(); psCfgPintar();
+      $('ps-cfg-sel').value = (existe || psCfgs[psCfgs.length - 1]).id;
+      abrir(false);
+      toast(`Configuración "${nombre}" guardada (${Object.keys(items).length} partes) ✓`, 'success');
+    };
+    $('ps-cfg-nueva-ok').addEventListener('click', guardar);
+    $('ps-cfg-nombre').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); guardar(); } if (e.key === 'Escape') abrir(false); });
+    $('ps-cfg-borrar').addEventListener('click', async () => {
+      const c = psCfgs.find((x) => x.id === $('ps-cfg-sel').value);
+      if (!c) { toast('Elige la configuración que quieres borrar', 'info'); return; }
+      if (!await gcConfirm(`¿Borrar la configuración "${c.nombre}"? La hoja no cambia.`, { okText: 'Borrar', danger: true })) return;
+      psCfgs = psCfgs.filter((x) => x !== c); await psCfgGuardar(); psCfgPintar();
+    });
+    $('ps-cfg-limpiar').addEventListener('click', async () => {
+      if (!await gcConfirm('¿Borrar todas las cantidades (ORDER y SHIP) de la hoja? El encabezado se queda.', { okText: 'Limpiar' })) return;
+      if (psModo === 'editar') psCambiarModo('llenar');
+      psGuardarBorrador();
+      const d = psLeerGuardado(); d.q = {}; d.qv = PS_LAYOUT_VER;
+      try { localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d)); } catch (e) {}
+      psLlenar(psLeerGuardado());
+    });
+  }
+
+  // ---- Moverse con las flechas del teclado (y Enter = abajo) ----
+  // Se busca la casilla vecina por su posición en pantalla, así sirve igual
+  // en ORDER/SHIP, en el encabezado y en modo "Editar hoja".
+  function psVecino(actual, dir) {
+    const hoja = $('ps-hoja');
+    const r0 = actual.getBoundingClientRect();
+    const cx0 = r0.left + r0.width / 2, cy0 = r0.top + r0.height / 2;
+    let mejor = null, mejorD = Infinity;
+    hoja.querySelectorAll('input').forEach((el) => {
+      if (el === actual || el.disabled || el.type === 'hidden') return;
+      const r = el.getBoundingClientRect(); if (!r.width || !r.height) return;
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      let d;
+      if (dir === 'ArrowUp' || dir === 'ArrowDown') {
+        const solapa = r.left < r0.right - 1 && r.right > r0.left + 1;
+        if (!solapa) return;
+        const dy = dir === 'ArrowDown' ? cy - cy0 : cy0 - cy;
+        if (dy <= r0.height * 0.5) return;
+        d = dy + Math.abs(cx - cx0) * 0.01;
+      } else {
+        const misma = Math.abs(cy - cy0) < Math.max(r0.height, r.height) * 0.6;
+        if (!misma) return;
+        const dx = dir === 'ArrowRight' ? cx - cx0 : cx0 - cx;
+        if (dx <= 1) return;
+        d = dx;
+      }
+      if (d < mejorD) { mejorD = d; mejor = el; }
+    });
+    return mejor;
+  }
+  function psTeclas(e) {
+    const t = e.target;
+    if (!t || t.tagName !== 'INPUT') return;
+    const k = e.key;
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].includes(k)) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (t.type === 'date' && k !== 'Enter') return;   // en la fecha las flechas cambian día/mes
+    if ((k === 'ArrowLeft' || k === 'ArrowRight') && t.type === 'text') {
+      const v = t.value || '', a = t.selectionStart, b = t.selectionEnd;
+      const todo = v.length > 0 && a === 0 && b === v.length;
+      if (!todo && a != null) {
+        if (k === 'ArrowLeft' && !(a === 0 && b === 0)) return;
+        if (k === 'ArrowRight' && !(a === v.length && b === v.length)) return;
+      }
+    }
+    const dir = k === 'Enter' ? (e.shiftKey ? 'ArrowUp' : 'ArrowDown') : k;
+    const dest = psVecino(t, dir);
+    e.preventDefault();
+    if (dest) {
+      dest.focus();
+      try { if (dest.type === 'text') dest.select(); } catch (err) {}
+    }
+  }
+
   (function psIniciar() {
     if (!$('ps-hoja')) return;
+    $('ps-hoja').addEventListener('keydown', psTeclas);
+    psCfgIniciar();
     try {
       if (!localStorage.getItem('gh-ps-fecha-limpia')) {
         const d0 = psLeerGuardado(); if (d0.fecha) { delete d0.fecha; localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d0)); }
         localStorage.setItem('gh-ps-fecha-limpia', '1');
       }
     } catch (e) {}
+    psMigrarBorrador();
     psLlenar(psLeerGuardado());
     $('ps-zoom-menos').addEventListener('click', () => psCambiarZoom(-0.15));
     $('ps-zoom-mas').addEventListener('click', () => psCambiarZoom(0.15));
