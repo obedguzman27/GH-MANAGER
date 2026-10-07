@@ -3204,8 +3204,9 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('service-worker.js').then((reg) => {
-        // Revisar si hay una versión nueva cada vez que se abre
-        reg.update();
+        // Revisar si hay una versión nueva cada vez que se abre (si no hay
+        // señal, no pasa nada: se revisa la próxima vez)
+        reg.update().catch(() => {});
         // Si aparece una versión nueva lista, avisar para recargar
         reg.addEventListener('updatefound', () => {
           const nuevo = reg.installing;
@@ -3386,7 +3387,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v114 · 7 oct';
+  const APP_VERSION = 'v115 · 7 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;

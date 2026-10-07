@@ -3,7 +3,7 @@
 // Los datos NO se guardan aquí (eso vive en localStorage / futuro backend),
 // solo el "cascarón" de la app (HTML, íconos).
 
-const CACHE_NAME = 'gh-manager-v114';
+const CACHE_NAME = 'gh-manager-v115';
 const ARCHIVOS_CACHE = [
   './',
   './index.html',
@@ -14,11 +14,21 @@ const ARCHIVOS_CACHE = [
   './supabase-storage.js'
 ];
 
+// Al instalar se bajan los archivos SIN usar la copia vieja del navegador
+// (cache: 'reload'); si no, GitHub Pages puede entregar la versión anterior
+// por unos minutos y la "nueva" versión se quedaba con el código viejo.
+// Cada archivo se guarda por separado: si uno falla, no se cae todo.
 self.addEventListener('install', (evento) => {
   self.skipWaiting();
-  evento.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ARCHIVOS_CACHE))
-  );
+  evento.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(ARCHIVOS_CACHE.map(async (url) => {
+      try {
+        const r = await fetch(new Request(url, { cache: 'reload' }));
+        if (r && r.ok) await cache.put(url, r);
+      } catch (e) {}
+    }));
+  })());
 });
 
 // Permite que la app fuerce la actualización al instante (botón "Actualizar")
@@ -55,7 +65,9 @@ self.addEventListener('fetch', (evento) => {
     const cache = await caches.open(CACHE_NAME);
     const enCache = await cache.match(evento.request);
 
-    const buscarEnRed = fetch(evento.request)
+    // 'no-cache' = pregunta al servidor si cambió (rápido), en vez de usar
+    // una copia vieja del navegador
+    const buscarEnRed = fetch(evento.request, { cache: 'no-cache' })
       .then((respuesta) => {
         if (respuesta && respuesta.ok) cache.put(evento.request, respuesta.clone());
         return respuesta;
