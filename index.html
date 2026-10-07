@@ -1685,6 +1685,68 @@
   }
   /* Sin textos de descripción/ayuda (pedido del usuario) */
   .gh-ayuda, #ajuste-info-text { display: none !important; }
+
+  /* ── CHEQUES ─────────────────────────────── */
+  .chq-seg { display: flex; gap: 3px; background: var(--surface-3); border-radius: 12px; padding: 3px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; }
+  .chq-seg::-webkit-scrollbar { display: none; }
+  .chq-seg button { flex: 1 0 auto; border: 0; background: transparent; color: var(--muted); font-family: var(--font-ui); font-weight: 700; font-size: 12.5px; padding: 9px 12px; border-radius: 9px; cursor: pointer; white-space: nowrap; }
+  .chq-seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .chq-panel { display: none; }
+  .chq-panel.on { display: block; animation: gc-fade .2s var(--ease); }
+  .chq-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .chq-mini-sel { font-family: var(--font-ui); font-weight: 700; font-size: 13px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); }
+  .chq-check { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--ink); margin: 6px 0 10px; cursor: pointer; }
+  .chq-check input { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+  .chq-tot { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .chq-tot b { color: var(--ink); }
+  .chq-umbral { font-size: 13px; color: var(--muted); background: var(--surface-2); border-radius: 12px; padding: 11px 13px; margin: 12px 0; line-height: 1.5; }
+  .chq-umbral b { color: var(--ink); }
+  .chq-lista { display: flex; flex-direction: column; gap: 9px; }
+  .chq-item { background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 14px; padding: 12px 14px; }
+  .chq-item.anulado { opacity: .6; }
+  .chq-item.anulado .chq-item-monto { text-decoration: line-through; }
+  .chq-item-top { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .chq-item-num { font-weight: 800; color: var(--ink); }
+  .chq-item-mid { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .chq-item-mid b { font-size: 15px; font-weight: 800; min-width: 0; overflow-wrap: anywhere; }
+  .chq-item-monto { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .chq-item-memo { font-size: 12.5px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
+  .chq-item-acc { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .chq-item-acc .gc-action-btn { padding: 6px 11px; font-size: 12px; }
+  .chq-item-acc .chq-mini, .chq-item-acc .chq-mini + .chq-mini { margin-right: auto; }
+  .chq-item-acc .chq-mini + .chq-mini { margin-left: -6px; }
+  .chq-mini { font-size: 10.5px; font-weight: 800; letter-spacing: .03em; padding: 3px 8px; border-radius: 6px; background: var(--blue-bg); color: var(--blue); }
+  .chq-mini.gris { background: var(--surface-3); color: var(--muted); }
+  .chq-mini.alerta { background: var(--ember-bg); color: var(--ember); }
+  .chq-mini.ok { background: var(--teal-bg); color: var(--teal-dk); }
+  .chq-tag { margin-left: auto; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: var(--surface-3); color: var(--muted); }
+  .chq-tag.impreso { background: var(--teal-bg); color: var(--teal-dk); }
+  .chq-tag.anulado { background: var(--ember-bg); color: var(--ember); }
+
+  /* Vista previa del cheque (proporción real 8.5" × 3.5") */
+  .chq-preview {
+    position: relative; width: 100%; aspect-ratio: 8.5 / 3.5; border-radius: 10px; overflow: hidden; container-type: inline-size;
+    background: repeating-linear-gradient(135deg, #F2F6F1 0 6px, #EEF3EC 6px 12px); border: 1px solid #D7DED4; color: #1d2a22;
+    font-family: Arial, Helvetica, sans-serif; font-size: 2.15cqw; box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  }
+  .chq-preview > div { position: absolute; display: flex; align-items: baseline; gap: .6em; white-space: nowrap; }
+  .chq-preview span { font-size: .72em; font-weight: 700; color: #4f6355; letter-spacing: .04em; line-height: 1.05; }
+  .chq-preview b { font-weight: 700; color: #0d1a3a; font-family: 'Courier New', Courier, monospace; overflow: hidden; text-overflow: ellipsis; }
+  .chq-pv-num { right: 4%; top: 6%; font-weight: 800; color: #4f6355; font-size: .85em; }
+  .chq-pv-fecha { left: 70%; top: 15%; border-bottom: 1px solid #7d8f82; min-width: 24%; }
+  .chq-pv-pay { left: 2.5%; top: 31%; right: 22%; border-bottom: 1px solid #7d8f82; }
+  .chq-pv-pay b { flex: 1; }
+  .chq-pv-monto { left: 80%; top: 31%; right: 3%; border: 1px solid #7d8f82; padding: .15em .4em; background: rgba(255,255,255,.6); }
+  .chq-pv-letras { left: 2.5%; top: 47%; right: 3%; border-bottom: 1px solid #7d8f82; }
+  .chq-pv-letras b { flex: 1; font-size: .92em; }
+  .chq-pv-memo { left: 2.5%; top: 78%; width: 42%; border-bottom: 1px solid #7d8f82; }
+  .chq-pv-firma { left: 55%; right: 3%; top: 84%; border-bottom: 1px solid #7d8f82; height: 1px; }
+  .chq-pv-micr { left: 18%; bottom: 3%; font-family: 'Courier New', monospace; color: #9aa69e !important; font-size: .9em; letter-spacing: .12em; }
+  @media (max-width: 720px) {
+    #nom-sub-cheques .gc-btn-row { flex-wrap: wrap; }
+    #nom-sub-cheques .gc-btn-row .gc-save-btn { flex: 1 1 100%; order: -1; }
+    #nom-sub-cheques .gc-btn-row .gc-action-btn { flex: 1 1 auto; }
+  }
   /* Selector de tema (Ajustes → Apariencia) */
   .gh-tema-seg { display: flex; background: var(--surface-3); border-radius: 12px; padding: 3px; gap: 3px; max-width: 420px; }
   .gh-tema-seg button { flex: 1; border: 0; background: transparent; color: var(--muted); font-family: var(--font-ui); font-weight: 700; font-size: 13px; padding: 10px 8px; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
@@ -2365,6 +2427,7 @@
     <button class="nom-subtab" data-i18n="historial" data-nsub="historial">Historial</button>
     <button class="nom-subtab" data-i18n="buscar_por_persona" data-nsub="buscar">Buscar por persona</button>
     <button class="nom-subtab" data-i18n="trabajadores" data-nsub="trabajadores">Trabajadores</button>
+    <button class="nom-subtab" data-nsub="cheques">Cheques</button>
   </div>
 
   <!-- Registrar pago -->
@@ -2472,6 +2535,169 @@
           <thead><tr><th data-i18n="trabajador">Trabajador</th><th class="num" data-i18n="h_sueldo_por_dia">Sueldo por día</th><th data-i18n="h_ajustar_sueldo">Ajustar sueldo</th><th></th></tr></thead>
           <tbody id="trab-nom-tbody"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cheques (se imprimen en cheques de computadora del banco) + 1099 -->
+  <div class="nom-subpanel" id="nom-sub-cheques">
+    <div class="chq-seg" role="tablist">
+      <button type="button" class="on" data-chq="escribir">Escribir</button>
+      <button type="button" data-chq="registro">Registro</button>
+      <button type="button" data-chq="benef">A quién pago</button>
+      <button type="button" data-chq="r1099">1099</button>
+      <button type="button" data-chq="config">Ajustar</button>
+    </div>
+
+    <!-- Escribir cheque -->
+    <div class="chq-panel on" data-chq="escribir">
+      <div class="gc-card">
+        <p class="gc-card-title">Nuevo cheque</p>
+        <div class="chq-preview gh-papel" id="chq-preview" aria-hidden="true">
+          <div class="chq-pv-num" id="chq-pv-num">No. 1001</div>
+          <div class="chq-pv-fecha"><span>DATE</span><b id="chq-pv-fecha"></b></div>
+          <div class="chq-pv-pay"><span>PAY TO THE<br>ORDER OF</span><b id="chq-pv-nombre"></b></div>
+          <div class="chq-pv-monto"><span>$</span><b id="chq-pv-monto"></b></div>
+          <div class="chq-pv-letras"><b id="chq-pv-letras"></b><span>DOLLARS</span></div>
+          <div class="chq-pv-memo"><span>MEMO</span><b id="chq-pv-memo"></b></div>
+          <div class="chq-pv-firma"></div>
+          <div class="chq-pv-micr">⑈001001⑈ ⑆000000000⑆ 0000000000⑈</div>
+        </div>
+        <div class="gc-form-row" style="margin-top:16px;">
+          <div class="gc-field"><label>Cheque #</label><input type="text" id="chq-num" inputmode="numeric" autocomplete="off"></div>
+          <div class="gc-field"><label>Fecha</label><input type="date" id="chq-fecha"></div>
+          <div class="gc-field"><label>Monto ($)</label><input type="text" id="chq-monto" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>
+        </div>
+        <div class="gc-form-row wide">
+          <div class="gc-field"><label>Páguese a</label>
+            <input type="text" id="chq-nombre" list="dl-chq-benef" placeholder="Nombre de la persona o compañía" autocomplete="off">
+            <datalist id="dl-chq-benef"></datalist>
+          </div>
+        </div>
+        <div class="gc-form-row wide">
+          <div class="gc-field"><label>Memo</label><input type="text" id="chq-memo" maxlength="60" placeholder="Ej. Trabajo semana 28 sep" autocomplete="off"></div>
+        </div>
+        <label class="chq-check"><input type="checkbox" id="chq-1099" checked> Cuenta para la 1099</label>
+        <label class="chq-check"><input type="checkbox" id="chq-gasto"> Registrar también como gasto en Principal</label>
+        <div class="gc-form-row wide" id="chq-gasto-cat-row" style="display:none;">
+          <div class="gc-field"><label>Categoría del gasto</label><select id="chq-gasto-cat"></select></div>
+        </div>
+        <div class="gc-btn-row" style="justify-content:flex-end;margin-top:6px;">
+          <button type="button" class="gc-action-btn" id="chq-btn-limpiar">Limpiar</button>
+          <button type="button" class="gc-action-btn" id="chq-btn-guardar">Guardar sin imprimir</button>
+          <button type="button" class="gc-save-btn" id="chq-btn-imprimir">🖨 Guardar e imprimir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registro de cheques -->
+    <div class="chq-panel" data-chq="registro">
+      <div class="gc-card">
+        <div class="chq-head">
+          <p class="gc-card-title" style="margin:0;">Cheques</p>
+          <select id="chq-reg-anio" class="chq-mini-sel"></select>
+        </div>
+        <div class="gc-field" style="margin:12px 0;"><input type="text" id="chq-reg-buscar" placeholder="Buscar por nombre, # o memo…" autocomplete="off"></div>
+        <div class="chq-tot" id="chq-reg-tot"></div>
+        <div id="chq-reg-lista" class="chq-lista"></div>
+        <div class="gc-empty" id="chq-reg-empty" style="display:none;">Todavía no hay cheques.</div>
+      </div>
+    </div>
+
+    <!-- Beneficiarios -->
+    <div class="chq-panel" data-chq="benef">
+      <div class="gc-card">
+        <div class="chq-head">
+          <p class="gc-card-title" style="margin:0;" id="chq-ben-titulo">Agregar a quién pago</p>
+          <button type="button" class="gc-action-btn" id="chq-ben-importar" style="padding:7px 12px;font-size:12.5px;">⇣ Traer trabajadores</button>
+        </div>
+        <input type="hidden" id="chq-ben-id">
+        <div class="gc-form-row wide" style="margin-top:14px;">
+          <div class="gc-field"><label>Nombre legal (como en su W-9)</label><input type="text" id="chq-ben-nombre" autocomplete="off"></div>
+        </div>
+        <div class="gc-form-row wide">
+          <div class="gc-field"><label>Nombre de negocio (si tiene)</label><input type="text" id="chq-ben-negocio" autocomplete="off"></div>
+        </div>
+        <div class="gc-form-row wide">
+          <div class="gc-field"><label>Dirección</label><input type="text" id="chq-ben-dir" autocomplete="off"></div>
+        </div>
+        <div class="gc-form-row">
+          <div class="gc-field"><label>Ciudad</label><input type="text" id="chq-ben-ciudad" autocomplete="off"></div>
+          <div class="gc-field"><label>Estado</label><input type="text" id="chq-ben-estado" maxlength="2" placeholder="TN" autocomplete="off" style="text-transform:uppercase;"></div>
+          <div class="gc-field"><label>ZIP</label><input type="text" id="chq-ben-zip" inputmode="numeric" maxlength="10" autocomplete="off"></div>
+        </div>
+        <div class="gc-form-row">
+          <div class="gc-field"><label>Tipo</label>
+            <select id="chq-ben-tipo">
+              <option value="individuo">Persona / Sole proprietor</option>
+              <option value="llc">LLC (una persona)</option>
+              <option value="sociedad">Partnership</option>
+              <option value="corp">Corporación (C o S)</option>
+            </select>
+          </div>
+          <div class="gc-field"><label>Número de impuestos</label>
+            <select id="chq-ben-tintipo"><option value="SSN">SSN</option><option value="ITIN">ITIN</option><option value="EIN">EIN</option></select>
+          </div>
+          <div class="gc-field"><label>Últimos 4</label><input type="text" id="chq-ben-tin4" inputmode="numeric" maxlength="4" placeholder="1234" autocomplete="off"></div>
+        </div>
+        <label class="chq-check"><input type="checkbox" id="chq-ben-w9"> Ya me dio su W-9 firmado</label>
+        <label class="chq-check"><input type="checkbox" id="chq-ben-1099" checked> Se le hace 1099</label>
+        <div class="gc-btn-row" style="justify-content:flex-end;margin-top:6px;">
+          <button type="button" class="gc-action-btn" id="chq-ben-cancelar">Limpiar</button>
+          <button type="button" class="gc-save-btn" id="chq-ben-guardar">Guardar</button>
+        </div>
+      </div>
+      <div class="gc-card">
+        <p class="gc-card-title">A quién pago</p>
+        <div id="chq-ben-lista" class="chq-lista"></div>
+        <div class="gc-empty" id="chq-ben-empty" style="display:none;">Todavía no hay nadie. Agrégalo arriba o tráelo de Trabajadores.</div>
+      </div>
+    </div>
+
+    <!-- Reporte 1099 -->
+    <div class="chq-panel" data-chq="r1099">
+      <div class="gc-card">
+        <div class="chq-head">
+          <p class="gc-card-title" style="margin:0;">1099-NEC</p>
+          <select id="chq-1099-anio" class="chq-mini-sel"></select>
+        </div>
+        <div class="chq-umbral" id="chq-1099-umbral"></div>
+        <div id="chq-1099-lista" class="chq-lista"></div>
+        <div class="gc-empty" id="chq-1099-empty" style="display:none;">No hay cheques para la 1099 en este año.</div>
+        <div class="gc-btn-row" style="justify-content:flex-end;margin-top:12px;">
+          <button type="button" class="gc-action-btn" id="chq-1099-csv">⬇ CSV para el contador</button>
+          <button type="button" class="gc-save-btn" id="chq-1099-imprimir">🖨 Imprimir resumen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ajustes de impresión -->
+    <div class="chq-panel" data-chq="config">
+      <div class="gc-card">
+        <p class="gc-card-title">Impresión de cheques</p>
+        <div class="gc-form-row">
+          <div class="gc-field"><label>Dónde va el cheque en la hoja</label>
+            <select id="chq-cfg-pos">
+              <option value="arriba">Arriba (cheque + 2 talones)</option>
+              <option value="medio">En medio</option>
+              <option value="abajo">Abajo</option>
+            </select>
+          </div>
+          <div class="gc-field"><label>Siguiente cheque #</label><input type="text" id="chq-cfg-sig" inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <div class="gc-form-row">
+          <div class="gc-field"><label>Mover → derecha (mm)</label><input type="text" id="chq-cfg-x" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+          <div class="gc-field"><label>Mover ↓ abajo (mm)</label><input type="text" id="chq-cfg-y" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+          <div class="gc-field"><label>Tamaño de letra</label>
+            <select id="chq-cfg-letra"><option value="10">Chica</option><option value="11.5">Normal</option><option value="13">Grande</option></select>
+          </div>
+        </div>
+        <label class="chq-check"><input type="checkbox" id="chq-cfg-talones" checked> Llenar los talones (stubs)</label>
+        <label class="chq-check"><input type="checkbox" id="chq-cfg-dir" checked> Poner la dirección de a quién pago (para sobre con ventana)</label>
+        <div class="gc-btn-row" style="justify-content:flex-end;margin-top:6px;">
+          <button type="button" class="gc-action-btn" id="chq-cfg-prueba">🖨 Hoja de prueba (papel normal)</button>
+          <button type="button" class="gc-save-btn" id="chq-cfg-guardar">Guardar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -3141,7 +3367,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v110 · 3 oct';
+  const APP_VERSION = 'v111 · 3 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -4328,6 +4554,8 @@
       fn: () => { ghIrA('facturas', '.inv-subtab[data-sub="nueva"]'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
     { id: 'invoice', txt: 'Guardar invoice de la semana', ic: QA_SVG_GUARDAR, cls: '', tab: 'movimientos', ok: () => !!$('btn-guardar-invoice-top'),
       fn: () => { ghIrA('movimientos', '.mov-subtab[data-msub="movs"]'); $('btn-guardar-invoice-top').click(); } },
+    { id: 'cheque', txt: 'Escribir cheque', ic: '✎', cls: 'f', tab: 'nomina', ok: () => !!document.querySelector('.nom-subtab[data-nsub="cheques"]'),
+      fn: () => { ghIrA('nomina', '.nom-subtab[data-nsub="cheques"]'); if (typeof chqIrA === 'function') chqIrA('escribir'); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => { const n = $('chq-nombre'); if (n) { try { n.focus({ preventScroll: true }); } catch (e) {} } }, 60); } },
     { id: 'nomina', txt: 'Pagar nómina', ic: '$', cls: 'i', tab: 'nomina', ok: () => true,
       fn: () => { ghIrA('nomina', '.nom-subtab[data-nsub="registro"]'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
     { id: 'completion', txt: 'Completion sheet', ic: QA_SVG_CHECK, cls: '', tab: 'facturas', ok: () => ghVisible('.inv-subtab[data-sub="completion"]'),
@@ -5695,6 +5923,11 @@
     try { trabajadoresData = JSON.parse(rTrabj.value); } catch (e) {}
     try { recibosData = JSON.parse(rRecibos.value); } catch (e) {}
 
+    // Cheques y a quién se les paga (para la 1099)
+    let chequesData = null, benefData = null, chequesCfgData = null;
+    try { chequesData = JSON.parse((await window.storage.get('gh-cheques')).value); } catch (e) {}
+    try { benefData = JSON.parse((await window.storage.get('gh-beneficiarios')).value); } catch (e) {}
+    try { chequesCfgData = JSON.parse((await window.storage.get('gh-cheques-cfg')).value); } catch (e) {}
     const respaldo = {
       app: 'GH Manager',
       version: 3,
@@ -5714,7 +5947,11 @@
       // Nómina
       nomina: nominaData,
       trabajadores: trabajadoresData,
-      recibosSemanales: recibosData
+      recibosSemanales: recibosData,
+      // Cheques
+      cheques: chequesData,
+      beneficiarios: benefData,
+      chequesConfig: chequesCfgData
     };
     const blob = new Blob([JSON.stringify(respaldo, null, 2)], { type: 'application/json;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -5940,6 +6177,9 @@
         if (data.nomina) await window.storage.set('gh-nomina', JSON.stringify(data.nomina));
         if (data.trabajadores) await window.storage.set('gh-trabajadores', JSON.stringify(data.trabajadores));
         if (data.recibosSemanales) await window.storage.set('gh-recibos-semanales', JSON.stringify(data.recibosSemanales));
+        if (data.cheques) await window.storage.set('gh-cheques', JSON.stringify(data.cheques));
+        if (data.beneficiarios) await window.storage.set('gh-beneficiarios', JSON.stringify(data.beneficiarios));
+        if (data.chequesConfig) await window.storage.set('gh-cheques-cfg', JSON.stringify(data.chequesConfig));
         try {
           if (data.nomina) nomDocs = data.nomina;
           // Los trabajadores de un respaldo viejo se integran a Empleados (sin duplicar).
@@ -11120,6 +11360,478 @@
     }));
   }
   $('nom-reg-buscar').addEventListener('input', debounce(nomRenderRegLedger, 160));
+
+  // ============================================================
+  // CHEQUES — se imprimen sobre cheques de computadora que ya traen
+  // impreso el banco, la cuenta y la línea MICR (los pide uno al banco o
+  // a una imprenta de cheques). La app solo llena fecha, nombre, monto,
+  // monto en letras, memo y los talones. Guarda a quién se le pagó para
+  // la 1099-NEC. Todo vive en la base de datos que estás usando.
+  // ============================================================
+  const CHQ_KEY = 'gh-cheques', CHQ_BEN_KEY = 'gh-beneficiarios', CHQ_CFG_KEY = 'gh-cheques-cfg';
+  let chqLista = [], chqBenef = [];
+  let chqCfg = { pos: 'arriba', siguiente: 1001, x: 0, y: 0, letra: 11.5, talones: true, dir: true };
+  const chqNum = (v) => { const n = parseFloat(String(v == null ? '' : v).replace(/[$,\s]/g, '')); return isNaN(n) ? 0 : n; };
+  const chqR2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+  const chqUsd = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function chqFechaUS(iso) {
+    if (!iso) return '';
+    const p = String(iso).slice(0, 10).split('-');
+    return p.length === 3 ? `${p[1]}/${p[2]}/${p[0]}` : iso;
+  }
+  // Monto en letras, en inglés (así se escriben los cheques en EE.UU.)
+  function chqLetras(monto) {
+    const n = chqR2(Math.abs(monto));
+    let dol = Math.floor(n);
+    const cts = Math.round((n - dol) * 100);
+    const U = ['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const D = ['', '', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    const menosDeMil = (x) => {
+      const out = [];
+      if (x >= 100) { out.push(U[Math.floor(x / 100)] + ' Hundred'); x %= 100; }
+      if (x >= 20) { out.push(D[Math.floor(x / 10)] + (x % 10 ? '-' + U[x % 10] : '')); }
+      else if (x > 0) out.push(U[x]);
+      return out.join(' ');
+    };
+    let palabras = '';
+    if (dol === 0) palabras = 'Zero';
+    else {
+      const partes = [];
+      [[1e9, 'Billion'], [1e6, 'Million'], [1e3, 'Thousand'], [1, '']].forEach(([v, nom]) => {
+        const k = Math.floor(dol / v);
+        if (k) { partes.push(menosDeMil(k) + (nom ? ' ' + nom : '')); dol -= k * v; }
+      });
+      palabras = partes.join(' ');
+    }
+    return `${palabras} and ${String(cts).padStart(2, '0')}/100`;
+  }
+  // Umbral de la 1099-NEC: $600 para pagos hasta 2025; $2,000 desde 2026 (ley OBBBA).
+  const chqUmbral = (anio) => (Number(anio) >= 2026 ? 2000 : 600);
+
+  async function chqGuardarTodo(cual) {
+    try {
+      if (!cual || cual === 'chq') await window.storage.set(CHQ_KEY, JSON.stringify(chqLista));
+      if (!cual || cual === 'ben') await window.storage.set(CHQ_BEN_KEY, JSON.stringify(chqBenef));
+      if (!cual || cual === 'cfg') await window.storage.set(CHQ_CFG_KEY, JSON.stringify(chqCfg));
+    } catch (e) { toast('No se pudo guardar. Revisa tu conexión.', 'error'); throw e; }
+  }
+  async function chqCargar() {
+    if (typeof window.GH_ESPERAR_SESION === 'function') { try { await window.GH_ESPERAR_SESION(); } catch (e) {} }
+    const leer = async (k) => { try { const r = await window.storage.get(k); return r && r.value ? JSON.parse(r.value) : null; } catch (e) { return null; } };
+    const [a, b, c] = await Promise.all([leer(CHQ_KEY), leer(CHQ_BEN_KEY), leer(CHQ_CFG_KEY)]);
+    chqLista = Array.isArray(a) ? a : [];
+    chqBenef = Array.isArray(b) ? b : [];
+    if (c && typeof c === 'object') chqCfg = { ...chqCfg, ...c };
+    chqRenderTodo();
+  }
+  function chqBenPorNombre(nombre) {
+    const k = String(nombre || '').trim().toLowerCase();
+    return k ? chqBenef.find((b) => (b.nombre || '').trim().toLowerCase() === k || (b.negocio || '').trim().toLowerCase() === k) : null;
+  }
+  function chqNombreCheque(b) { return (b && (b.negocio || b.nombre)) || ''; }
+  function chqSiguienteNumero() {
+    const usados = chqLista.map((c) => parseInt(c.numero, 10)).filter((x) => !isNaN(x));
+    return Math.max(parseInt(chqCfg.siguiente, 10) || 1001, usados.length ? Math.max(...usados) + 1 : 0);
+  }
+
+  // ---------- Navegación interna ----------
+  document.querySelectorAll('#nom-sub-cheques .chq-seg button').forEach((b) => {
+    b.addEventListener('click', () => chqIrA(b.dataset.chq));
+  });
+  function chqIrA(cual) {
+    document.querySelectorAll('#nom-sub-cheques .chq-seg button').forEach((x) => x.classList.toggle('on', x.dataset.chq === cual));
+    document.querySelectorAll('#nom-sub-cheques .chq-panel').forEach((x) => x.classList.toggle('on', x.dataset.chq === cual));
+    chqRenderTodo();
+  }
+
+  // ---------- Escribir ----------
+  function chqFormLimpiar() {
+    $('chq-num').value = chqSiguienteNumero();
+    $('chq-fecha').value = today();
+    $('chq-monto').value = ''; $('chq-nombre').value = ''; $('chq-memo').value = '';
+    $('chq-1099').checked = true; $('chq-gasto').checked = false; $('chq-gasto-cat-row').style.display = 'none';
+    chqPreview();
+  }
+  function chqPreview() {
+    if (!$('chq-preview')) return;
+    const monto = chqNum($('chq-monto').value);
+    $('chq-pv-num').textContent = 'No. ' + ($('chq-num').value || '');
+    $('chq-pv-fecha').textContent = chqFechaUS($('chq-fecha').value);
+    $('chq-pv-nombre').textContent = $('chq-nombre').value || '';
+    $('chq-pv-monto').textContent = monto ? '**' + chqUsd(monto) : '';
+    $('chq-pv-letras').textContent = monto ? chqLetras(monto) + ' ' + '*'.repeat(6) : '';
+    $('chq-pv-memo').textContent = $('chq-memo').value || '';
+  }
+  ['chq-num', 'chq-fecha', 'chq-monto', 'chq-nombre', 'chq-memo'].forEach((id) => { if ($(id)) $(id).addEventListener('input', chqPreview); });
+  if ($('chq-nombre')) $('chq-nombre').addEventListener('change', () => {
+    const b = chqBenPorNombre($('chq-nombre').value);
+    if (b) $('chq-1099').checked = b.es1099 !== false;
+  });
+  if ($('chq-gasto')) $('chq-gasto').addEventListener('change', () => {
+    $('chq-gasto-cat-row').style.display = $('chq-gasto').checked ? '' : 'none';
+    const sel = $('chq-gasto-cat');
+    const actual = sel.value;
+    sel.innerHTML = (catGastos || []).map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') || '<option value="Cheques">Cheques</option>';
+    if (actual) sel.value = actual;
+  });
+  if ($('chq-btn-limpiar')) $('chq-btn-limpiar').addEventListener('click', chqFormLimpiar);
+  async function chqGuardarDesdeForm(imprimir) {
+    const numero = String($('chq-num').value || '').trim();
+    const fecha = $('chq-fecha').value || today();
+    const nombre = $('chq-nombre').value.replace(/\s+/g, ' ').trim();
+    const monto = chqR2(chqNum($('chq-monto').value));
+    if (!numero) { toast('Pon el número del cheque', 'error'); $('chq-num').focus(); return; }
+    if (!nombre) { toast('¿A quién le pagas?', 'error'); $('chq-nombre').focus(); return; }
+    if (!(monto > 0)) { toast('Escribe un monto válido', 'error'); $('chq-monto').focus(); return; }
+    if (chqLista.some((c) => String(c.numero) === numero && c.estado !== 'anulado')) {
+      if (!await gcConfirm(`Ya hay un cheque #${numero}. ¿Guardar otro con el mismo número?`, { okText: 'Sí, guardar' })) return;
+    }
+    let ben = chqBenPorNombre(nombre);
+    if (!ben) {
+      ben = { id: 'ben-' + Date.now(), nombre, negocio: '', dir: '', ciudad: '', estado: '', zip: '', tipo: 'individuo', tinTipo: 'SSN', tin4: '', w9: false, es1099: $('chq-1099').checked, creado: new Date().toISOString() };
+      chqBenef.push(ben);
+      await chqGuardarTodo('ben');
+      toast(`"${nombre}" agregado a "A quién pago" — completa su dirección y W-9 ahí`, 'info', 4500);
+    }
+    const chq = {
+      id: 'chq-' + Date.now(), numero, fecha, benId: ben.id, nombre: chqNombreCheque(ben) || nombre,
+      monto, memo: $('chq-memo').value.trim(), es1099: $('chq-1099').checked, estado: imprimir ? 'impreso' : 'guardado',
+      creado: new Date().toISOString()
+    };
+    if ($('chq-gasto').checked) {
+      const cat = $('chq-gasto-cat').value || 'Cheques';
+      const mov = { id: Date.now() + Math.random(), fecha, tipo: 'gasto', cat, desc: `Cheque #${numero} — ${chq.nombre}${chq.memo ? ' · ' + chq.memo : ''}`, monto };
+      movimientos.push(mov);
+      chq.movId = mov.id;
+      try { saveMov(); renderMovimientos(); actualizarStats(); } catch (e) {}
+    }
+    chqLista.push(chq);
+    const n = parseInt(numero, 10);
+    if (!isNaN(n) && n + 1 > (parseInt(chqCfg.siguiente, 10) || 0)) chqCfg.siguiente = n + 1;
+    await chqGuardarTodo();
+    if (imprimir) chqImprimir(chq);
+    toast(imprimir ? `Cheque #${numero} guardado — imprimiendo` : `Cheque #${numero} guardado ✓`, 'success');
+    chqFormLimpiar();
+    chqRenderTodo();
+  }
+  if ($('chq-btn-guardar')) $('chq-btn-guardar').addEventListener('click', () => chqGuardarDesdeForm(false));
+  if ($('chq-btn-imprimir')) $('chq-btn-imprimir').addEventListener('click', () => chqGuardarDesdeForm(true));
+
+  // ---------- Impresión ----------
+  // Medidas en pulgadas del cheque estándar de computadora (8.5 × 11 con el
+  // cheque de 3.5"), las mismas que usan QuickBooks y los cheques "voucher".
+  const CHQ_POS = { fecha: [6.70, 0.62], nombre: [1.05, 1.27], monto: [6.92, 1.27], letras: [0.45, 1.63], dir: [1.05, 1.98], memo: [0.72, 2.80] };
+  function chqSeccion() { return chqCfg.pos === 'medio' ? 1 : chqCfg.pos === 'abajo' ? 2 : 0; }
+  function chqCampo(texto, x, y, extra) {
+    return `<div class="f" style="left:${x}in;top:${y}in;${extra || ''}">${escapeHtml(texto)}</div>`;
+  }
+  function chqPagina(c, prueba) {
+    const ben = chqBenef.find((b) => b.id === c.benId) || null;
+    const sec = chqSeccion();
+    const top = sec * 3.5;
+    let h = '';
+    const P = (k) => [CHQ_POS[k][0], CHQ_POS[k][1] + top];
+    if (prueba) {
+      h += `<div class="marco" style="top:${top}in;"></div>`;
+      Object.entries(CHQ_POS).forEach(([k, [x, y]]) => {
+        if (k === 'dir' && !chqCfg.dir) return;
+        h += `<div class="cruz" style="left:${x}in;top:${y + top}in;"></div>`;
+      });
+      for (let s = 0; s < 3; s++) if (s !== sec) h += `<div class="marco talon" style="top:${s * 3.5}in;"></div>`;
+      h += `<div class="nota" style="top:${top + 3.2}in;">HOJA DE PRUEBA — ponla encima de un cheque contra la luz. Las cruces deben caer donde va cada dato.</div>`;
+    }
+    h += chqCampo(chqFechaUS(c.fecha), ...P('fecha'));
+    h += chqCampo(c.nombre, ...P('nombre'), 'font-weight:700;');
+    h += chqCampo('**' + chqUsd(c.monto), ...P('monto'), 'font-weight:700;');
+    h += chqCampo(chqLetras(c.monto) + ' ' + '*'.repeat(Math.max(4, 58 - chqLetras(c.monto).length)), ...P('letras'), 'width:6.2in;white-space:nowrap;overflow:hidden;');
+    if (chqCfg.dir && ben && (ben.dir || ben.ciudad)) {
+      const lineas = [chqNombreCheque(ben), ben.dir, [ben.ciudad, [ben.estado, ben.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean);
+      const [x, y] = P('dir');
+      lineas.forEach((l, i) => { h += chqCampo(l, x, y + i * 0.18, 'font-size:.92em;'); });
+    }
+    if (c.memo) h += chqCampo(c.memo, ...P('memo'));
+    if (chqCfg.talones) {
+      for (let s = 0; s < 3; s++) {
+        if (s === sec) continue;
+        const t = s * 3.5;
+        h += chqCampo(`${chqCfg.facturaNombre || cfgFacturaNombre || ''}`, 0.5, t + 0.35, 'font-weight:700;');
+        h += chqCampo(`Check #${c.numero}`, 6.3, t + 0.35, 'font-weight:700;');
+        h += chqCampo(`Date: ${chqFechaUS(c.fecha)}`, 0.5, t + 0.75);
+        h += chqCampo(`Paid to: ${c.nombre}`, 0.5, t + 1.0);
+        h += chqCampo(`Amount: $${chqUsd(c.monto)}`, 0.5, t + 1.25, 'font-weight:700;');
+        if (c.memo) h += chqCampo(`Memo: ${c.memo}`, 0.5, t + 1.5);
+      }
+    }
+    return `<div class="hoja">${h}</div>`;
+  }
+  function chqDocumento(cheques, prueba) {
+    const dx = chqNum(chqCfg.x), dy = chqNum(chqCfg.y);
+    const letra = Number(chqCfg.letra) || 11.5;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${prueba ? 'Prueba de cheque' : 'Cheques'}</title>
+      <style>
+        @page { size: letter portrait; margin: 0; }
+        html, body { margin: 0; padding: 0; background: #fff; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: ${letra}pt; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .hoja { position: relative; width: 8.5in; height: 11in; overflow: hidden; page-break-after: always; break-after: page; }
+        .hoja:last-child { page-break-after: auto; break-after: auto; }
+        .capa { position: absolute; inset: 0; transform: translate(${dx}mm, ${dy}mm); }
+        .f { position: absolute; line-height: 1; white-space: nowrap; }
+        .marco { position: absolute; left: 0.25in; width: 8in; height: 3.3in; border: 1.5px dashed #888; box-sizing: border-box; margin-top: .1in; }
+        .marco.talon { border-color: #ccc; }
+        .cruz { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+        .cruz::before, .cruz::after { content: ''; position: absolute; background: #d00; }
+        .cruz::before { left: 8px; top: 0; width: 2px; height: 18px; }
+        .cruz::after { top: 8px; left: 0; height: 2px; width: 18px; }
+        .nota { position: absolute; left: 0.5in; font-size: 9pt; color: #555; }
+      </style></head><body>${cheques.map((c) => chqPagina(c, prueba).replace('<div class="hoja">', '<div class="hoja"><div class="capa">') + '</div>').join('')}</body></html>`;
+  }
+  function chqImprimir(c) { ghImprimirEnVentana('', `Cheque #${c.numero}`, chqDocumento([c], false)); }
+  if ($('chq-cfg-prueba')) $('chq-cfg-prueba').addEventListener('click', () => {
+    chqLeerCfgForm();
+    const ej = { numero: chqSiguienteNumero(), fecha: today(), nombre: 'JOHN SAMPLE', monto: 1234.56, memo: 'Prueba de alineación', benId: null };
+    ghImprimirEnVentana('', 'Prueba de cheque', chqDocumento([ej], true));
+  });
+
+  // ---------- Registro ----------
+  function chqAnios(lista) {
+    const s = new Set(lista.map((c) => String(c.fecha || '').slice(0, 4)).filter(Boolean));
+    s.add(String(new Date().getFullYear()));
+    return [...s].sort().reverse();
+  }
+  function chqLlenarAnios(sel, anios) {
+    if (!sel) return;
+    const v = sel.value;
+    sel.innerHTML = anios.map((a) => `<option value="${a}">${a}</option>`).join('');
+    sel.value = anios.includes(v) ? v : anios[0];
+  }
+  function chqRenderRegistro() {
+    const cont = $('chq-reg-lista'); if (!cont) return;
+    chqLlenarAnios($('chq-reg-anio'), chqAnios(chqLista));
+    const anio = $('chq-reg-anio').value;
+    const q = ($('chq-reg-buscar').value || '').trim().toLowerCase();
+    const lista = chqLista.filter((c) => String(c.fecha || '').startsWith(anio))
+      .filter((c) => !q || [c.nombre, c.numero, c.memo].join(' ').toLowerCase().includes(q))
+      .sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '') || (parseInt(b.numero, 10) || 0) - (parseInt(a.numero, 10) || 0));
+    const validos = lista.filter((c) => c.estado !== 'anulado');
+    $('chq-reg-tot').innerHTML = lista.length ? `<b>${validos.length}</b> cheque(s) · <b>$${chqUsd(validos.reduce((t, c) => t + c.monto, 0))}</b>` : '';
+    $('chq-reg-empty').style.display = lista.length ? 'none' : 'block';
+    cont.innerHTML = lista.map((c) => `
+      <div class="chq-item${c.estado === 'anulado' ? ' anulado' : ''}">
+        <div class="chq-item-top"><span class="chq-item-num">#${escapeHtml(c.numero)}</span><span class="chq-item-fecha">${chqFechaUS(c.fecha)}</span>
+          <span class="chq-tag ${c.estado}">${c.estado === 'anulado' ? 'Anulado' : c.estado === 'impreso' ? 'Impreso' : 'Guardado'}</span></div>
+        <div class="chq-item-mid"><b>${escapeHtml(c.nombre)}</b><span class="chq-item-monto">$${chqUsd(c.monto)}</span></div>
+        ${c.memo ? `<div class="chq-item-memo">${escapeHtml(c.memo)}</div>` : ''}
+        <div class="chq-item-acc">
+          ${c.es1099 ? '<span class="chq-mini">1099</span>' : ''}
+          ${c.estado !== 'anulado' ? `<button type="button" class="gc-action-btn" data-chqa="imprimir" data-id="${c.id}">🖨 Imprimir</button>
+          <button type="button" class="gc-action-btn" data-chqa="anular" data-id="${c.id}">Anular</button>` : ''}
+          <button type="button" class="gc-del" data-chqa="borrar" data-id="${c.id}" title="Borrar">✕</button>
+        </div>
+      </div>`).join('');
+    cont.querySelectorAll('[data-chqa]').forEach((b) => b.addEventListener('click', async () => {
+      const c = chqLista.find((x) => x.id === b.dataset.id); if (!c) return;
+      if (b.dataset.chqa === 'imprimir') {
+        chqImprimir(c);
+        if (c.estado !== 'impreso') { c.estado = 'impreso'; await chqGuardarTodo('chq'); chqRenderRegistro(); }
+      } else if (b.dataset.chqa === 'anular') {
+        if (!await gcConfirm(`¿Anular el cheque #${c.numero} de ${c.nombre} por $${chqUsd(c.monto)}?\n\nQueda en el registro como ANULADO (no cuenta para la 1099). Escribe VOID en el papel y guárdalo.`, { okText: 'Anular', danger: true })) return;
+        c.estado = 'anulado';
+        if (c.movId != null) { movimientos = movimientos.filter((m) => m.id !== c.movId); try { saveMov(); renderMovimientos(); actualizarStats(); } catch (e) {} }
+        await chqGuardarTodo('chq'); chqRenderTodo(); toast('Cheque anulado', 'info');
+      } else if (b.dataset.chqa === 'borrar') {
+        if (!await gcConfirm(`¿Borrar el cheque #${c.numero} del registro? Si el cheque ya salió, mejor usa "Anular" para que quede constancia.`, { okText: 'Borrar', danger: true })) return;
+        chqLista = chqLista.filter((x) => x !== c);
+        if (c.movId != null) { movimientos = movimientos.filter((m) => m.id !== c.movId); try { saveMov(); renderMovimientos(); actualizarStats(); } catch (e) {} }
+        await chqGuardarTodo('chq'); chqRenderTodo(); toast('Cheque borrado', 'info');
+      }
+    }));
+  }
+  if ($('chq-reg-anio')) $('chq-reg-anio').addEventListener('change', chqRenderRegistro);
+  if ($('chq-reg-buscar')) $('chq-reg-buscar').addEventListener('input', debounce(chqRenderRegistro, 150));
+
+  // ---------- A quién pago ----------
+  const CHQ_BEN_CAMPOS = { nombre: 'chq-ben-nombre', negocio: 'chq-ben-negocio', dir: 'chq-ben-dir', ciudad: 'chq-ben-ciudad', estado: 'chq-ben-estado', zip: 'chq-ben-zip', tipo: 'chq-ben-tipo', tinTipo: 'chq-ben-tintipo', tin4: 'chq-ben-tin4' };
+  function chqBenFormLimpiar() {
+    $('chq-ben-id').value = '';
+    Object.values(CHQ_BEN_CAMPOS).forEach((id) => { const el = $(id); if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : ''; });
+    $('chq-ben-w9').checked = false; $('chq-ben-1099').checked = true;
+    $('chq-ben-titulo').textContent = 'Agregar a quién pago';
+  }
+  function chqBenEditar(b) {
+    $('chq-ben-id').value = b.id;
+    Object.entries(CHQ_BEN_CAMPOS).forEach(([k, id]) => { if ($(id)) $(id).value = b[k] || ($(id).tagName === 'SELECT' ? $(id).options[0].value : ''); });
+    $('chq-ben-w9').checked = !!b.w9; $('chq-ben-1099').checked = b.es1099 !== false;
+    $('chq-ben-titulo').textContent = 'Editar: ' + (b.nombre || '');
+    ghBajarA($('chq-ben-titulo').closest('.gc-card'), 76);
+  }
+  if ($('chq-ben-tipo')) $('chq-ben-tipo').addEventListener('change', () => {
+    // A las corporaciones normalmente no se les hace 1099-NEC (salvo abogados)
+    $('chq-ben-1099').checked = $('chq-ben-tipo').value !== 'corp';
+    if ($('chq-ben-tipo').value === 'corp' || $('chq-ben-tipo').value === 'sociedad') $('chq-ben-tintipo').value = 'EIN';
+  });
+  if ($('chq-ben-cancelar')) $('chq-ben-cancelar').addEventListener('click', chqBenFormLimpiar);
+  if ($('chq-ben-guardar')) $('chq-ben-guardar').addEventListener('click', async () => {
+    const id = $('chq-ben-id').value;
+    const datos = {};
+    Object.entries(CHQ_BEN_CAMPOS).forEach(([k, el]) => { datos[k] = ($(el).value || '').replace(/\s+/g, ' ').trim(); });
+    datos.estado = datos.estado.toUpperCase();
+    datos.tin4 = datos.tin4.replace(/\D/g, '').slice(-4);
+    datos.w9 = $('chq-ben-w9').checked; datos.es1099 = $('chq-ben-1099').checked;
+    if (!datos.nombre) { toast('Escribe el nombre', 'error'); $('chq-ben-nombre').focus(); return; }
+    const otro = chqBenPorNombre(datos.nombre);
+    if (otro && otro.id !== id) { toast('Ya existe alguien con ese nombre', 'error'); return; }
+    if (id) {
+      const b = chqBenef.find((x) => x.id === id); if (!b) return;
+      const nombreViejo = chqNombreCheque(b);
+      Object.assign(b, datos);
+      // Los cheques ya guardados siguen ligados a la persona; su nombre se actualiza
+      const nuevo = chqNombreCheque(b);
+      if (nuevo !== nombreViejo) chqLista.forEach((c) => { if (c.benId === b.id) c.nombre = nuevo; });
+      await chqGuardarTodo();
+    } else {
+      chqBenef.push({ id: 'ben-' + Date.now(), ...datos, creado: new Date().toISOString() });
+      await chqGuardarTodo('ben');
+    }
+    toast('Guardado ✓', 'success');
+    chqBenFormLimpiar(); chqRenderTodo();
+  });
+  if ($('chq-ben-importar')) $('chq-ben-importar').addEventListener('click', async () => {
+    const activos = (empleados || []).filter((e) => e.estado !== 'inactivo');
+    const nuevos = activos.filter((e) => !chqBenPorNombre(empNombreCompleto(e)));
+    if (!nuevos.length) { toast(activos.length ? 'Todos tus trabajadores ya están aquí' : 'No hay trabajadores en Nómina', 'info'); return; }
+    nuevos.forEach((e, i) => chqBenef.push({
+      id: 'ben-' + Date.now() + '-' + i, nombre: empNombreCompleto(e), negocio: '', dir: e.direccion || '', ciudad: '', estado: '', zip: '',
+      tipo: 'individuo', tinTipo: 'SSN', tin4: '', w9: false, es1099: true, empId: e.id, creado: new Date().toISOString()
+    }));
+    await chqGuardarTodo('ben');
+    toast(`${nuevos.length} trabajador(es) agregado(s) ✓`, 'success');
+    chqRenderTodo();
+  });
+  function chqRenderBenef() {
+    const cont = $('chq-ben-lista'); if (!cont) return;
+    const dl = $('dl-chq-benef');
+    if (dl) dl.innerHTML = chqBenef.map((b) => `<option value="${escapeHtml(chqNombreCheque(b))}"></option>`).join('');
+    const anio = String(new Date().getFullYear());
+    $('chq-ben-empty').style.display = chqBenef.length ? 'none' : 'block';
+    cont.innerHTML = [...chqBenef].sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '')).map((b) => {
+      const tot = chqLista.filter((c) => c.benId === b.id && c.estado !== 'anulado' && String(c.fecha || '').startsWith(anio)).reduce((t, c) => t + c.monto, 0);
+      const falta = [];
+      if (!b.w9) falta.push('W-9'); if (!b.dir || !b.zip) falta.push('dirección'); if (!b.tin4) falta.push('# impuestos');
+      return `<div class="chq-item">
+        <div class="chq-item-mid"><b>${escapeHtml(b.nombre)}</b><span class="chq-item-monto" title="Pagado en ${anio}">$${chqUsd(tot)}</span></div>
+        ${b.negocio ? `<div class="chq-item-memo">${escapeHtml(b.negocio)}</div>` : ''}
+        <div class="chq-item-memo">${escapeHtml([b.dir, b.ciudad, [b.estado, b.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ') || 'Sin dirección')}${b.tin4 ? ` · ${escapeHtml(b.tinTipo || '')} ••••${escapeHtml(b.tin4)}` : ''}</div>
+        <div class="chq-item-acc">
+          ${b.es1099 ? '<span class="chq-mini">1099</span>' : '<span class="chq-mini gris">Sin 1099</span>'}
+          ${b.es1099 && falta.length ? `<span class="chq-mini alerta">Falta: ${falta.join(', ')}</span>` : ''}
+          <button type="button" class="gc-action-btn" data-bena="cheque" data-id="${b.id}">Cheque</button>
+          <button type="button" class="gc-action-btn" data-bena="editar" data-id="${b.id}">✎ Editar</button>
+          <button type="button" class="gc-del" data-bena="borrar" data-id="${b.id}" title="Borrar">✕</button>
+        </div></div>`;
+    }).join('');
+    cont.querySelectorAll('[data-bena]').forEach((btn) => btn.addEventListener('click', async () => {
+      const b = chqBenef.find((x) => x.id === btn.dataset.id); if (!b) return;
+      if (btn.dataset.bena === 'editar') chqBenEditar(b);
+      else if (btn.dataset.bena === 'cheque') {
+        chqIrA('escribir'); chqFormLimpiar(); $('chq-nombre').value = chqNombreCheque(b); $('chq-1099').checked = b.es1099 !== false; chqPreview();
+        try { $('chq-monto').focus({ preventScroll: true }); } catch (e) {}
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (btn.dataset.bena === 'borrar') {
+        const n = chqLista.filter((c) => c.benId === b.id).length;
+        if (!await gcConfirm(n ? `¿Quitar a ${b.nombre}? Sus ${n} cheque(s) se quedan en el registro y en la 1099.` : `¿Quitar a ${b.nombre}?`, { okText: 'Quitar', danger: true })) return;
+        chqBenef = chqBenef.filter((x) => x !== b);
+        await chqGuardarTodo('ben'); chqRenderTodo();
+      }
+    }));
+  }
+
+  // ---------- 1099 ----------
+  function chq1099Datos(anio) {
+    const porBen = new Map();
+    chqLista.filter((c) => c.es1099 && c.estado !== 'anulado' && String(c.fecha || '').startsWith(anio)).forEach((c) => {
+      const k = c.benId || ('n:' + (c.nombre || '').toLowerCase());
+      const a = porBen.get(k) || { benId: c.benId, nombre: c.nombre, total: 0, n: 0 };
+      a.total = chqR2(a.total + c.monto); a.n += 1; porBen.set(k, a);
+    });
+    return [...porBen.values()].map((r) => ({ ...r, ben: chqBenef.find((b) => b.id === r.benId) || null })).sort((a, b) => b.total - a.total);
+  }
+  function chqRender1099() {
+    const cont = $('chq-1099-lista'); if (!cont) return;
+    chqLlenarAnios($('chq-1099-anio'), chqAnios(chqLista));
+    const anio = $('chq-1099-anio').value, umbral = chqUmbral(anio);
+    const datos = chq1099Datos(anio);
+    const necesitan = datos.filter((d) => d.total >= umbral);
+    $('chq-1099-umbral').innerHTML = `Año ${anio}: se hace 1099-NEC a quien le pagaste <b>$${chqUsd(umbral)} o más</b>. ${necesitan.length ? `<b>${necesitan.length}</b> persona(s) la necesitan.` : 'Nadie llega todavía.'}`;
+    $('chq-1099-empty').style.display = datos.length ? 'none' : 'block';
+    cont.innerHTML = datos.map((d) => {
+      const b = d.ben || {};
+      const llega = d.total >= umbral;
+      const falta = [];
+      if (llega) { if (!b.w9) falta.push('W-9'); if (!b.dir || !b.zip) falta.push('dirección'); if (!b.tin4) falta.push('# impuestos'); }
+      return `<div class="chq-item">
+        <div class="chq-item-mid"><b>${escapeHtml(d.nombre)}</b><span class="chq-item-monto">$${chqUsd(d.total)}</span></div>
+        <div class="chq-item-memo">${d.n} cheque(s)${b.tin4 ? ` · ${escapeHtml(b.tinTipo || '')} ••••${escapeHtml(b.tin4)}` : ''}</div>
+        <div class="chq-item-acc">
+          ${llega ? '<span class="chq-mini alerta">Necesita 1099</span>' : `<span class="chq-mini gris">Menos de $${chqUsd(umbral)}</span>`}
+          ${falta.length ? `<span class="chq-mini alerta">Falta: ${falta.join(', ')}</span>` : (llega ? '<span class="chq-mini ok">Datos completos</span>' : '')}
+        </div></div>`;
+    }).join('');
+  }
+  if ($('chq-1099-anio')) $('chq-1099-anio').addEventListener('change', chqRender1099);
+  if ($('chq-1099-csv')) $('chq-1099-csv').addEventListener('click', () => {
+    const anio = $('chq-1099-anio').value, umbral = chqUmbral(anio);
+    const datos = chq1099Datos(anio);
+    if (!datos.length) { toast('No hay datos para ese año', 'info'); return; }
+    const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+    const filas = [['Year', 'Recipient legal name', 'Business name', 'Address', 'City', 'State', 'ZIP', 'Entity type', 'TIN type', 'TIN last 4', 'W-9 on file', 'Checks', 'Total paid (Box 1 NEC)', 'Needs 1099-NEC']];
+    datos.forEach((d) => { const b = d.ben || {}; filas.push([anio, b.nombre || d.nombre, b.negocio || '', b.dir || '', b.ciudad || '', b.estado || '', b.zip || '', b.tipo || '', b.tinTipo || '', b.tin4 || '', b.w9 ? 'Yes' : 'No', d.n, d.total.toFixed(2), d.total >= umbral ? 'Yes' : 'No']); });
+    const csv = '﻿' + filas.map((f) => f.map(q).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a'); a.href = url; a.download = `1099-${anio}.csv`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  });
+  if ($('chq-1099-imprimir')) $('chq-1099-imprimir').addEventListener('click', () => {
+    const anio = $('chq-1099-anio').value, umbral = chqUmbral(anio);
+    const datos = chq1099Datos(anio);
+    const filas = datos.map((d) => { const b = d.ben || {}; return `<tr><td>${escapeHtml(b.nombre || d.nombre)}${b.negocio ? '<br><small>' + escapeHtml(b.negocio) + '</small>' : ''}</td>
+      <td>${escapeHtml([b.dir, b.ciudad, [b.estado, b.zip].filter(Boolean).join(' ')].filter(Boolean).join(', '))}</td>
+      <td>${b.tin4 ? escapeHtml((b.tinTipo || '') + ' ••••' + b.tin4) : ''}</td><td>${b.w9 ? 'Yes' : 'No'}</td>
+      <td class="num">${d.n}</td><td class="num">$${chqUsd(d.total)}</td><td>${d.total >= umbral ? '<b>Yes</b>' : 'No'}</td></tr>`; }).join('');
+    ghImprimirEnVentana(`<h1>${escapeHtml(cfgFacturaNombre || '')}</h1><div class="ps-badge">1099-NEC — pagos con cheque ${anio} · umbral $${chqUsd(umbral)}</div>
+      <table><thead><tr><th>Recipient</th><th>Address</th><th>TIN</th><th>W-9</th><th class="num">Checks</th><th class="num">Total</th><th>1099</th></tr></thead><tbody>${filas || '<tr><td colspan="7">Sin datos</td></tr>'}</tbody></table>`, `1099 ${anio}`);
+  });
+
+  // ---------- Ajustes de impresión ----------
+  function chqLlenarCfgForm() {
+    if (!$('chq-cfg-pos')) return;
+    $('chq-cfg-pos').value = chqCfg.pos; $('chq-cfg-sig').value = chqSiguienteNumero();
+    $('chq-cfg-x').value = chqCfg.x || ''; $('chq-cfg-y').value = chqCfg.y || '';
+    $('chq-cfg-letra').value = String(chqCfg.letra || 11.5);
+    $('chq-cfg-talones').checked = chqCfg.talones !== false; $('chq-cfg-dir').checked = chqCfg.dir !== false;
+  }
+  function chqLeerCfgForm() {
+    chqCfg.pos = $('chq-cfg-pos').value;
+    chqCfg.siguiente = parseInt($('chq-cfg-sig').value, 10) || chqCfg.siguiente;
+    chqCfg.x = chqNum($('chq-cfg-x').value); chqCfg.y = chqNum($('chq-cfg-y').value);
+    chqCfg.letra = Number($('chq-cfg-letra').value) || 11.5;
+    chqCfg.talones = $('chq-cfg-talones').checked; chqCfg.dir = $('chq-cfg-dir').checked;
+  }
+  if ($('chq-cfg-guardar')) $('chq-cfg-guardar').addEventListener('click', async () => {
+    chqLeerCfgForm();
+    await chqGuardarTodo('cfg');
+    toast('Ajustes de cheques guardados ✓', 'success');
+    chqRenderTodo();
+  });
+
+  function chqRenderTodo() {
+    if (!$('nom-sub-cheques')) return;
+    if (!$('chq-num').value) $('chq-num').value = chqSiguienteNumero();
+    if (!$('chq-fecha').value) $('chq-fecha').value = today();
+    chqPreview(); chqRenderRegistro(); chqRenderBenef(); chqRender1099();
+    if (document.activeElement && !String(document.activeElement.id || '').startsWith('chq-cfg-')) chqLlenarCfgForm();
+  }
+  chqCargar();
+
 
   // ====================================================================
   // FIN MÓDULO NÓMINA
