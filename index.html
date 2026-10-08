@@ -109,6 +109,10 @@
   :root[data-accent="teal"] { --accent: var(--teal); --accent-dk: var(--teal-dk); --accent-bg: var(--teal-bg); }
   :root[data-accent="indigo"] { --accent: var(--blue); --accent-dk: #3A5486; --accent-bg: var(--blue-bg); }
   :root[data-accent="verde"] { --accent: #4E9350; --accent-dk: #397239; --accent-bg: #E3F0E3; }
+  :root[data-accent="rojo"] { --accent: #C8402F; --accent-dk: #A02E20; --accent-bg: #FBE3DF; }
+  :root[data-accent="morado"] { --accent: #7A4FB5; --accent-dk: #5E3990; --accent-bg: #EEE5F8; }
+  :root[data-accent="azul"] { --accent: #2F7BD9; --accent-dk: #1F5FB0; --accent-bg: #E1EDFB; }
+  :root[data-accent="grafito"] { --accent: #3A3D45; --accent-dk: #22242A; --accent-bg: #E6E7EA; }
   #gc-app {
     width: 100%; min-height: 100vh;
     background:
@@ -1287,6 +1291,10 @@
   :root[data-accent="teal"]   { --accent: var(--teal); --accent-dk: var(--teal-dk); --accent-bg: var(--teal-bg); }
   :root[data-accent="indigo"] { --accent: var(--blue); --accent-dk: #2D46B0; --accent-bg: var(--blue-bg); }
   :root[data-accent="verde"]  { --accent: #3F8F45; --accent-dk: #2F6F34; --accent-bg: #E1F0E1; }
+  :root[data-accent="rojo"]   { --accent: #C8402F; --accent-dk: #A02E20; --accent-bg: #FBE3DF; }
+  :root[data-accent="morado"] { --accent: #7A4FB5; --accent-dk: #5E3990; --accent-bg: #EEE5F8; }
+  :root[data-accent="azul"]   { --accent: #2F7BD9; --accent-dk: #1F5FB0; --accent-bg: #E1EDFB; }
+  :root[data-accent="grafito"] { --accent: #3A3D45; --accent-dk: #22242A; --accent-bg: #E6E7EA; }
 
   html, body { background: var(--bg); font-family: var(--font-ui); }
   #gc-app { background: var(--bg); font-family: var(--font-ui); color: var(--ink); }
@@ -1584,6 +1592,10 @@
     :root[data-tema="oscuro"][data-accent="teal"]   { --accent: #2FBF95; --accent-dk: #5FDAB4; --accent-bg: rgba(47,191,149,.16); }
     :root[data-tema="oscuro"][data-accent="indigo"] { --accent: #6F8BFF; --accent-dk: #9CB0FF; --accent-bg: rgba(111,139,255,.16); }
     :root[data-tema="oscuro"][data-accent="verde"]  { --accent: #4FAE57; --accent-dk: #7BCB82; --accent-bg: rgba(79,174,87,.16); }
+    :root[data-tema="oscuro"][data-accent="rojo"]   { --accent: #EE6A57; --accent-dk: #F7988A; --accent-bg: rgba(238,106,87,.16); }
+    :root[data-tema="oscuro"][data-accent="morado"] { --accent: #A47DE0; --accent-dk: #C3A6F0; --accent-bg: rgba(164,125,224,.16); }
+    :root[data-tema="oscuro"][data-accent="azul"]   { --accent: #5A9BF0; --accent-dk: #8DBBF7; --accent-bg: rgba(90,155,240,.16); }
+    :root[data-tema="oscuro"][data-accent="grafito"] { --accent: #C9CCD3; --accent-dk: #E4E6EA; --accent-bg: rgba(201,204,211,.14); }
     :root[data-tema="oscuro"] .gc-header { background: #141519; border-bottom: 1px solid #22242A; }
     :root[data-tema="oscuro"] .gh-hero, :root[data-tema="oscuro"] .iv-hero { background: #1F2026; border: 1px solid #2A2C33; }
     :root[data-tema="oscuro"] .gc-save-btn:hover { background: var(--accent); filter: brightness(1.1); }
@@ -1750,6 +1762,36 @@
   .inv-estados .inv-f-limpiar { margin-left: auto; border-style: dashed; }
   .inv-resumen { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
   .inv-resumen b { color: var(--ink); } .inv-resumen b.pend { color: var(--ember); }
+  /* Colores de factura (Ajustes) */
+  .fc-sws { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .fc-sw { width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--border-soft); cursor: pointer; padding: 0; position: relative; overflow: hidden; background: var(--p); }
+  .fc-sw::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 30%; background: var(--a); }
+  .fc-sw.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink); }
+  .fc-sw.custom { background: conic-gradient(#e44, #fb3, #4c6, #39f, #a5f, #e44); }
+  .fc-sw.custom::after { display: none; }
+  .fc-custom { display: none; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; color: var(--ink); font-weight: 600; }
+  .fc-custom.on { display: flex; }
+  .fc-custom label { display: flex; align-items: center; gap: 8px; }
+  .fc-custom input[type=color] { width: 40px; height: 32px; border: 1px solid var(--border); border-radius: 8px; padding: 2px; background: var(--card); cursor: pointer; }
+  .fc-prev { background: #fff; border: 1px solid #E3E6EC; border-radius: 12px; padding: 14px 16px; max-width: 360px; color: #333; }
+  .fc-prev-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .fc-prev-top b { font-family: Georgia, serif; font-size: 15px; color: var(--fp); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fc-prev-top span { font-weight: 800; letter-spacing: 1.5px; font-size: 13px; color: var(--fp); }
+  .fc-prev-bar { height: 3px; border-radius: 2px; margin: 9px 0 12px; background: linear-gradient(90deg, var(--fa), var(--fp) 65%); }
+  .fc-prev-th { height: 14px; border-radius: 3px; background: var(--fp); margin-bottom: 6px; }
+  .fc-prev-row { height: 9px; border-radius: 3px; background: #EEF1F5; margin-bottom: 6px; }
+  .fc-prev-tot { margin: 10px 0 0 auto; width: 58%; background: var(--fp); color: #fff; border-radius: 6px; padding: 6px 9px; font-size: 11.5px; font-weight: 800; display: flex; justify-content: space-between; }
+  /* Récords */
+  .gh-rec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .gh-rec-head .gc-card-title { margin: 0; }
+  .gh-rec-head span { font-size: 12px; color: var(--muted); }
+  .gh-rec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 9px; }
+  .gh-rec { background: var(--surface-2); border-radius: 14px; padding: 12px 13px; min-width: 0; position: relative; }
+  .gh-rec-lbl { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .gh-rec-lbl svg { width: 14px; height: 14px; color: var(--gold); flex-shrink: 0; }
+  .gh-rec-val { font-size: 18px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gh-rec-sub { font-size: 12px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gh-rec-nuevo { display: inline-block; vertical-align: 3px; margin-left: 7px; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; padding: 2px 7px; border-radius: 6px; background: var(--gold-bg); color: var(--gold); }
   /* Selector de tema (Ajustes → Apariencia) */
   .gh-tema-seg { display: flex; background: var(--surface-3); border-radius: 12px; padding: 3px; gap: 3px; max-width: 420px; }
   .gh-tema-seg button { flex: 1; border: 0; background: transparent; color: var(--muted); font-family: var(--font-ui); font-weight: 700; font-size: 13px; padding: 10px 8px; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
@@ -1883,6 +1925,12 @@
         <div class="gc-stat gas"><div class="gc-stat-icon">↓</div><div><div class="gc-stat-label">Gastos semana</div><div class="gc-stat-val" id="stat-gas">$0.00</div><div class="gc-stat-delta" id="stat-gas-delta"></div></div></div>
         <div class="gc-stat net"><div class="gc-stat-icon">≈</div><div><div class="gc-stat-label">Neto semana</div><div class="gc-stat-val" id="stat-net">$0.00</div></div></div>
         <div class="gc-stat inv"><div class="gc-stat-icon">#</div><div><div class="gc-stat-label">Invoices guardados</div><div class="gc-stat-val" id="stat-inv">0</div></div></div>
+      </div>
+
+      <!-- Récords -->
+      <div class="gc-card" id="gh-records" style="display:none;">
+        <div class="gh-rec-head"><p class="gc-card-title">Récords</p><span id="gh-rec-sub"></span></div>
+        <div class="gh-rec-grid" id="gh-rec-grid"></div>
       </div>
 
       <!-- Form -->
@@ -2232,6 +2280,25 @@
             <button type="button" class="gc-action-btn" data-i18n="quitar_logo" id="aj-logo-quitar" style="display:none;">Quitar logo</button>
           </div>
           <p id="aj-logo-status" style="font-size:11.5px;color:var(--muted);margin-top:8px;"></p>
+          <label class="aj-check" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:10px;">
+            <input type="checkbox" id="aj-logo-app" style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;">
+            <span style="font-size:13.5px;color:var(--ink);">Usar mi logo también arriba en la app</span>
+          </label>
+        </div>
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border-soft);">
+          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:block;margin-bottom:10px;">Colores de las facturas y recibos</label>
+          <div class="fc-sws" id="fc-sws"></div>
+          <div class="fc-custom" id="fc-custom">
+            <label>Principal <input type="color" id="fc-p" value="#0E1830"></label>
+            <label>Detalle <input type="color" id="fc-a" value="#C2611B"></label>
+          </div>
+          <div class="fc-prev gh-papel" id="fc-prev" aria-hidden="true">
+            <div class="fc-prev-top"><b id="fc-prev-nom">GUZMAN HVAC</b><span>INVOICE</span></div>
+            <div class="fc-prev-bar"></div>
+            <div class="fc-prev-th"></div>
+            <div class="fc-prev-row"></div><div class="fc-prev-row"></div>
+            <div class="fc-prev-tot">TOTAL <span>$1,250.00</span></div>
+          </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
           <button class="gc-save-btn" id="aj-btn-guardar-factura">Guardar datos de la empresa</button>
@@ -2268,6 +2335,10 @@
           <button type="button" class="aj-accent-sw" data-accent="teal" title="Teal" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#0E8F82,#0B6F65);"></button>
           <button type="button" class="aj-accent-sw" data-accent="indigo" title="Índigo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4F6FA8,#3A5486);"></button>
           <button type="button" class="aj-accent-sw" data-accent="verde" title="Verde" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4E9350,#397239);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="azul" title="Azul" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#2F7BD9,#1F5FB0);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="rojo" title="Rojo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C8402F,#A02E20);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="morado" title="Morado" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#7A4FB5,#5E3990);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="grafito" title="Grafito" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4A4D55,#22242A);"></button>
         </div>
         <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin:20px 0 10px;">Tema de la app en este aparato. "Automático" sigue el modo claro/oscuro de tu teléfono.</p>
         <div class="gh-tema-seg">
@@ -3219,7 +3290,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v118 · 7 oct';
+  const APP_VERSION = 'v119 · 8 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -3424,6 +3495,8 @@
   let cfgFacturaSigueSocio = true; // (obsoleto) antes el nombre seguía al Socio 2
   let cfgSociosMigrados = false;   // ya se separó la empresa de la lista de socios
   let cfgLogoDataUrl = ''; // logo para las FACTURAS (aparte del logo de la app)
+  let cfgFacturaColor = 'clasico'; // colores de facturas y recibos (preset o {p,a})
+  let cfgLogoEnApp = false;        // usar el logo de la compañía también arriba en la app
   let cfgUltimoCliente = ''; // último "Bill To" usado en Facturas — se mantiene hasta que lo cambien
   let cfgUltimoClienteDir = ''; // última dirección del cliente — se recuerda igual que el nombre
 
@@ -3474,6 +3547,8 @@
       if (typeof c.facturaSigueSocio === 'boolean') cfgFacturaSigueSocio = c.facturaSigueSocio;
       if (typeof c.sociosMigrados === 'boolean') cfgSociosMigrados = c.sociosMigrados;
       if (typeof c.logoDataUrl === 'string') cfgLogoDataUrl = c.logoDataUrl;
+      if (c.facturaColor) cfgFacturaColor = c.facturaColor;
+      if (typeof c.logoEnApp === 'boolean') cfgLogoEnApp = c.logoEnApp;
       if (typeof c.ultimoCliente === 'string') cfgUltimoCliente = c.ultimoCliente;
       if (typeof c.ultimoClienteDir === 'string') cfgUltimoClienteDir = c.ultimoClienteDir;
       if (typeof c.tasaTaxas === 'number' && c.tasaTaxas >= 0 && c.tasaTaxas < 1) TASA_TAXAS = c.tasaTaxas;
@@ -3487,7 +3562,7 @@
         // Base de datos nueva: empieza en blanco (el nombre de la compañía
         // se pone en Ajustes). Nada se copia de otra base.
         cfgFacturaNombre = ''; cfgFacturaDireccion = ''; cfgSocios = []; cfgUltimoCliente = ''; cfgUltimoClienteDir = '';
-        cfgLogoDataUrl = '';
+        cfgLogoDataUrl = ''; cfgFacturaColor = 'clasico'; cfgLogoEnApp = false;
       }
     }
     // Si el nombre de factura sigue al socio, mantenerlo sincronizado
@@ -3536,22 +3611,54 @@
       socios: cfgSocios,
       socioBonus: cfgSocioBonus, socioMitad: cfgSocioMitad, // se dejan también por compatibilidad hacia atrás
       facturaNombre: cfgFacturaNombre, facturaDireccion: cfgFacturaDireccion,
-      facturaSigueSocio: cfgFacturaSigueSocio, sociosMigrados: cfgSociosMigrados, logoDataUrl: cfgLogoDataUrl,
+      facturaSigueSocio: cfgFacturaSigueSocio, sociosMigrados: cfgSociosMigrados, logoDataUrl: cfgLogoDataUrl, facturaColor: cfgFacturaColor, logoEnApp: cfgLogoEnApp,
       ultimoCliente: cfgUltimoCliente, ultimoClienteDir: cfgUltimoClienteDir, tasaTaxas: TASA_TAXAS
     };
     try { localStorage.setItem(cfgCacheKey(), JSON.stringify(c)); } catch (e) {}
     try { await window.storage.set(CFG_KEY, JSON.stringify(c)); } catch (e) {}
   }
-  // El encabezado siempre usa el logo de la app (GH Manager).
+  // El encabezado usa el logo de la app (GH Manager), salvo que en Ajustes se
+  // elija "usar mi logo también en la app" y haya un logo subido.
   function aplicarLogo() {
-    // El encabezado SIEMPRE lleva el logo de la app (GH Manager). El logo
-    // que se sube en Ajustes es solo para las facturas y recibos, porque
-    // esos los ve el cliente — son dos logos distintos a propósito.
     const badge = document.querySelector('.gc-logo-badge');
     const img = document.getElementById('gc-logo-custom');
-    if (badge) badge.style.display = '';
-    if (img) { img.style.display = 'none'; img.src = ''; }
+    const usar = !!(cfgLogoEnApp && cfgLogoDataUrl);
+    if (badge) badge.style.display = usar ? 'none' : '';
+    if (img) {
+      if (usar) { img.src = cfgLogoDataUrl; img.style.display = ''; }
+      else { img.style.display = 'none'; img.removeAttribute('src'); }
+    }
+    const t = document.getElementById('aj-logo-app');
+    if (t) { t.checked = !!cfgLogoEnApp; t.disabled = !cfgLogoDataUrl; }
   }
+
+  // ---- Colores de facturas y recibos ----
+  const FACT_COLORES = {
+    clasico: { n: 'Clásico', p: '#0E1830', a: '#C2611B' },
+    azul:    { n: 'Azul',    p: '#123A73', a: '#2F7BD9' },
+    verde:   { n: 'Verde',   p: '#143D2B', a: '#2E9B5A' },
+    teal:    { n: 'Teal',    p: '#0B3B3B', a: '#0E8F82' },
+    rojo:    { n: 'Rojo',    p: '#4A1416', a: '#C8302F' },
+    morado:  { n: 'Morado',  p: '#2E1A47', a: '#8A4FD0' },
+    negro:   { n: 'Negro',   p: '#111111', a: '#8A8A8A' },
+  };
+  const esHex = (h) => typeof h === 'string' && /^#[0-9a-f]{6}$/i.test(h);
+  function mezclarHex(h1, h2, t) {
+    const a = parseInt(h1.slice(1), 16), b = parseInt(h2.slice(1), 16);
+    const c = (sh) => Math.round(((a >> sh) & 255) * (1 - t) + ((b >> sh) & 255) * t);
+    return '#' + [16, 8, 0].map((sh) => c(sh).toString(16).padStart(2, '0')).join('');
+  }
+  function facturaColores(sel) {
+    const c = sel === undefined ? cfgFacturaColor : sel;
+    let p, a;
+    if (c && typeof c === 'object' && esHex(c.p) && esHex(c.a)) { p = c.p; a = c.a; }
+    else { const k = FACT_COLORES[c] || FACT_COLORES.clasico; p = k.p; a = k.a; }
+    const clasico = p === FACT_COLORES.clasico.p && a === FACT_COLORES.clasico.a;
+    return { p, a,
+      tint: clasico ? '#FBEAD8' : mezclarHex(a, '#ffffff', 0.86),
+      tintTxt: clasico ? '#5C3B1B' : mezclarHex(a, '#000000', 0.55) };
+  }
+
   // Actualiza los textos fijos del HTML que muestran los nombres de los socios
   function aplicarNombresEstaticos() {
     document.querySelectorAll('.socio-bonus').forEach((e) => { e.textContent = cfgSocioBonus; });
@@ -4327,7 +4434,7 @@
   var resModo = (function () { try { return localStorage.getItem('gh-res-modo') === 'mes' ? 'mes' : 'sem'; } catch (e) { return 'sem'; } })();
   var resSel = null;   // clave del grupo tocado
   var resPag = 0, resAnio = 0, resNavInfo = { prev: false, next: false, max: 0 };
-  function resDatos() {
+  function resSemanasTodas() {
     const porSemana = new Map();
     const sumar = (key, label, x) => {
       if (!key) return;
@@ -4347,7 +4454,10 @@
       sumar(key, inv.label, inv);
     });
     try { calcularSemanas().forEach((sm) => sumar(sm.key, sm.label, sm)); } catch (e) {}
-    const semanas = [...porSemana.values()].sort((x, y) => x.key.localeCompare(y.key));
+    return [...porSemana.values()].sort((x, y) => x.key.localeCompare(y.key));
+  }
+  function resDatos() {
+    const semanas = resSemanasTodas();
     const hoy = new Date();
     if (resModo === 'sem') {
       // páginas de 8 semanas; resPag = 0 son las más recientes
@@ -4385,8 +4495,67 @@
     return meses.map((x) => ({ ...x, futuro: x.key > hoyK && !x.n, corto: x.nom.charAt(0).toUpperCase() + x.nom.slice(1, 3),
       titulo: `${RES_MESES_LARGO[Number(x.key.slice(5, 7)) - 1]} ${resAnio}` + (x.n ? ` · ${x.n} semana${x.n === 1 ? '' : 's'}` : ' · sin movimientos') }));
   }
+  // ---- Récords: mejor semana, mejor mes, factura más grande, racha ----
+  var REC_TROFEO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>';
+  var recDocs = null;
+  async function ghRenderRecords() {
+    const card = $('gh-records'), grid = $('gh-rec-grid');
+    if (!card || !grid) return;
+    let docs = (typeof invDocs !== 'undefined' && invDocs && invDocs.length) ? invDocs : recDocs;
+    if (!docs) {
+      docs = [];
+      try {
+        const r = await window.storage.get('gh-invoices');
+        const v = JSON.parse(r.value);
+        if (Array.isArray(v)) { docs = v; recDocs = v; }
+      } catch (e) {}
+    }
+    const semanas = resSemanasTodas().filter((x) => x.ingresos > 0 || x.gastos > 0);
+    const tiles = [];
+    const hoyIso = today();
+    let semHoy = ''; try { semHoy = weekInfo(hoyIso).key; } catch (e) {}
+    const mesHoy = hoyIso.slice(0, 7);
+    const [ay, am] = [Number(hoyIso.slice(0, 4)), Number(hoyIso.slice(5, 7))];
+    // semana pasada también cuenta como "nuevo" (es la que se acaba de cerrar)
+    let semPas = ''; try { const d = new Date(hoyIso + 'T00:00:00'); d.setDate(d.getDate() - 7); semPas = weekInfo(ghFechaLocal(d)).key; } catch (e) {}
+    if (semanas.length) {
+      const mejor = semanas.reduce((m, x) => (x.ingresos > m.ingresos ? x : m), semanas[0]);
+      if (mejor.ingresos > 0) {
+        const [y, mm, dd] = mejor.key.split('-').map(Number);
+        tiles.push({ lbl: 'Mejor semana', val: fmt(mejor.ingresos), sub: `Semana del ${dd} ${RES_MESES[mm - 1]}${y !== ay ? ' ' + y : ''}`, nuevo: mejor.key === semHoy || mejor.key === semPas });
+      }
+      const porMes = new Map();
+      semanas.forEach((x) => { const k = x.key.slice(0, 7); porMes.set(k, (porMes.get(k) || 0) + x.ingresos); });
+      let mk = '', mv = 0; porMes.forEach((v, k) => { if (v > mv) { mv = v; mk = k; } });
+      if (mk) tiles.push({ lbl: 'Mejor mes', val: fmt(mv), sub: `${RES_MESES_LARGO[Number(mk.slice(5, 7)) - 1]} ${mk.slice(0, 4)}`, nuevo: mk === mesHoy });
+      // racha: semanas seguidas ganando (neto > 0); una semana sin nada la corta
+      let cur = 0, mejorRacha = 0, prevKey = '';
+      semanas.forEach((x) => {
+        const seguida = !!prevKey && Math.round((new Date(x.key + 'T00:00:00') - new Date(prevKey + 'T00:00:00')) / 864e5) === 7;
+        cur = x.neto > 0 ? (seguida ? cur + 1 : 1) : 0;
+        mejorRacha = Math.max(mejorRacha, cur);
+        prevKey = x.key;
+      });
+      // si la última semana con movimientos ya no es esta ni la pasada, la racha se cortó
+      const racha = (prevKey === semHoy || prevKey === semPas) ? cur : 0;
+      if (mejorRacha > 1) tiles.push({ lbl: 'Racha ganando', val: `${racha} semana${racha === 1 ? '' : 's'}`, sub: racha >= mejorRacha ? '¡Tu mejor racha!' : `Récord: ${mejorRacha} semanas`, nuevo: racha >= mejorRacha && racha > 1 });
+    }
+    const conTotal = (docs || []).filter((d) => Number(d.total) > 0);
+    if (conTotal.length) {
+      const f = conTotal.reduce((m, d) => (Number(d.total) > Number(m.total) ? d : m), conTotal[0]);
+      const fe = /^\d{4}-\d{2}-\d{2}$/.test(f.fecha || '') ? `${Number(f.fecha.slice(8, 10))} ${RES_MESES[Number(f.fecha.slice(5, 7)) - 1]} ${f.fecha.slice(0, 4)}` : '';
+      tiles.push({ lbl: 'Factura más grande', val: fmt(Number(f.total)), sub: [f.numero ? '#' + f.numero : '', f.cliente || '', fe].filter(Boolean).join(' · '), nuevo: (f.fecha || '').slice(0, 7) === mesHoy });
+    }
+    card.style.display = tiles.length ? '' : 'none';
+    const sub = $('gh-rec-sub'); if (sub) sub.textContent = semanas.length ? `${semanas.length} semana${semanas.length === 1 ? '' : 's'} registradas` : '';
+    grid.innerHTML = tiles.map((t) => `<div class="gh-rec">
+      <div class="gh-rec-lbl">${REC_TROFEO}${escapeHtml(t.lbl)}</div>
+      <div class="gh-rec-val">${escapeHtml(t.val)}${t.nuevo ? '<span class="gh-rec-nuevo">NUEVO</span>' : ''}</div>
+      <div class="gh-rec-sub">${escapeHtml(t.sub)}</div></div>`).join('');
+  }
   function renderGraficaSemanal() {
     if (!RES_MESES) return;   // todavía no se inicializa (se vuelve a llamar después)
+    ghRenderRecords();
     const cont = $('gc-chart-semanal');
     const wrap = $('gc-chart-semanal-cont');
     if (!cont || !wrap) return;
@@ -7413,6 +7582,8 @@
 
   // ---- Logo para las facturas (lo que ve el cliente; no cambia el de la app) ----
   function ajRefrescarPreviewLogo() {
+    if (typeof fcRender === 'function') { try { fcRender(); } catch (e) {} }
+    aplicarLogo();
     const prev = $('aj-logo-preview');
     const btnQuitar = $('aj-logo-quitar');
     if (cfgLogoDataUrl) { prev.src = cfgLogoDataUrl; prev.style.display = ''; btnQuitar.style.display = ''; }
@@ -7464,6 +7635,54 @@
       aplicarLogo();
       ajRefrescarPreviewLogo();
       toast('Logo de la factura quitado', 'info');
+    });
+  }
+
+  // ---- Colores de facturas y recibos (Ajustes → Name of Company) ----
+  function fcRender() {
+    const box = $('fc-sws'); if (!box) return;
+    const sel = cfgFacturaColor;
+    const esCustom = !!(sel && typeof sel === 'object');
+    box.innerHTML = Object.entries(FACT_COLORES).map(([k, c]) =>
+      `<button type="button" class="fc-sw${!esCustom && (sel === k || (!FACT_COLORES[sel] && k === 'clasico')) ? ' on' : ''}" data-fc="${k}" title="${c.n}" aria-label="${c.n}" style="--p:${c.p};--a:${c.a};"></button>`).join('')
+      + `<button type="button" class="fc-sw custom${esCustom ? ' on' : ''}" data-fc="custom" title="Personalizado" aria-label="Personalizado"></button>`;
+    const fc = facturaColores();
+    $('fc-custom').classList.toggle('on', esCustom);
+    $('fc-p').value = fc.p; $('fc-a').value = fc.a;
+    const prev = $('fc-prev');
+    prev.style.setProperty('--fp', fc.p); prev.style.setProperty('--fa', fc.a);
+    $('fc-prev-nom').textContent = cfgFacturaNombre || 'Tu compañía';
+  }
+  async function fcGuardar(v) {
+    cfgFacturaColor = v;
+    fcRender();
+    await guardarConfig();
+  }
+  if ($('fc-sws')) {
+    $('fc-sws').addEventListener('click', async (e) => {
+      const b = e.target.closest('.fc-sw'); if (!b) return;
+      if (b.dataset.fc === 'custom') {
+        const fc = facturaColores();
+        await fcGuardar({ p: fc.p, a: fc.a });
+      } else {
+        await fcGuardar(b.dataset.fc);
+      }
+      toast('Colores de la factura guardados ✓', 'success', 1600);
+    });
+    let fcT = null;
+    ['fc-p', 'fc-a'].forEach((id) => $(id).addEventListener('input', () => {
+      const v = { p: $('fc-p').value, a: $('fc-a').value };
+      if (!esHex(v.p) || !esHex(v.a)) return;
+      cfgFacturaColor = v; fcRender();
+      clearTimeout(fcT); fcT = setTimeout(() => guardarConfig(), 500);
+    }));
+    fcRender();
+  }
+  if ($('aj-logo-app')) {
+    $('aj-logo-app').addEventListener('change', async () => {
+      cfgLogoEnApp = $('aj-logo-app').checked;
+      aplicarLogo();
+      await guardarConfig();
     });
   }
 
@@ -9740,7 +9959,7 @@
   }
   document.querySelectorAll('.inv-carpeta-btn').forEach((b) => b.addEventListener('click', () => invMostrarCarpeta(b.dataset.carpeta)));
 
-  async function invSaveInv() { await window.storage.set(INV_KEY, JSON.stringify(invDocs)); }
+  async function invSaveInv() { await window.storage.set(INV_KEY, JSON.stringify(invDocs)); recDocs = null; if (typeof ghRenderRecords === 'function') ghRenderRecords(); }
   async function invSaveCol() { await window.storage.set(COL_KEY, JSON.stringify(invColonias)); invRefreshDlColonias(); }
   async function invSaveCli() { await window.storage.set(CLI_KEY, JSON.stringify(invClientes)); invRefreshDlClientes(); }
   async function invSaveTrb() { await window.storage.set(TRB_KEY, JSON.stringify(invTrabajos)); invRefreshDlTrabajos(); }
@@ -10031,6 +10250,7 @@
   }
 
   function invBuildPrint(inv) {
+    const FC = facturaColores();
     const rows = (inv.items||[]).map((it,i) => `<tr style="background:${i%2?'#F7F9FC':'#fff'};">
       <td style="padding:9px 8px;border-bottom:1px solid #E6EAF2;color:#8A93A6;font-size:11.5px;">${i+1}</td>
       <td style="padding:9px 8px;border-bottom:1px solid #E6EAF2;font-size:11.5px;color:#5C6B85;white-space:nowrap;">${/^\d{4}-\d{2}-\d{2}$/.test(it.dia || '') ? invFechaGuion(it.dia) : escapeHtml(it.dia || '')}</td>
@@ -10050,20 +10270,20 @@
         <div style="display:flex;align-items:center;gap:13px;">
           ${logoSvg}
           <div>
-            <div style="font-size:22px;font-weight:700;color:#0E1830;font-family:Georgia,'Times New Roman',serif;letter-spacing:.2px;">${escapeHtml(cfgFacturaNombre)}</div>
+            <div style="font-size:22px;font-weight:700;color:${FC.p};font-family:Georgia,'Times New Roman',serif;letter-spacing:.2px;">${escapeHtml(cfgFacturaNombre)}</div>
             ${inv.direccionEmisor ? `<div style="font-size:11.5px;color:#707A8C;margin-top:2px;">${escapeHtml(inv.direccionEmisor)}</div>` : ''}
           </div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:25px;font-weight:700;color:#0E1830;letter-spacing:2px;">INVOICE</div>
+          <div style="font-size:25px;font-weight:700;color:${FC.p};letter-spacing:2px;">INVOICE</div>
           <div style="font-size:13.5px;font-weight:600;color:#555;margin-top:4px;">${escapeHtml(inv.numero||'')}</div>
           <div style="font-size:11.5px;color:#93A0B8;margin-top:2px;">${invFechaNum(inv.fecha)}</div>
         </div>
       </div>
-      <div style="height:3px;background:linear-gradient(90deg,#C2611B,#0E1830 65%);border-radius:2px;margin-bottom:24px;"></div>
-      ${(inv.cliente || inv.clienteDireccion)?`<div style="margin-bottom:22px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#A3ACBD;margin-bottom:5px;">Bill To</div>${inv.cliente?`<div style="font-size:15px;font-weight:700;color:#0E1830;">${escapeHtml(inv.cliente)}</div>`:''}${inv.clienteDireccion?`<div style="font-size:12px;color:#5C6B85;margin-top:2px;">${escapeHtml(inv.clienteDireccion)}</div>`:''}</div>`:''}
+      <div style="height:3px;background:linear-gradient(90deg,${FC.a},${FC.p} 65%);border-radius:2px;margin-bottom:24px;"></div>
+      ${(inv.cliente || inv.clienteDireccion)?`<div style="margin-bottom:22px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#A3ACBD;margin-bottom:5px;">Bill To</div>${inv.cliente?`<div style="font-size:15px;font-weight:700;color:${FC.p};">${escapeHtml(inv.cliente)}</div>`:''}${inv.clienteDireccion?`<div style="font-size:12px;color:#5C6B85;margin-top:2px;">${escapeHtml(inv.clienteDireccion)}</div>`:''}</div>`:''}
       <table style="width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12.5px;">
-        <thead><tr style="background:#0E1830;">
+        <thead><tr style="background:${FC.p};">
           <th style="padding:11px 8px;text-align:left;font-size:10px;color:rgba(255,255,255,.62);text-transform:uppercase;letter-spacing:.5px;width:30px;">#</th>
           <th style="padding:11px 8px;text-align:left;font-size:10px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;width:94px;">Date</th>
           <th style="padding:11px 8px;text-align:left;font-size:10px;color:rgba(255,255,255,.92);text-transform:uppercase;letter-spacing:.5px;width:200px;">Subdivision</th>
@@ -10081,11 +10301,11 @@
           })()}
           <tr><td style="padding:5px 4px;color:#707A8C;">Subtotal</td><td style="padding:5px 4px;text-align:right;font-weight:600;color:#333;">${invFmt(inv.subtotal)}</td></tr>
           ${inv.taxPct?`<tr><td style="padding:5px 4px;color:#96721F;">Tax (${inv.taxPct}%)</td><td style="padding:5px 4px;text-align:right;font-weight:600;color:#96721F;">${invFmt(inv.tax)}</td></tr>`:''}
-          <tr><td colspan="2" style="padding:6px 4px 0;"><div style="height:2px;background:#0E1830;border-radius:2px;"></div></td></tr>
-          <tr><td style="padding:11px 12px;font-size:15px;font-weight:700;color:#fff;background:#0E1830;border-radius:8px 0 0 8px;">TOTAL</td><td style="padding:11px 12px;text-align:right;font-size:15px;font-weight:700;color:#fff;background:#0E1830;border-radius:0 8px 8px 0;">${invFmt(inv.total)}</td></tr>
+          <tr><td colspan="2" style="padding:6px 4px 0;"><div style="height:2px;background:${FC.p};border-radius:2px;"></div></td></tr>
+          <tr><td style="padding:11px 12px;font-size:15px;font-weight:700;color:#fff;background:${FC.p};border-radius:8px 0 0 8px;">TOTAL</td><td style="padding:11px 12px;text-align:right;font-size:15px;font-weight:700;color:#fff;background:${FC.p};border-radius:0 8px 8px 0;">${invFmt(inv.total)}</td></tr>
         </table>
       </div>
-      ${inv.notas?`<div style="margin-top:24px;padding:13px 17px;background:#FBEAD8;border-left:3px solid #C2611B;border-radius:8px;font-size:12.5px;color:#5C3B1B;line-height:1.6;"><strong style="color:#0E1830;">Notes:</strong> ${escapeHtml(inv.notas)}</div>`:''}`;
+      ${inv.notas?`<div style="margin-top:24px;padding:13px 17px;background:${FC.tint};border-left:3px solid ${FC.a};border-radius:8px;font-size:12.5px;color:${FC.tintTxt};line-height:1.6;"><strong style="color:${FC.p};">Notes:</strong> ${escapeHtml(inv.notas)}</div>`:''}`;
   }
 
   function invMostrarVista(inv) {
@@ -10970,6 +11190,7 @@
 
   // ---- Recibo tipo invoice ----
   function nomBuildRecibo(n) {
+    const FC = facturaColores();
     const dias = Array.isArray(n.dias) ? n.dias.slice().sort() : [];
     const sueldoDia = Number(n.sueldoDia) || 0;
     const extraMonto = Number(n.extraMonto) || 0;
@@ -10984,26 +11205,26 @@
       </tr>`).join('');
 
     return `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:3px solid #0E1830;padding-bottom:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;border-bottom:3px solid ${FC.p};padding-bottom:18px;">
         <div>
-          <div style="font-size:22px;font-weight:700;color:#0E1830;font-family:Georgia,serif;">${escapeHtml(cfgFacturaNombre)}</div>
+          <div style="font-size:22px;font-weight:700;color:${FC.p};font-family:Georgia,serif;">${escapeHtml(cfgFacturaNombre)}</div>
           ${cfgFacturaDireccion ? `<div style="font-size:11.5px;color:#707A8C;margin-top:2px;">${escapeHtml(cfgFacturaDireccion)}</div>` : ''}
           <div style="font-size:12px;color:#666;margin-top:3px;">Recibo de pago a trabajador</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:20px;font-weight:700;color:#0E1830;letter-spacing:1px;">RECIBO</div>
+          <div style="font-size:20px;font-weight:700;color:${FC.p};letter-spacing:1px;">RECIBO</div>
           <div style="font-size:12px;color:#888;margin-top:3px;">${invFechaNum((n.creadoEn || '').slice(0, 10))}</div>
         </div>
       </div>
 
       <div style="margin-bottom:20px;">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:5px;">Trabajador</div>
-        <div style="font-size:17px;font-weight:700;color:#0E1830;">${escapeHtml(n.trabajador || '')}</div>
+        <div style="font-size:17px;font-weight:700;color:${FC.p};">${escapeHtml(n.trabajador || '')}</div>
       </div>
 
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#0E1830;margin-bottom:8px;">Días trabajados</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${FC.p};margin-bottom:8px;">Días trabajados</div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:18px;">
-        <thead><tr style="background:#0E1830;">
+        <thead><tr style="background:${FC.p};">
           <th style="padding:9px 6px;text-align:left;font-size:10px;color:rgba(255,255,255,.85);text-transform:uppercase;width:34px;">#</th>
           <th style="padding:9px 6px;text-align:left;font-size:10px;color:rgba(255,255,255,.85);text-transform:uppercase;" data-i18n="h_dia">Día</th>
           <th style="padding:9px 6px;text-align:right;font-size:10px;color:rgba(255,255,255,.85);text-transform:uppercase;width:110px;" data-i18n="h_sueldo_dia">Sueldo/día</th>
@@ -11015,11 +11236,11 @@
         <table style="font-size:13px;width:280px;">
           <tr><td style="padding:5px 0;color:#666;">${totalDias} día(s)${sueldoDia > 0 ? ` × ${nomFmt(sueldoDia)}` : ''}</td><td style="padding:5px 0;text-align:right;font-weight:600;">${nomFmt(subtotalDias)}</td></tr>
           ${extraMonto ? `<tr><td style="padding:5px 0;color:#C2622E;">Extra${n.extraDesc ? ` — ${escapeHtml(n.extraDesc)}` : ''}</td><td style="padding:5px 0;text-align:right;font-weight:600;color:#C2622E;">${nomFmt(extraMonto)}</td></tr>` : ''}
-          <tr style="border-top:2px solid #0E1830;"><td style="padding:10px 0;font-size:15px;font-weight:700;color:#0E1830;">TOTAL A PAGAR</td><td style="padding:10px 0;text-align:right;font-size:15px;font-weight:700;color:#0E1830;">${nomFmt(n.monto)}</td></tr>
+          <tr style="border-top:2px solid ${FC.p};"><td style="padding:10px 0;font-size:15px;font-weight:700;color:${FC.p};">TOTAL A PAGAR</td><td style="padding:10px 0;text-align:right;font-size:15px;font-weight:700;color:${FC.p};">${nomFmt(n.monto)}</td></tr>
         </table>
       </div>
 
-      ${n.nota ? `<div style="margin-top:22px;padding:12px 16px;background:#F5F8FC;border-left:3px solid #0E1830;border-radius:6px;font-size:12.5px;color:#444;"><strong>Nota:</strong> ${escapeHtml(n.nota)}</div>` : ''}
+      ${n.nota ? `<div style="margin-top:22px;padding:12px 16px;background:#F5F8FC;border-left:3px solid ${FC.p};border-radius:6px;font-size:12.5px;color:#444;"><strong>Nota:</strong> ${escapeHtml(n.nota)}</div>` : ''}
 
       <div style="margin-top:40px;display:flex;justify-content:space-between;gap:40px;">
         <div style="flex:1;border-top:1px solid #999;padding-top:6px;text-align:center;font-size:11px;color:#888;">Firma del trabajador</div>
@@ -11505,6 +11726,7 @@
 
   // Construir el recibo semanal (invoice de toda la semana)
   function nomBuildReciboSemanal(wk) {
+    const FC = facturaColores();
     const semanas = nomAgruparSemanas();
     const trabMap = semanas.get(wk);
     if (!trabMap) return '<div>Sin datos</div>';
@@ -11525,22 +11747,22 @@
     }).join('');
 
     return `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;border-bottom:3px solid #0E1830;padding-bottom:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;border-bottom:3px solid ${FC.p};padding-bottom:18px;">
         <div>
-          <div style="font-size:22px;font-weight:700;color:#0E1830;font-family:Georgia,serif;">${escapeHtml(cfgFacturaNombre)}</div>
+          <div style="font-size:22px;font-weight:700;color:${FC.p};font-family:Georgia,serif;">${escapeHtml(cfgFacturaNombre)}</div>
           ${cfgFacturaDireccion ? `<div style="font-size:11.5px;color:#707A8C;margin-top:2px;">${escapeHtml(cfgFacturaDireccion)}</div>` : ''}
           <div style="font-size:12px;color:#666;margin-top:3px;">Recibo de nómina semanal</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:20px;font-weight:700;color:#0E1830;letter-spacing:1px;">NÓMINA</div>
-          <div style="font-size:13px;font-weight:600;color:#0E1830;margin-top:6px;">Semana</div>
+          <div style="font-size:20px;font-weight:700;color:${FC.p};letter-spacing:1px;">NÓMINA</div>
+          <div style="font-size:13px;font-weight:600;color:${FC.p};margin-top:6px;">Semana</div>
           <div style="font-size:12px;color:#666;">${invFechaNum(rango.inicio)}</div>
           <div style="font-size:12px;color:#666;">al ${invFechaNum(rango.fin)}</div>
         </div>
       </div>
 
       <table style="width:100%;border-collapse:collapse;margin-bottom:18px;">
-        <thead><tr style="background:#0E1830;">
+        <thead><tr style="background:${FC.p};">
           <th style="padding:10px 8px;text-align:left;font-size:10px;color:rgba(255,255,255,.85);text-transform:uppercase;" data-i18n="trabajador">Trabajador</th>
           <th style="padding:10px 8px;text-align:left;font-size:10px;color:rgba(255,255,255,.85);text-transform:uppercase;" data-i18n="h_dias_trabajados">Días trabajados</th>
           <th style="padding:10px 8px;text-align:center;font-size:10px;color:rgba(255,255,255,.85);text-transform:uppercase;width:60px;" data-i18n="h_dias">Días</th>
@@ -11551,7 +11773,7 @@
 
       <div style="display:flex;justify-content:flex-end;">
         <table style="font-size:14px;width:260px;">
-          <tr style="border-top:2px solid #0E1830;"><td style="padding:10px 0;font-size:15px;font-weight:700;color:#0E1830;">TOTAL SEMANA</td><td style="padding:10px 0;text-align:right;font-size:15px;font-weight:700;color:#0E1830;">${nomFmt(totalSemana)}</td></tr>
+          <tr style="border-top:2px solid ${FC.p};"><td style="padding:10px 0;font-size:15px;font-weight:700;color:${FC.p};">TOTAL SEMANA</td><td style="padding:10px 0;text-align:right;font-size:15px;font-weight:700;color:${FC.p};">${nomFmt(totalSemana)}</td></tr>
         </table>
       </div>
 
@@ -11833,6 +12055,10 @@
           <button type="button" class="visor-accent-sw" data-accent="teal" title="Teal" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#0E8F82,#0B6F65);"></button>
           <button type="button" class="visor-accent-sw" data-accent="indigo" title="Índigo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4F6FA8,#3A5486);"></button>
           <button type="button" class="visor-accent-sw" data-accent="verde" title="Verde" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4E9350,#397239);"></button>
+          <button type="button" class="visor-accent-sw" data-accent="azul" title="Azul" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#2F7BD9,#1F5FB0);"></button>
+          <button type="button" class="visor-accent-sw" data-accent="rojo" title="Rojo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C8402F,#A02E20);"></button>
+          <button type="button" class="visor-accent-sw" data-accent="morado" title="Morado" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#7A4FB5,#5E3990);"></button>
+          <button type="button" class="visor-accent-sw" data-accent="grafito" title="Grafito" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4A4D55,#22242A);"></button>
         </div>
         <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin:20px 0 10px;">Tema de la app en este aparato. "Automático" sigue el modo claro/oscuro de tu teléfono.</p>
         <div class="gh-tema-seg">
