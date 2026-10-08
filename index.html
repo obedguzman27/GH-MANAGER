@@ -1434,6 +1434,11 @@
   .gh-res-seg { display: inline-flex; background: var(--surface-3); border-radius: 10px; padding: 3px; gap: 2px; }
   .gh-res-seg button { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: 12px; padding: 6px 11px; border-radius: 8px; cursor: pointer; }
   .gh-res-seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(22,23,26,.1); }
+  .gh-res-nav { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: 12.5px; color: var(--muted); font-weight: 700; }
+  .gh-res-nav button { border: 1px solid var(--border-soft); background: var(--surface-2); color: var(--ink); width: 26px; height: 26px; border-radius: 8px; font-size: 15px; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+  .gh-res-nav button:disabled { opacity: .35; cursor: default; }
+  .gh-res-nav span { min-width: 0; white-space: nowrap; }
+  .gh-res-head { flex-wrap: wrap; }
   .gh-res-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
   .gh-res-kpi { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; min-width: 0; }
   .gh-res-kpi span { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: var(--muted); text-transform: uppercase; }
@@ -1850,30 +1855,34 @@
         </div>
       </div>
 
-      <!-- Stats row - semana actual -->
-      <div class="gc-stats">
-        <div class="gc-stat ing"><div class="gc-stat-icon">↑</div><div><div class="gc-stat-label">Ingresos semana</div><div class="gc-stat-val" id="stat-ing">$0.00</div><div class="gc-stat-delta" id="stat-ing-delta"></div></div></div>
-        <div class="gc-stat gas"><div class="gc-stat-icon">↓</div><div><div class="gc-stat-label">Gastos semana</div><div class="gc-stat-val" id="stat-gas">$0.00</div><div class="gc-stat-delta" id="stat-gas-delta"></div></div></div>
-        <div class="gc-stat net"><div class="gc-stat-icon">≈</div><div><div class="gc-stat-label">Neto semana</div><div class="gc-stat-val" id="stat-net">$0.00</div></div></div>
-        <div class="gc-stat inv"><div class="gc-stat-icon">#</div><div><div class="gc-stat-label">Invoices guardados</div><div class="gc-stat-val" id="stat-inv">0</div></div></div>
-      </div>
-
       <!-- Resumen con gráfica: semanas o meses (movimientos + invoices guardados) -->
       <div class="gc-chart-card gh-res" id="gc-chart-semanal-cont">
         <div class="gh-res-head">
           <div style="min-width:0;">
             <p class="gc-card-title">Resumen</p>
-            <div style="font-size:12px;color:var(--muted);margin-top:3px;" id="gh-res-rango"></div>
+            <div class="gh-res-nav">
+              <button type="button" data-nav="-1" aria-label="Anterior">‹</button>
+              <span id="gh-res-rango"></span>
+              <button type="button" data-nav="1" aria-label="Siguiente">›</button>
+            </div>
           </div>
           <div class="gh-res-seg" role="tablist">
             <button type="button" data-res="sem" class="on">Semanas</button>
-            <button type="button" data-res="mes">Meses</button>
+            <button type="button" data-res="mes">Meses del año</button>
           </div>
         </div>
         <div class="gh-res-kpis" id="gh-res-kpis"></div>
         <div class="gc-chart-svg-wrap" id="gc-chart-semanal"></div>
         <div class="gh-res-det" id="gh-res-det"></div>
         <div class="gh-res-leg"><span><i style="background:var(--teal);"></i>Ingresos</span><span><i style="background:var(--ember);"></i>Gastos (con taxas)</span><span><i style="background:var(--ink);border-radius:50%;"></i>Neto</span></div>
+      </div>
+
+      <!-- Stats row - semana actual -->
+      <div class="gc-stats">
+        <div class="gc-stat ing"><div class="gc-stat-icon">↑</div><div><div class="gc-stat-label">Ingresos semana</div><div class="gc-stat-val" id="stat-ing">$0.00</div><div class="gc-stat-delta" id="stat-ing-delta"></div></div></div>
+        <div class="gc-stat gas"><div class="gc-stat-icon">↓</div><div><div class="gc-stat-label">Gastos semana</div><div class="gc-stat-val" id="stat-gas">$0.00</div><div class="gc-stat-delta" id="stat-gas-delta"></div></div></div>
+        <div class="gc-stat net"><div class="gc-stat-icon">≈</div><div><div class="gc-stat-label">Neto semana</div><div class="gc-stat-val" id="stat-net">$0.00</div></div></div>
+        <div class="gc-stat inv"><div class="gc-stat-icon">#</div><div><div class="gc-stat-label">Invoices guardados</div><div class="gc-stat-val" id="stat-inv">0</div></div></div>
       </div>
 
       <!-- Form -->
@@ -3210,7 +3219,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v117 · 7 oct';
+  const APP_VERSION = 'v118 · 7 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -4313,9 +4322,11 @@
   // Junta lo que hay en la hoja activa con los invoices ya guardados, para
   // que el historial no desaparezca al guardar una semana.
   // (var a propósito: renderGraficaSemanal puede llamarse antes de que se lea esta línea)
+  var RES_MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   var RES_MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   var resModo = (function () { try { return localStorage.getItem('gh-res-modo') === 'mes' ? 'mes' : 'sem'; } catch (e) { return 'sem'; } })();
   var resSel = null;   // clave del grupo tocado
+  var resPag = 0, resAnio = 0, resNavInfo = { prev: false, next: false, max: 0 };
   function resDatos() {
     const porSemana = new Map();
     const sumar = (key, label, x) => {
@@ -4337,24 +4348,42 @@
     });
     try { calcularSemanas().forEach((sm) => sumar(sm.key, sm.label, sm)); } catch (e) {}
     const semanas = [...porSemana.values()].sort((x, y) => x.key.localeCompare(y.key));
+    const hoy = new Date();
     if (resModo === 'sem') {
-      return semanas.slice(-8).map((x) => {
+      // páginas de 8 semanas; resPag = 0 son las más recientes
+      const porPag = 8;
+      resNavInfo.max = Math.max(0, Math.ceil(semanas.length / porPag) - 1);
+      if (resPag > resNavInfo.max) resPag = resNavInfo.max;
+      if (resPag < 0) resPag = 0;
+      const fin = semanas.length - resPag * porPag;
+      const trozo = semanas.slice(Math.max(0, fin - porPag), Math.max(0, fin));
+      resNavInfo.prev = resPag < resNavInfo.max;
+      resNavInfo.next = resPag > 0;
+      return trozo.map((x) => {
         const [yy, mm, dd] = x.key.split('-').map(Number);
         return { ...x, corto: `${dd} ${RES_MESES[(mm || 1) - 1]}`, titulo: (typeof invRangoCorto === 'function' && invRangoCorto(x.label)) || x.label || x.key };
       });
     }
-    const porMes = new Map();
+    // Meses: los 12 meses del año elegido (enero a diciembre)
+    const anios = semanas.map((x) => Number(x.key.slice(0, 4))).filter(Boolean);
+    const anioHoy = hoy.getFullYear();
+    const minA = anios.length ? Math.min(anioHoy, ...anios) : anioHoy;
+    const maxA = anios.length ? Math.max(anioHoy, ...anios) : anioHoy;
+    if (!resAnio) resAnio = anioHoy;
+    if (resAnio < minA) resAnio = minA;
+    if (resAnio > maxA) resAnio = maxA;
+    resNavInfo.prev = resAnio > minA;
+    resNavInfo.next = resAnio < maxA;
+    const meses = RES_MESES.map((nom, i) => ({ key: `${resAnio}-${String(i + 1).padStart(2, '0')}`, ingresos: 0, gastos: 0, neto: 0, n: 0, nom }));
     semanas.forEach((x) => {
-      const k = x.key.slice(0, 7);
-      const a = porMes.get(k) || { key: k, ingresos: 0, gastos: 0, neto: 0, n: 0 };
+      if (Number(x.key.slice(0, 4)) !== resAnio) return;
+      const a = meses[Number(x.key.slice(5, 7)) - 1];
+      if (!a) return;
       a.ingresos += x.ingresos; a.gastos += x.gastos; a.neto += x.neto; a.n += 1;
-      porMes.set(k, a);
     });
-    return [...porMes.values()].sort((x, y) => x.key.localeCompare(y.key)).slice(-6).map((x) => {
-      const [yy, mm] = x.key.split('-').map(Number);
-      const nom = RES_MESES[(mm || 1) - 1];
-      return { ...x, corto: nom, titulo: `${nom.charAt(0).toUpperCase() + nom.slice(1)} ${yy} · ${x.n} semana${x.n === 1 ? '' : 's'}` };
-    });
+    const hoyK = `${anioHoy}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+    return meses.map((x) => ({ ...x, futuro: x.key > hoyK && !x.n, corto: x.nom.charAt(0).toUpperCase() + x.nom.slice(1, 3),
+      titulo: `${RES_MESES_LARGO[Number(x.key.slice(5, 7)) - 1]} ${resAnio}` + (x.n ? ` · ${x.n} semana${x.n === 1 ? '' : 's'}` : ' · sin movimientos') }));
   }
   function renderGraficaSemanal() {
     if (!RES_MESES) return;   // todavía no se inicializa (se vuelve a llamar después)
@@ -4363,7 +4392,16 @@
     if (!cont || !wrap) return;
     wrap.style.display = 'block';
     wrap.querySelectorAll('.gh-res-seg button').forEach((b) => b.classList.toggle('on', b.dataset.res === resModo));
-    const datos = resDatos();
+    let datos = resDatos();
+    const navB = wrap.querySelectorAll('.gh-res-nav button');
+    if (navB[0]) navB[0].disabled = !resNavInfo.prev;
+    if (navB[1]) navB[1].disabled = !resNavInfo.next;
+    const nav = wrap.querySelector('.gh-res-nav');
+    if (resModo === 'mes' && !datos.some((x) => x.n)) {
+      // el año no tiene nada: si ningún año tiene, se muestra el mensaje de vacío
+      if (!resNavInfo.prev && !resNavInfo.next) datos = [];
+    }
+    if (nav) nav.style.display = datos.length ? '' : 'none';
     wrap.classList.toggle('vacio', !datos.length);
     const kpis = $('gh-res-kpis'), det = $('gh-res-det'), rango = $('gh-res-rango');
     if (!datos.length) {
@@ -4374,15 +4412,27 @@
       return;
     }
     const tot = datos.reduce((t, x) => ({ i: t.i + x.ingresos, g: t.g + x.gastos, n: t.n + x.neto }), { i: 0, g: 0, n: 0 });
-    if (rango) rango.textContent = resModo === 'sem'
-      ? `Últimas ${datos.length} semana${datos.length === 1 ? '' : 's'} con movimientos`
-      : `Últimos ${datos.length} mes${datos.length === 1 ? '' : 'es'}`;
+    if (rango) {
+      if (resModo === 'mes') rango.textContent = `Año ${resAnio}`;
+      else {
+        const pr = datos[0].key.split('-').map(Number), ul = datos[datos.length - 1].key.split('-').map(Number);
+        const txt = (d) => `${d[2]} ${RES_MESES[(d[1] || 1) - 1]}${d[0] !== new Date().getFullYear() ? ' ' + d[0] : ''}`;
+        rango.textContent = resPag === 0 ? `Últimas ${datos.length} semana${datos.length === 1 ? '' : 's'}` : `${txt(pr)} – ${txt(ul)}`;
+      }
+    }
     if (kpis) kpis.innerHTML = `
       <div class="gh-res-kpi i"><span>Ingresos</span><b>${fmt(tot.i)}</b></div>
       <div class="gh-res-kpi g"><span>Gastos</span><b>${fmt(tot.g)}</b></div>
       <div class="gh-res-kpi"><span>Neto</span><b style="color:${tot.n < 0 ? 'var(--ember)' : 'var(--ink)'}">${fmt(tot.n)}</b></div>`;
 
-    if (!datos.some((x) => x.key === resSel)) resSel = datos[datos.length - 1].key;
+    if (!datos.some((x) => x.key === resSel)) {
+      if (resModo === 'mes') {
+        const hoyK = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+        const conDatos = datos.filter((x) => x.n);
+        const mesHoy = datos.find((x) => x.key === hoyK);
+        resSel = mesHoy && mesHoy.n ? hoyK : (conDatos.length ? conDatos[conDatos.length - 1].key : (mesHoy ? hoyK : datos[0].key));
+      } else resSel = datos[datos.length - 1].key;
+    }
     const W = 340, H = 168, padL = 6, padR = 6, padT = 18, padB = 24;
     const plotW = W - padL - padR, plotH = H - padT - padB;
     const maxVal = Math.max(1, ...datos.map((x) => Math.max(x.ingresos, x.gastos, x.neto)));
@@ -4408,9 +4458,10 @@
         <rect class="hit" x="${(cx - bandW / 2 + 2).toFixed(1)}" y="${padT - 4}" width="${(bandW - 4).toFixed(1)}" height="${(plotH + 4 + 20).toFixed(1)}" rx="8"/>
         <rect x="${(cx - barW - 1.5).toFixed(1)}" y="${yi.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(0, base - yi).toFixed(1)}" rx="3" fill="var(--teal)" opacity="${on ? 1 : .78}"/>
         <rect x="${(cx + 1.5).toFixed(1)}" y="${yg.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(0, base - yg).toFixed(1)}" rx="3" fill="var(--ember)" opacity="${on ? 1 : .78}"/>
-        <text x="${cx.toFixed(1)}" y="${H - 7}" text-anchor="middle" font-size="10" fill="${on ? 'var(--ink)' : 'var(--muted)'}" font-weight="${on ? 800 : 600}">${escapeHtml(x.corto)}</text>
+        <text x="${cx.toFixed(1)}" y="${H - 7}" text-anchor="middle" font-size="${n > 8 ? 9 : 10}" fill="${on ? 'var(--ink)' : 'var(--muted)'}" font-weight="${on ? 800 : 600}">${escapeHtml(x.corto)}</text>
       </g>`;
-      linea += `${i === 0 ? 'M' : 'L'}${cx.toFixed(1)} ${yn.toFixed(1)} `;
+      if (x.futuro) return;
+      linea += `${linea ? 'L' : 'M'}${cx.toFixed(1)} ${yn.toFixed(1)} `;
       puntos += `<circle cx="${cx.toFixed(1)}" cy="${yn.toFixed(1)}" r="${on ? 4 : 3}" fill="var(--card)" stroke="var(--ink)" stroke-width="2" pointer-events="none"/>`;
     });
     cont.innerHTML = `<svg class="gh-res-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Ingresos y gastos por ${resModo === 'sem' ? 'semana' : 'mes'}">
@@ -4425,8 +4476,17 @@
   document.querySelectorAll('#gc-chart-semanal-cont .gh-res-seg button').forEach((b) => {
     b.addEventListener('click', () => {
       resModo = b.dataset.res === 'mes' ? 'mes' : 'sem';
-      resSel = null;
+      resSel = null; resPag = 0; resAnio = 0;
       try { localStorage.setItem('gh-res-modo', resModo); } catch (e) {}
+      renderGraficaSemanal();
+    });
+  });
+
+  document.querySelectorAll('#gc-chart-semanal-cont .gh-res-nav button').forEach((b) => {
+    b.addEventListener('click', () => {
+      const d = Number(b.dataset.nav);   // -1 = más viejo, 1 = más nuevo
+      if (resModo === 'mes') resAnio += d; else resPag -= d;
+      resSel = null;
       renderGraficaSemanal();
     });
   });
