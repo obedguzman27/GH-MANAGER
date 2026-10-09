@@ -3,13 +3,16 @@
 // Los datos NO se guardan aquí (eso vive en localStorage / futuro backend),
 // solo el "cascarón" de la app (HTML, íconos).
 
-const CACHE_NAME = 'gh-manager-v123';
+const CACHE_NAME = 'gh-manager-v124';
 const ARCHIVOS_CACHE = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
+  './apple-touch-icon.png',
   './browser-storage.js',
   './supabase-storage.js'
 ];
