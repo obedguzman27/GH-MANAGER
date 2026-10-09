@@ -1803,16 +1803,21 @@
   .chk-res span { background: var(--surface-2); border-radius: 12px; padding: 9px 8px; text-align: center; font-size: 11.5px; color: var(--muted); font-weight: 600; }
   .chk-res b { display: block; font-size: 19px; font-weight: 800; color: var(--ink); }
   .chk-res .si b { color: var(--teal-dk); } .chk-res .no b { color: var(--ember); }
-  .chk-todos { width: 100%; margin-bottom: 12px; }
+  .chk-res.dos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .chk-lista { display: flex; flex-direction: column; gap: 8px; }
-  .chk-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--border-soft); background: var(--card); }
+  .chk-fila { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; padding: 12px 14px; min-height: 58px; border-radius: 14px; border: 1.5px solid var(--border-soft); background: var(--card); cursor: pointer; color: var(--ink); transition: background .15s, border-color .15s; }
+  .chk-fila:active { transform: scale(.99); }
   .chk-fila.es-si { border-color: var(--teal); background: var(--teal-bg); }
-  .chk-fila.es-no { border-color: var(--ember); background: var(--ember-bg); }
-  .chk-nom { font-weight: 700; font-size: 14.5px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chk-btns { display: flex; gap: 6px; flex-shrink: 0; }
-  .chk-b { border: 1.5px solid var(--border); background: var(--card); color: var(--ink); font-weight: 800; font-size: 13px; padding: 10px 12px; border-radius: 11px; cursor: pointer; white-space: nowrap; min-height: 44px; }
-  .chk-b.si.on { background: var(--teal); border-color: var(--teal); color: #fff; }
-  .chk-b.no.on { background: var(--ember); border-color: var(--ember); color: #fff; }
+  .chk-caja { width: 28px; height: 28px; border-radius: 9px; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #fff; background: var(--card); }
+  .chk-fila.es-si .chk-caja { background: var(--teal); border-color: var(--teal); }
+  .chk-nom { flex: 1; font-weight: 700; font-size: 15px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chk-tag { font-size: 11.5px; font-weight: 800; color: var(--muted); flex-shrink: 0; }
+  .chk-fila.es-si .chk-tag { color: var(--teal-dk); }
+  .chk-acc { margin-top: 10px; }
+  .chk-acc .chk-todos { width: 100%; }
+  .chk-add { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
+  .chk-add input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface-2); color: var(--ink); }
+  .chk-add .gc-save-btn { flex-shrink: 0; padding: 11px 16px; }
   .chk-estado { font-size: 12px; color: var(--muted); text-align: center; margin: 12px 0 0; min-height: 15px; }
   /* Check-in en Nómina → Registrar pago */
   .nom-chk-aviso { display: none; background: var(--teal-bg); color: var(--teal-dk); border-radius: 12px; padding: 10px 13px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px; line-height: 1.45; }
@@ -3321,7 +3326,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v120 · 8 oct';
+  const APP_VERSION = 'v121 · 8 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -7805,6 +7810,8 @@
     } catch(e) {
       throw new Error('No se pudo guardar: ' + e.message);
     }
+    clearTimeout(chkSyncT);
+    chkSyncT = setTimeout(() => { chkSincronizarTrabajadores().then(chkAvisarNuevos).catch(() => {}); }, 800);
   }
 
   async function loadEmpleados() {
@@ -7813,6 +7820,51 @@
       empleados = JSON.parse(r.value);
     } catch (e) { empleados = []; }
   }
+
+  // ---- Check-in del visor: solo NOMBRES (nunca sueldos) ----
+  // En "gh-checkin" se guarda _trab (los nombres de los trabajadores activos)
+  // para que el visor haga el check-in sin leer Empleados, que trae sueldos y
+  // datos personales. Los que el visor agrega llegan en _nuevos y aquí se
+  // crean en Empleados con sueldo $0 (el admin les pone el sueldo).
+  const CHK_KEY_APP = 'gh-checkin';
+  let chkSyncT = null;
+  async function chkSincronizarTrabajadores() {
+    if (window.GH_ROL === 'visor') return 0;
+    let obj = {};
+    try { const r = await window.storage.get(CHK_KEY_APP); const v = JSON.parse(r.value); if (v && typeof v === 'object' && !Array.isArray(v)) obj = v; } catch (e) {}
+    const nuevos = Array.isArray(obj._nuevos) ? obj._nuevos : [];
+    let agregados = 0;
+    nuevos.forEach((n) => {
+      const nombre = String(n || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (!nombre || nomBuscarTrab(nombre)) return;
+      empleados.push({
+        id: 'emp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+        nombre, apellido: '', rol: '', estado: 'activo', sueldo: 0,
+        tel: '', email: '', inicio: '', ss: '', emergencia: '', direccion: '', notas: 'Agregado desde el check-in'
+      });
+      agregados++;
+    });
+    if (agregados) { try { await window.storage.set(STORAGE_EMPLEADOS, JSON.stringify(empleados)); } catch (e) { return 0; } }
+    const lista = empleados.filter((e) => e.estado !== 'inactivo').map((e) => empNombreCompleto(e)).filter(Boolean).sort((a, b) => a.localeCompare(b, 'es'));
+    if (JSON.stringify(lista) === JSON.stringify(obj._trab || []) && !nuevos.length) return agregados;
+    obj._trab = lista;
+    delete obj._nuevos;
+    try { await window.storage.set(CHK_KEY_APP, JSON.stringify(obj)); } catch (e) {}
+    if (agregados && typeof nomRefreshDl === 'function') { try { nomRefreshDl(); } catch (e) {} }
+    return agregados;
+  }
+  function chkAvisarNuevos(n) {
+    if (n) toast(`${n === 1 ? '1 trabajador nuevo' : n + ' trabajadores nuevos'} del check-in — ponle sueldo en Nómina → Trabajadores`, 'info', 5000);
+  }
+  // Al abrir la app: publica la lista y trae los nuevos que agregó el visor
+  (async () => {
+    try { if (typeof window.GH_ESPERAR_SESION === 'function') await window.GH_ESPERAR_SESION(); } catch (e) {}
+    if (window.GH_ROL === 'visor') return;
+    try {
+      if (!empleados.length) await loadEmpleados();
+      chkAvisarNuevos(await chkSincronizarTrabajadores());
+    } catch (e) {}
+  })();
 
   // ---- Render grid ----
   function renderEmpleados() {
@@ -10995,7 +11047,8 @@
     }).map((fila) => {
       // Lo que marcó el visor en el check-in de esta semana
       fila.chk = {};
-      fechas.forEach((f) => { const v = (nomCheckin[f] || {}).v || {}; if (v[fila.nombre] === 1 || v[fila.nombre] === 0) fila.chk[f] = v[fila.nombre]; });
+      // si ese día hubo check-in y no lo marcaron, es que no vino
+      fechas.forEach((f) => { const reg = nomCheckin[f]; if (!reg || !reg.v || !Object.keys(reg.v).length) return; fila.chk[f] = reg.v[fila.nombre] === 1 ? 1 : 0; });
       const diasChk = fechas.filter((f) => fila.chk[f] === 1);
       // Sin pago guardado todavía: los días salen marcados solos (el admin revisa y guarda)
       if (!fila.pagos.length && diasChk.length) {
@@ -11660,6 +11713,7 @@
           // Migración de una sola vez: si había trabajadores en el formato viejo
           // que aún no están en Empleados, se agregan ahí (sin duplicar).
           if (rViejo) { try { await nomMigrarTrabajadoresViejos(JSON.parse(rViejo.value)); } catch (e) {} }
+          try { chkAvisarNuevos(await chkSincronizarTrabajadores()); } catch (e) {}
           nomRefreshDl();
           nomRegSemanaOffset = 0;
           nomGridAbrirSemana();
@@ -11667,6 +11721,7 @@
         } else {
           // Ya estaba abierta: trae el check-in más reciente. Si el admin no
           // ha tocado nada a mano en esta semana, se vuelve a armar la lista.
+          try { chkAvisarNuevos(await chkSincronizarTrabajadores()); } catch (e) {}
           const antes = JSON.stringify(nomCheckin);
           await nomCargarCheckin();
           const sinTocar = !nomGridFilas.some((f) => f.tocado && !f.deCheckin);
@@ -12043,24 +12098,14 @@
       return codigo === 'principal' ? 'Principal' : codigo;
     };
 
-    // 3. Cargar los datos de CADA base de datos permitida (invoices + nómina)
+    // 3. Cargar SOLO el check-in de cada base de datos permitida (trae los
+    //    nombres de los trabajadores, sin sueldos ni nada más)
     const datosPorCuenta = {};
     for (const codigo of cuentas) {
-      let invoices = [], nomina = [];
-      try {
-        const rInv = await window.GH_LEER_DE_CUENTA(codigo, 'invoicesGuardados');
-        invoices = rInv ? JSON.parse(rInv) : [];
-      } catch (e) {}
-      try {
-        const rNom = await window.GH_LEER_DE_CUENTA(codigo, 'gh-nomina');
-        nomina = rNom ? JSON.parse(rNom) : [];
-      } catch (e) {}
-      let empleados = [], checkin = {};
-      try { const r = await window.GH_LEER_DE_CUENTA(codigo, 'empleados'); empleados = r ? JSON.parse(r) : []; } catch (e) {}
+      let checkin = {};
       try { const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY); checkin = r ? JSON.parse(r) : {}; } catch (e) {}
-      if (!Array.isArray(empleados)) empleados = [];
       if (!checkin || typeof checkin !== 'object' || Array.isArray(checkin)) checkin = {};
-      datosPorCuenta[codigo] = { nombre: nombreDe(codigo), invoices, nomina, empleados, checkin };
+      datosPorCuenta[codigo] = { nombre: nombreDe(codigo), checkin };
     }
 
     construirInterfazVisor(cuentas, datosPorCuenta);
@@ -12104,26 +12149,9 @@
       const panel = document.createElement('div');
       panel.className = 'gc-panel visor-panel' + (i === 0 ? ' active' : '');
       panel.dataset.visorCuenta = codigo;
-      panel.innerHTML = `
-        <div class="inv-subnav">
-          <button type="button" class="mov-subtab active" data-vsub="checkin">Check-in</button>
-          <button type="button" class="mov-subtab" data-i18n="invoices_guardados" data-vsub="invoices">Invoices guardados</button>
-          <button type="button" class="mov-subtab" data-i18n="recibo_semanal" data-vsub="semanal">Recibo semanal</button>
-        </div>
-        <div class="mov-subpanel active" data-vsub="checkin"></div>
-        <div class="mov-subpanel" data-vsub="invoices">${htmlInvoicesVisor(d)}</div>
-        <div class="mov-subpanel" data-vsub="semanal">${htmlReciboSemanalVisor(d)}</div>
-      `;
+      panel.innerHTML = `<div class="chk-cont"></div>`;
       body.appendChild(panel);
-      montarCheckinVisor(panel.querySelector('.mov-subpanel[data-vsub="checkin"]'), codigo, d);
-      panel.querySelectorAll('.mov-subtab').forEach((tab) => {
-        tab.addEventListener('click', () => {
-          panel.querySelectorAll('.mov-subtab').forEach((t) => t.classList.remove('active'));
-          panel.querySelectorAll('.mov-subpanel').forEach((p) => p.classList.remove('active'));
-          tab.classList.add('active');
-          panel.querySelector(`.mov-subpanel[data-vsub="${tab.dataset.vsub}"]`).classList.add('active');
-        });
-      });
+      montarCheckinVisor(panel.querySelector('.chk-cont'), codigo, d);
     });
 
     // ---- Panel de Ajustes (color de acento + cerrar sesión) ----
@@ -12133,7 +12161,7 @@
     panelAjustes.innerHTML = `
       <div class="gc-card">
         <p class="gc-card-title" data-i18n="apariencia">Apariencia</p>
-        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige el color de acento de la app.</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige el color de la app en este teléfono.</p>
         <div id="visor-accent-picker" style="display:flex;gap:12px;flex-wrap:wrap;">
           <button type="button" class="visor-accent-sw" data-accent="cobre" title="Cobre" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C46E20,#A2560F);"></button>
           <button type="button" class="visor-accent-sw" data-accent="teal" title="Teal" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#0E8F82,#0B6F65);"></button>
@@ -12209,16 +12237,16 @@
         sw.style.boxShadow = sw.dataset.accent === nombre ? '0 0 0 2.5px #fff, 0 0 0 4.5px var(--accent, #C46E20)' : 'none';
       });
     }
-    (async () => {
+    (() => {
       let guardado = 'cobre';
-      try { const r = await window.storage.get('kontaly-accent'); guardado = JSON.parse(r.value) || 'cobre'; } catch (e) {}
+      try { guardado = localStorage.getItem('gh-accent-visor') || 'cobre'; } catch (e) {}
       aplicarAcentoVisor(guardado);
     })();
     if (window.GH_TEMA) window.GH_TEMA.aplicar();
     panelAjustes.querySelectorAll('.visor-accent-sw').forEach((sw) => {
       sw.addEventListener('click', async () => {
         aplicarAcentoVisor(sw.dataset.accent);
-        try { await window.storage.set('kontaly-accent', JSON.stringify(sw.dataset.accent)); } catch (e) {}
+        try { localStorage.setItem('gh-accent-visor', sw.dataset.accent); } catch (e) {}
       });
     });
     panelAjustes.querySelector('#visor-btn-cerrar-sesion').addEventListener('click', () => {
@@ -12256,12 +12284,15 @@
     const hoy = ghFechaLocal(new Date());
     let fecha = hoy;
     let cola = Promise.resolve();   // los guardados van uno tras otro
-    let estado = '';                 // texto de "Guardando… / Guardado"
+    let estado = '';                 // "Guardando… / Guardado"
+    let agregando = false;
 
+    const norm = (x) => String(x || '').replace(/\s+/g, ' ').trim();
     const trabajadores = () => {
-      const activos = (d.empleados || []).filter((e) => e && e.estado !== 'inactivo').map(chkNombre).filter(Boolean);
+      const lista = Array.isArray(d.checkin._trab) ? d.checkin._trab : [];
+      const nuevos = Array.isArray(d.checkin._nuevos) ? d.checkin._nuevos : [];
       const delDia = Object.keys(((d.checkin[fecha] || {}).v) || {});
-      return [...new Set([...activos, ...delDia])].sort((a, b) => a.localeCompare(b, 'es'));
+      return [...new Set([...lista, ...nuevos, ...delDia].map(norm).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
     };
 
     function render() {
@@ -12269,201 +12300,127 @@
       const reg = d.checkin[fecha] || { v: {} };
       const v = reg.v || {};
       const si = nombres.filter((n) => v[n] === 1).length;
-      const no = nombres.filter((n) => v[n] === 0).length;
-      const falta = nombres.length - si - no;
       const dt = new Date(fecha + 'T00:00:00');
       const titulo = (fecha === hoy ? 'Hoy · ' : fecha === chkSumarDias(hoy, -1) ? 'Ayer · ' : '') + `${CHK_DIAS[dt.getDay()]} ${dt.getDate()} de ${CHK_MESES[dt.getMonth()]}`;
       const minimo = chkSumarDias(hoy, -CHK_MAX_ATRAS);
       const quien = reg.por ? `Último cambio: ${escapeHtmlVisor(reg.por)}${reg.en ? ' · ' + chkHora(reg.en) : ''}` : '';
+      const enfocar = document.activeElement && document.activeElement.classList.contains('chk-add-in');
       cont.innerHTML = `
         <div class="gc-card chk">
           <div class="chk-head">
             <button type="button" class="chk-nav" data-nav="-1" aria-label="Día anterior" ${fecha <= minimo ? 'disabled' : ''}>‹</button>
-            <div class="chk-titulo"><b>${titulo}</b><span>${nombres.length ? `${si + no} de ${nombres.length} marcados` : ''}</span></div>
+            <div class="chk-titulo"><b>${titulo}</b><span>Toca a los que vinieron</span></div>
             <button type="button" class="chk-nav" data-nav="1" aria-label="Día siguiente" ${fecha >= hoy ? 'disabled' : ''}>›</button>
           </div>
           ${nombres.length ? `
-          <div class="chk-res">
+          <div class="chk-res dos">
             <span class="si"><b>${si}</b> vinieron</span>
-            <span class="no"><b>${no}</b> no vinieron</span>
-            <span class="falta"><b>${falta}</b> sin marcar</span>
+            <span class="no"><b>${nombres.length - si}</b> no vinieron</span>
           </div>
-          ${falta ? `<button type="button" class="gc-action-btn chk-todos">✓ Los que faltan vinieron</button>` : ''}
           <div class="chk-lista">
             ${nombres.map((n) => `
-              <div class="chk-fila${v[n] === 1 ? ' es-si' : v[n] === 0 ? ' es-no' : ''}">
+              <button type="button" class="chk-fila${v[n] === 1 ? ' es-si' : ''}" data-n="${escapeHtmlVisor(n)}" aria-pressed="${v[n] === 1}">
+                <span class="chk-caja" aria-hidden="true">${v[n] === 1 ? '✓' : ''}</span>
                 <span class="chk-nom">${escapeHtmlVisor(n)}</span>
-                <div class="chk-btns">
-                  <button type="button" class="chk-b si${v[n] === 1 ? ' on' : ''}" data-n="${escapeHtmlVisor(n)}" data-val="1" aria-pressed="${v[n] === 1}">✓ Vino</button>
-                  <button type="button" class="chk-b no${v[n] === 0 ? ' on' : ''}" data-n="${escapeHtmlVisor(n)}" data-val="0" aria-pressed="${v[n] === 0}">✕ No vino</button>
-                </div>
-              </div>`).join('')}
+                <span class="chk-tag">${v[n] === 1 ? 'Vino' : 'No vino'}</span>
+              </button>`).join('')}
           </div>
-          <p class="chk-estado">${estado || quien}</p>`
-          : `<div class="gc-empty">No hay trabajadores activos en esta base de datos. El admin los agrega en Nómina → Trabajadores.</div>`}
+          <div class="chk-acc">
+            ${si < nombres.length ? `<button type="button" class="gc-action-btn chk-todos" data-todos="1">✓ Marcar a todos</button>` : `<button type="button" class="gc-action-btn chk-todos" data-todos="0">Quitar a todos</button>`}
+          </div>`
+          : `<div class="gc-empty">Todavía no hay trabajadores. Agrégalos abajo.</div>`}
+          <form class="chk-add" autocomplete="off">
+            <input type="text" class="chk-add-in" maxlength="60" placeholder="Agregar trabajador nuevo…" aria-label="Nombre del trabajador nuevo" ${agregando ? 'disabled' : ''}>
+            <button type="submit" class="gc-save-btn" ${agregando ? 'disabled' : ''}>+ Agregar</button>
+          </form>
+          <p class="chk-estado">${estado || quien}</p>
         </div>`;
+      if (enfocar) { const i = cont.querySelector('.chk-add-in'); if (i) i.focus(); }
       cont.querySelectorAll('.chk-nav').forEach((b) => b.addEventListener('click', () => {
         const nf = chkSumarDias(fecha, Number(b.dataset.nav));
         if (nf > hoy || nf < minimo) return;
         fecha = nf; estado = ''; render();
       }));
-      cont.querySelectorAll('.chk-b').forEach((b) => b.addEventListener('click', () => {
-        const n = b.dataset.n, val = Number(b.dataset.val);
-        // tocar el mismo botón otra vez lo desmarca
-        cambiar({ [n]: v[n] === val ? null : val });
+      cont.querySelectorAll('.chk-fila').forEach((b) => b.addEventListener('click', () => {
+        const n = b.dataset.n;
+        guardar({ dia: fecha, marcar: { [n]: v[n] === 1 ? null : 1 } });
       }));
       const todos = cont.querySelector('.chk-todos');
       if (todos) todos.addEventListener('click', () => {
-        const cambios = {};
-        nombres.forEach((n) => { if (v[n] !== 1 && v[n] !== 0) cambios[n] = 1; });
-        cambiar(cambios);
+        const marcar = {};
+        nombres.forEach((n) => { marcar[n] = todos.dataset.todos === '1' ? 1 : null; });
+        guardar({ dia: fecha, marcar });
+      });
+      cont.querySelector('.chk-add').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const inp = cont.querySelector('.chk-add-in');
+        const nombre = norm(inp.value);
+        if (!nombre) { inp.focus(); return; }
+        const ya = trabajadores().find((x) => x.toLowerCase() === nombre.toLowerCase());
+        if (ya) { estado = `${escapeHtmlVisor(ya)} ya está en la lista.`; render(); return; }
+        // el nuevo se marca como que vino ese día
+        guardar({ dia: fecha, marcar: { [nombre]: 1 }, nuevo: nombre });
       });
     }
 
-    function aplicar(obj, dia, cambios) {
+    function aplicar(obj, cambio) {
+      if (cambio.nuevo) {
+        obj._nuevos = Array.isArray(obj._nuevos) ? obj._nuevos : [];
+        if (!obj._nuevos.includes(cambio.nuevo)) obj._nuevos.push(cambio.nuevo);
+        obj._trab = Array.isArray(obj._trab) ? obj._trab : [];
+        if (!obj._trab.includes(cambio.nuevo)) obj._trab.push(cambio.nuevo);
+      }
+      const dia = cambio.dia;
       const reg = obj[dia] && typeof obj[dia] === 'object' ? obj[dia] : { v: {} };
       reg.v = reg.v || {};
-      Object.entries(cambios).forEach(([n, val]) => { if (val === null) delete reg.v[n]; else reg.v[n] = val; });
+      Object.entries(cambio.marcar || {}).forEach(([n, val]) => { if (val === 1) reg.v[n] = 1; else delete reg.v[n]; });
+      // solo se guardan los que vinieron (los que no están marcados no fueron)
+      Object.keys(reg.v).forEach((n) => { if (reg.v[n] !== 1) delete reg.v[n]; });
       reg.por = window.GH_NOMBRE || 'visor';
       reg.en = new Date().toISOString();
       if (Object.keys(reg.v).length) obj[dia] = reg; else delete obj[dia];
     }
 
-    function cambiar(cambios) {
-      const dia = fecha;
-      aplicar(d.checkin, dia, cambios);   // se ve al instante
+    function guardar(cambio) {
+      aplicar(d.checkin, cambio);   // se ve al instante
       estado = 'Guardando…';
+      if (cambio.nuevo) agregando = true;
       render();
       cola = cola.then(async () => {
         try {
-          // Lee lo último de la nube y solo cambia lo que se tocó, para no
-          // borrar lo que alguien más haya marcado desde otro teléfono.
+          // Lee lo último de la nube y solo cambia lo que se tocó (por si
+          // alguien más marcó desde otro teléfono).
           let actual = {};
           try { const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY); actual = r ? JSON.parse(r) : {}; } catch (e) {}
           if (!actual || typeof actual !== 'object' || Array.isArray(actual)) actual = {};
-          aplicar(actual, dia, cambios);
-          // Solo se guardan los últimos 120 días
-          const corte = chkSumarDias(hoy, -120);
-          Object.keys(actual).forEach((k) => { if (k < corte) delete actual[k]; });
+          aplicar(actual, cambio);
+          const corte = chkSumarDias(hoy, -120);   // solo los últimos 120 días
+          Object.keys(actual).forEach((k) => { if (/^\d{4}-\d{2}-\d{2}$/.test(k) && k < corte) delete actual[k]; });
           await window.GH_ESCRIBIR_EN_CUENTA(codigo, CHK_KEY, JSON.stringify(actual));
           d.checkin = actual;
-          estado = 'Guardado ✓ ' + chkHora(new Date().toISOString());
+          estado = cambio.nuevo ? `${escapeHtmlVisor(cambio.nuevo)} agregado ✓` : 'Guardado ✓ ' + chkHora(new Date().toISOString());
         } catch (e) {
           estado = 'No se pudo guardar. Revisa tu conexión y vuelve a tocar.';
-          if (typeof toast === 'function') toast('No se pudo guardar el check-in', 'error');
         }
-        if (fecha === dia) render();
+        if (cambio.nuevo) {
+          agregando = false;
+          const i = cont.querySelector('.chk-add-in'); if (i && !estado.startsWith('No se')) i.value = '';
+        }
+        if (fecha === cambio.dia) render();
       });
     }
 
     render();
   }
 
-  // ---- HTML: tabla de Invoices guardados para una base de datos (solo lectura) ----
-  function htmlInvoicesVisor(d) {
-    if (!d.invoices || d.invoices.length === 0) {
-      return `<div class="gc-card"><div class="gc-empty">No hay invoices guardados en esta base de datos.</div></div>`;
-    }
-    const sorted = [...d.invoices].sort((a, b) => (b.guardadoEn || '').localeCompare(a.guardadoEn || ''));
-    // Columnas de socios: usa los "pagos" del invoice más reciente que los tenga (formato nuevo)
-    let nombresSocios = [];
-    const conPagos = sorted.find((i) => Array.isArray(i.pagos) && i.pagos.length);
-    if (conPagos) nombresSocios = conPagos.pagos.map((p) => p.nombre);
-    else nombresSocios = ['Socio 1', 'Socio 2'];
-
-    const filas = sorted.map((inv) => {
-      const fecha = inv.guardadoEn ? new Date(inv.guardadoEn).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : '';
-      const montos = nombresSocios.map((nom, i) => {
-        if (Array.isArray(inv.pagos) && inv.pagos[i]) return fmtVisor(inv.pagos[i].total);
-        if (i === 0) return fmtVisor(inv.pagoCra);
-        if (i === 1) return fmtVisor(inv.pagoGuzman);
-        return '—';
-      });
-      return `<tr>
-        <td>${escapeHtmlVisor(inv.label || '')}</td>
-        <td>${fecha}</td>
-        <td class="num">${fmtVisor(inv.gastosTotales)}</td>
-        ${montos.map((m) => `<td class="num">${m}</td>`).join('')}
-      </tr>`;
-    }).join('');
-
-    return `
-      <div class="gc-card">
-        <p class="gc-card-title" data-i18n="invoices_guardados">Invoices guardados</p>
-        <div style="overflow-x:auto;">
-          <table class="gc-ledger">
-            <thead><tr>
-              <th data-i18n="h_semana">Semana</th><th data-i18n="h_guardado">Guardado</th><th class="num" data-i18n="h_gastos">Gastos</th>
-              ${nombresSocios.map((n) => `<th class="num">${escapeHtmlVisor(n)}</th>`).join('')}
-            </tr></thead>
-            <tbody>${filas}</tbody>
-          </table>
-        </div>
-      </div>`;
-  }
-
-  // ---- HTML: Recibo semanal para una base de datos (solo lectura) ----
-  function htmlReciboSemanalVisor(d) {
-    if (!d.nomina || d.nomina.length === 0) {
-      return `<div class="gc-card"><div class="gc-empty">No hay pagos de nómina en esta base de datos.</div></div>`;
-    }
-    const semanas = new Map();
-    d.nomina.forEach((n) => {
-      const dias = Array.isArray(n.dias) ? n.dias.slice().sort() : [];
-      const refDay = dias[0] || (n.creadoEn || '').slice(0, 10);
-      if (!refDay) return;
-      const wk = weekKeyVisor(refDay);
-      if (!wk) return;
-      if (!semanas.has(wk)) semanas.set(wk, new Map());
-      const trabMap = semanas.get(wk);
-      if (!trabMap.has(n.trabajador)) trabMap.set(n.trabajador, { dias: [], monto: 0 });
-      const t = trabMap.get(n.trabajador);
-      t.dias.push(...dias);
-      t.monto += Number(n.monto) || 0;
-    });
-
-    const claves = [...semanas.keys()].sort((a, b) => b.localeCompare(a));
-    const tarjetas = claves.map((wk) => {
-      const trabMap = semanas.get(wk);
-      const rango = weekRangoVisor(wk);
-      let totalSemana = 0;
-      let filas = '';
-      [...trabMap.entries()].forEach(([nombre, t]) => {
-        totalSemana += t.monto;
-        const diasUnicos = [...new Set(t.dias)].sort();
-        const diasTxt = diasUnicos.map(diaCortoVisor).join(', ');
-        filas += `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #F0F4FA;gap:12px;">
-            <div style="flex:1;min-width:0;">
-              <div style="font-weight:600;color:var(--ink);font-size:13.5px;">${escapeHtmlVisor(nombre)}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px;">trabajó: ${escapeHtmlVisor(diasTxt)} <span style="color:var(--navy);font-weight:600;">(${diasUnicos.length} día${diasUnicos.length !== 1 ? 's' : ''})</span></div>
-            </div>
-            <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--teal);font-size:14px;white-space:nowrap;">${fmtVisor(t.monto)}</div>
-          </div>`;
-      });
-      return `
-        <div class="gc-card" style="margin-bottom:16px;">
-          <p style="font-family:'Zilla Slab',serif;font-size:15px;font-weight:600;color:var(--ink);margin-bottom:12px;">Semana del ${fechaCortaVisor(rango.inicio)} al ${fechaCortaVisor(rango.fin)}</p>
-          <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;">
-            ${filas}
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--navy);color:#fff;">
-              <span style="font-weight:600;font-size:13px;">TOTAL DE LA SEMANA</span>
-              <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;">${fmtVisor(totalSemana)}</span>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-    return tarjetas || `<div class="gc-card"><div class="gc-empty">No hay pagos de nómina en esta base de datos.</div></div>`;
-  }
-
   // Bloqueo de edición: por si algún elemento interactivo quedara dentro de
   // estos paneles nuevos, no se puede editar nada (todo es texto/tablas, pero
   // esto es un respaldo).
   function aplicarBloqueoEdicionVisor() {
-    document.body.insertAdjacentHTML('afterbegin', `<div id="gh-banner-visor" style="background:#EAF3FF;color:#1A4B8C;font-size:12.5px;padding:10px 20px;text-align:center;border-bottom:1px solid #C7DFFB;">Modo visor — puedes ver y hacer el check-in de los trabajadores.</div>`);
+    document.body.insertAdjacentHTML('afterbegin', `<div id="gh-banner-visor" style="background:#EAF3FF;color:#1A4B8C;font-size:12.5px;padding:10px 20px;text-align:center;border-bottom:1px solid #C7DFFB;">Modo visor — check-in de los trabajadores.</div>`);
     const style = document.createElement('style');
     style.textContent = `
-      body.gh-modo-visor .visor-panel input,
+      body.gh-modo-visor .visor-panel input:not(.chk-add-in),
       body.gh-modo-visor .visor-panel select,
       body.gh-modo-visor .visor-panel textarea {
         pointer-events: none !important;

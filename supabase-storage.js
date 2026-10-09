@@ -452,12 +452,16 @@
   window.storage = {
     get: async (key) => {
       await sesionLista;
+      // El visor solo usa el check-in (con sus propias funciones): la app
+      // normal, que queda escondida para él, no lee ni escribe nada.
+      if (window.GH_ROL === 'visor' && !key.startsWith('__')) throw new Error('not found');
       const { data, error } = await client.from('datos_app').select('valor').eq('clave', claveConCuenta(key)).maybeSingle();
       if (error || !data) throw new Error('not found');
       return { key, value: data.valor, shared: false };
     },
     set: async (key, value) => {
       await sesionLista;
+      if (window.GH_ROL === 'visor') return { key, value, shared: false };
       const { data: { user } } = await client.auth.getUser();
       const { error } = await client.from('datos_app').upsert({
         clave: claveConCuenta(key), valor: value, actualizado_por: user ? user.id : null, actualizado_en: new Date().toISOString()
@@ -467,6 +471,7 @@
     },
     delete: async (key) => {
       await sesionLista;
+      if (window.GH_ROL === 'visor') return { key, deleted: false, shared: false };
       const { error } = await client.from('datos_app').delete().eq('clave', claveConCuenta(key));
       if (error) throw error;
       return { key, deleted: true, shared: false };
