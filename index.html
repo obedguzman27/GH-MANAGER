@@ -1792,6 +1792,36 @@
   .gh-rec-val { font-size: 18px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gh-rec-sub { font-size: 12px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .gh-rec-nuevo { display: inline-block; vertical-align: 3px; margin-left: 7px; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; padding: 2px 7px; border-radius: 6px; background: var(--gold-bg); color: var(--gold); }
+  /* Check-in (visor) */
+  .chk-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .chk-nav { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border-soft); background: var(--surface-2); color: var(--ink); font-size: 20px; cursor: pointer; flex-shrink: 0; }
+  .chk-nav:disabled { opacity: .3; cursor: default; }
+  .chk-titulo { text-align: center; min-width: 0; }
+  .chk-titulo b { display: block; font-size: 16px; font-weight: 800; color: var(--ink); }
+  .chk-titulo span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .chk-res { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .chk-res span { background: var(--surface-2); border-radius: 12px; padding: 9px 8px; text-align: center; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .chk-res b { display: block; font-size: 19px; font-weight: 800; color: var(--ink); }
+  .chk-res .si b { color: var(--teal-dk); } .chk-res .no b { color: var(--ember); }
+  .chk-todos { width: 100%; margin-bottom: 12px; }
+  .chk-lista { display: flex; flex-direction: column; gap: 8px; }
+  .chk-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--border-soft); background: var(--card); }
+  .chk-fila.es-si { border-color: var(--teal); background: var(--teal-bg); }
+  .chk-fila.es-no { border-color: var(--ember); background: var(--ember-bg); }
+  .chk-nom { font-weight: 700; font-size: 14.5px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chk-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .chk-b { border: 1.5px solid var(--border); background: var(--card); color: var(--ink); font-weight: 800; font-size: 13px; padding: 10px 12px; border-radius: 11px; cursor: pointer; white-space: nowrap; min-height: 44px; }
+  .chk-b.si.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .chk-b.no.on { background: var(--ember); border-color: var(--ember); color: #fff; }
+  .chk-estado { font-size: 12px; color: var(--muted); text-align: center; margin: 12px 0 0; min-height: 15px; }
+  /* Check-in en Nómina → Registrar pago */
+  .nom-chk-aviso { display: none; background: var(--teal-bg); color: var(--teal-dk); border-radius: 12px; padding: 10px 13px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px; line-height: 1.45; }
+  .nom-chk-aviso.on { display: block; }
+  .nom-chk-aviso.dif { background: var(--gold-bg); color: var(--gold); }
+  .nom-grid-dia { position: relative; }
+  .nom-grid-dia .chk-dot { position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; }
+  .nom-grid-dia .chk-dot.si { background: var(--teal); box-shadow: 0 0 0 1.5px #fff; }
+  .nom-grid-dia .chk-dot.no { background: var(--ember); box-shadow: 0 0 0 1.5px #fff; }
   /* Selector de tema (Ajustes → Apariencia) */
   .gh-tema-seg { display: flex; background: var(--surface-3); border-radius: 12px; padding: 3px; gap: 3px; max-width: 420px; }
   .gh-tema-seg button { flex: 1; border: 0; background: transparent; color: var(--muted); font-family: var(--font-ui); font-weight: 700; font-size: 13px; padding: 10px 8px; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
@@ -2525,6 +2555,7 @@
         <button type="button" class="gc-action-btn" data-i18n="agregar" id="nom-grid-btn-add">+ Agregar</button>
       </div>
 
+      <div class="nom-chk-aviso" id="nom-chk-aviso"></div>
       <div id="nom-grid-lista"></div>
       <div class="gc-empty" id="nom-grid-empty" style="display:none;">No hay trabajadores todavía. Agrégalos arriba.</div>
 
@@ -3290,7 +3321,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v119 · 8 oct';
+  const APP_VERSION = 'v120 · 8 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -10807,6 +10838,12 @@
   const NOM_KEY = 'gh-nomina'; // entradas de pago
   const TRAB_NOM_KEY_VIEJO = 'gh-trabajadores'; // formato viejo [{nombre, sueldo}] — solo para migrar una vez
   let nomDocs = [];
+  let nomCheckin = {};   // check-in que hace el visor: { fecha: { v: { nombre: 1|0 }, por, en } }
+  const NOM_CHK_KEY = 'gh-checkin';
+  async function nomCargarCheckin() {
+    try { const r = await window.storage.get(NOM_CHK_KEY); const v = JSON.parse(r.value); nomCheckin = (v && typeof v === 'object' && !Array.isArray(v)) ? v : {}; }
+    catch (e) { nomCheckin = {}; }
+  }
 
   const nomFmt = n => '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const nomToday = () => ghFechaLocal(new Date());
@@ -10937,7 +10974,9 @@
     const trabMap = semanas.get(wk) || new Map();
     const activos = empleados.filter((e) => e.estado !== 'inactivo').map((e) => empNombreCompleto(e));
     const nombresConPago = [...trabMap.keys()];
-    const nombres = [...new Set([...activos, ...nombresConPago])];
+    const nombresCheckin = [];
+    fechas.forEach((f) => { const v = (nomCheckin[f] || {}).v || {}; Object.keys(v).forEach((n) => { if (v[n] === 1) nombresCheckin.push(n); }); });
+    const nombres = [...new Set([...activos, ...nombresConPago, ...nombresCheckin])];
 
     nomGridFilas = nombres.map((nombre) => {
       const t = nomBuscarTrab(nombre);
@@ -10953,6 +10992,19 @@
         extraMonto: primerPago ? (Number(primerPago.extraMonto) || 0) : 0,
         extraAbierto: false
       };
+    }).map((fila) => {
+      // Lo que marcó el visor en el check-in de esta semana
+      fila.chk = {};
+      fechas.forEach((f) => { const v = (nomCheckin[f] || {}).v || {}; if (v[fila.nombre] === 1 || v[fila.nombre] === 0) fila.chk[f] = v[fila.nombre]; });
+      const diasChk = fechas.filter((f) => fila.chk[f] === 1);
+      // Sin pago guardado todavía: los días salen marcados solos (el admin revisa y guarda)
+      if (!fila.pagos.length && diasChk.length) {
+        fila.dias = diasChk;
+        fila.monto = diasChk.length * fila.sueldo;
+        fila.tocado = true;
+        fila.deCheckin = true;
+      }
+      return fila;
     }).sort((a, b) => {
       if ((b.dias.length > 0) !== (a.dias.length > 0)) return (b.dias.length > 0) ? 1 : -1;
       return a.nombre.localeCompare(b.nombre);
@@ -10964,6 +11016,21 @@
   function nomGridRender() {
     const cont = $('nom-grid-lista');
     if (!cont) return;
+    const aviso = $('nom-chk-aviso');
+    if (aviso) {
+      const pre = nomGridFilas.filter((f) => f.deCheckin);
+      const fechasS = nomGridFechasSemana();
+      const conChk = nomGridFilas.filter((f) => f.chk && Object.keys(f.chk).length);
+      const distintos = nomGridFilas.filter((f) => !f.deCheckin && f.pagos.length && f.chk && Object.keys(f.chk).length &&
+        fechasS.filter((x) => f.chk[x] === 1).join() !== fechasS.filter((x) => f.dias.includes(x)).join());
+      let txt = '', dif = false;
+      if (pre.length) txt = `El check-in marcó los días de ${pre.length} trabajador${pre.length === 1 ? '' : 'es'}. Revisa y presiona <b>Guardar cambios de la semana</b>.`;
+      if (distintos.length) { txt += (txt ? '<br>' : '') + `${distintos.length === 1 ? '1 trabajador tiene' : distintos.length + ' trabajadores tienen'} días distintos a su check-in (${distintos.map((f) => escapeHtml(f.nombre)).join(', ')}).`; dif = !pre.length; }
+      if (!txt && conChk.length) txt = 'Los puntos en los días son el check-in: verde = vino, rojo = no vino.';
+      aviso.innerHTML = txt;
+      aviso.classList.toggle('on', !!txt);
+      aviso.classList.toggle('dif', dif);
+    }
     $('nom-grid-empty').style.display = nomGridFilas.length === 0 ? 'block' : 'none';
     const fechas = nomGridFechasSemana();
     const letras = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
@@ -10977,7 +11044,7 @@
           border:1.5px solid ${sel ? 'var(--navy)' : 'var(--border)'};
           background:${sel ? 'var(--navy)' : '#fff'};color:${sel ? '#fff' : 'var(--ink)'};
           display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.25;">
-          <span style="font-size:9.5px;opacity:.8;">${letras[i]}</span>${d.getDate()}</button>`;
+          <span style="font-size:9.5px;opacity:.8;">${letras[i]}</span>${d.getDate()}${fila.chk && fila.chk[f] === 1 ? '<i class="chk-dot si" title="Check-in: vino"></i>' : fila.chk && fila.chk[f] === 0 ? '<i class="chk-dot no" title="Check-in: no vino"></i>' : ''}</button>`;
       }).join('');
       return `
         <div class="gc-card" data-grid-nombre="${escapeHtml(fila.nombre)}" style="margin-bottom:10px;padding:12px 14px;">
@@ -11009,7 +11076,7 @@
         const f = btn.dataset.fecha;
         const idx = fila.dias.indexOf(f);
         if (idx >= 0) fila.dias.splice(idx, 1); else { fila.dias.push(f); fila.dias.sort(); }
-        fila.tocado = true;
+        fila.tocado = true; fila.deCheckin = false;
         if (!fila.montoTocado) fila.monto = (fila.dias.length * fila.sueldo) + (fila.extraMonto || 0);
         nomGridRender();
       });
@@ -11018,7 +11085,7 @@
       inp.addEventListener('input', () => {
         const fi = Number(inp.dataset.fi);
         nomGridFilas[fi].montoTocado = true;
-        nomGridFilas[fi].tocado = true;
+        nomGridFilas[fi].tocado = true; nomGridFilas[fi].deCheckin = false;
         nomGridFilas[fi].monto = parseFloat(inp.value.replace(',', '.')) || 0;
       });
     });
@@ -11033,7 +11100,7 @@
       inp.addEventListener('input', () => {
         const fi = Number(inp.dataset.fi);
         nomGridFilas[fi].extraDesc = inp.value;
-        nomGridFilas[fi].tocado = true;
+        nomGridFilas[fi].tocado = true; nomGridFilas[fi].deCheckin = false;
       });
     });
     cont.querySelectorAll('.nom-grid-extra-monto').forEach((inp) => {
@@ -11041,7 +11108,7 @@
         const fi = Number(inp.dataset.fi);
         const fila = nomGridFilas[fi];
         fila.extraMonto = parseFloat(inp.value.replace(',', '.')) || 0;
-        fila.tocado = true;
+        fila.tocado = true; fila.deCheckin = false;
         if (!fila.montoTocado) {
           fila.monto = (fila.dias.length * fila.sueldo) + fila.extraMonto;
           const montoInp = cont.querySelector(`.nom-grid-monto[data-fi="${fi}"]`);
@@ -11584,7 +11651,8 @@
           const [rDocs, rEmp, rViejo] = await Promise.all([
             window.storage.get(NOM_KEY).catch(() => null),
             window.storage.get(STORAGE_EMPLEADOS).catch(() => null),
-            window.storage.get(TRAB_NOM_KEY_VIEJO).catch(() => null)
+            window.storage.get(TRAB_NOM_KEY_VIEJO).catch(() => null),
+            nomCargarCheckin()
           ]);
           try { nomDocs = JSON.parse(rDocs.value); } catch (e) { nomDocs = []; }
           await nomLimpiarDuplicados();   // junta recibos repetidos de la misma persona/semana
@@ -11596,6 +11664,13 @@
           nomRegSemanaOffset = 0;
           nomGridAbrirSemana();
           nomRenderRegLedger();
+        } else {
+          // Ya estaba abierta: trae el check-in más reciente. Si el admin no
+          // ha tocado nada a mano en esta semana, se vuelve a armar la lista.
+          const antes = JSON.stringify(nomCheckin);
+          await nomCargarCheckin();
+          const sinTocar = !nomGridFilas.some((f) => f.tocado && !f.deCheckin);
+          if (JSON.stringify(nomCheckin) !== antes && sinTocar) nomGridAbrirSemana();
         }
       });
     }
@@ -11907,6 +11982,7 @@
   // funciones auxiliares — escapeHtml/fmt/etc. de la app principal
   // no son accesibles desde aquí.)
   // ============================================================
+  const CHK_KEY = 'gh-checkin';
   function escapeHtmlVisor(str) {
     const d = document.createElement('div');
     d.textContent = str == null ? '' : String(str);
@@ -11979,7 +12055,12 @@
         const rNom = await window.GH_LEER_DE_CUENTA(codigo, 'gh-nomina');
         nomina = rNom ? JSON.parse(rNom) : [];
       } catch (e) {}
-      datosPorCuenta[codigo] = { nombre: nombreDe(codigo), invoices, nomina };
+      let empleados = [], checkin = {};
+      try { const r = await window.GH_LEER_DE_CUENTA(codigo, 'empleados'); empleados = r ? JSON.parse(r) : []; } catch (e) {}
+      try { const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY); checkin = r ? JSON.parse(r) : {}; } catch (e) {}
+      if (!Array.isArray(empleados)) empleados = [];
+      if (!checkin || typeof checkin !== 'object' || Array.isArray(checkin)) checkin = {};
+      datosPorCuenta[codigo] = { nombre: nombreDe(codigo), invoices, nomina, empleados, checkin };
     }
 
     construirInterfazVisor(cuentas, datosPorCuenta);
@@ -12025,13 +12106,16 @@
       panel.dataset.visorCuenta = codigo;
       panel.innerHTML = `
         <div class="inv-subnav">
-          <button type="button" class="mov-subtab active" data-i18n="invoices_guardados" data-vsub="invoices">Invoices guardados</button>
+          <button type="button" class="mov-subtab active" data-vsub="checkin">Check-in</button>
+          <button type="button" class="mov-subtab" data-i18n="invoices_guardados" data-vsub="invoices">Invoices guardados</button>
           <button type="button" class="mov-subtab" data-i18n="recibo_semanal" data-vsub="semanal">Recibo semanal</button>
         </div>
-        <div class="mov-subpanel active" data-vsub="invoices">${htmlInvoicesVisor(d)}</div>
+        <div class="mov-subpanel active" data-vsub="checkin"></div>
+        <div class="mov-subpanel" data-vsub="invoices">${htmlInvoicesVisor(d)}</div>
         <div class="mov-subpanel" data-vsub="semanal">${htmlReciboSemanalVisor(d)}</div>
       `;
       body.appendChild(panel);
+      montarCheckinVisor(panel.querySelector('.mov-subpanel[data-vsub="checkin"]'), codigo, d);
       panel.querySelectorAll('.mov-subtab').forEach((tab) => {
         tab.addEventListener('click', () => {
           panel.querySelectorAll('.mov-subtab').forEach((t) => t.classList.remove('active'));
@@ -12150,6 +12234,131 @@
     aplicarBloqueoEdicionVisor();
   }
 
+  // ============================================================
+  // CHECK-IN — el visor marca quién vino y quién no, cada día.
+  // Se guarda en "gh-checkin" de esa base de datos:
+  //   { "2026-10-08": { v: { "Juan Pérez": 1, "Pedro": 0 }, por, en } }
+  // (1 = vino, 0 = no vino, sin nombre = sin marcar). En Nómina →
+  // Registrar pago esos días ya salen marcados para que el admin revise.
+  // ============================================================
+  const CHK_DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const CHK_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const CHK_MAX_ATRAS = 13;   // se puede corregir hasta 2 semanas atrás
+  function chkNombre(e) { return ((e && e.apellido) ? (e.nombre + ' ' + e.apellido) : ((e && e.nombre) || '')).trim(); }
+  function chkSumarDias(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return ghFechaLocal(d); }
+  function chkHora(isoTs) {
+    const d = new Date(isoTs); if (isNaN(d)) return '';
+    return d.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function montarCheckinVisor(cont, codigo, d) {
+    if (!cont) return;
+    const hoy = ghFechaLocal(new Date());
+    let fecha = hoy;
+    let cola = Promise.resolve();   // los guardados van uno tras otro
+    let estado = '';                 // texto de "Guardando… / Guardado"
+
+    const trabajadores = () => {
+      const activos = (d.empleados || []).filter((e) => e && e.estado !== 'inactivo').map(chkNombre).filter(Boolean);
+      const delDia = Object.keys(((d.checkin[fecha] || {}).v) || {});
+      return [...new Set([...activos, ...delDia])].sort((a, b) => a.localeCompare(b, 'es'));
+    };
+
+    function render() {
+      const nombres = trabajadores();
+      const reg = d.checkin[fecha] || { v: {} };
+      const v = reg.v || {};
+      const si = nombres.filter((n) => v[n] === 1).length;
+      const no = nombres.filter((n) => v[n] === 0).length;
+      const falta = nombres.length - si - no;
+      const dt = new Date(fecha + 'T00:00:00');
+      const titulo = (fecha === hoy ? 'Hoy · ' : fecha === chkSumarDias(hoy, -1) ? 'Ayer · ' : '') + `${CHK_DIAS[dt.getDay()]} ${dt.getDate()} de ${CHK_MESES[dt.getMonth()]}`;
+      const minimo = chkSumarDias(hoy, -CHK_MAX_ATRAS);
+      const quien = reg.por ? `Último cambio: ${escapeHtmlVisor(reg.por)}${reg.en ? ' · ' + chkHora(reg.en) : ''}` : '';
+      cont.innerHTML = `
+        <div class="gc-card chk">
+          <div class="chk-head">
+            <button type="button" class="chk-nav" data-nav="-1" aria-label="Día anterior" ${fecha <= minimo ? 'disabled' : ''}>‹</button>
+            <div class="chk-titulo"><b>${titulo}</b><span>${nombres.length ? `${si + no} de ${nombres.length} marcados` : ''}</span></div>
+            <button type="button" class="chk-nav" data-nav="1" aria-label="Día siguiente" ${fecha >= hoy ? 'disabled' : ''}>›</button>
+          </div>
+          ${nombres.length ? `
+          <div class="chk-res">
+            <span class="si"><b>${si}</b> vinieron</span>
+            <span class="no"><b>${no}</b> no vinieron</span>
+            <span class="falta"><b>${falta}</b> sin marcar</span>
+          </div>
+          ${falta ? `<button type="button" class="gc-action-btn chk-todos">✓ Los que faltan vinieron</button>` : ''}
+          <div class="chk-lista">
+            ${nombres.map((n) => `
+              <div class="chk-fila${v[n] === 1 ? ' es-si' : v[n] === 0 ? ' es-no' : ''}">
+                <span class="chk-nom">${escapeHtmlVisor(n)}</span>
+                <div class="chk-btns">
+                  <button type="button" class="chk-b si${v[n] === 1 ? ' on' : ''}" data-n="${escapeHtmlVisor(n)}" data-val="1" aria-pressed="${v[n] === 1}">✓ Vino</button>
+                  <button type="button" class="chk-b no${v[n] === 0 ? ' on' : ''}" data-n="${escapeHtmlVisor(n)}" data-val="0" aria-pressed="${v[n] === 0}">✕ No vino</button>
+                </div>
+              </div>`).join('')}
+          </div>
+          <p class="chk-estado">${estado || quien}</p>`
+          : `<div class="gc-empty">No hay trabajadores activos en esta base de datos. El admin los agrega en Nómina → Trabajadores.</div>`}
+        </div>`;
+      cont.querySelectorAll('.chk-nav').forEach((b) => b.addEventListener('click', () => {
+        const nf = chkSumarDias(fecha, Number(b.dataset.nav));
+        if (nf > hoy || nf < minimo) return;
+        fecha = nf; estado = ''; render();
+      }));
+      cont.querySelectorAll('.chk-b').forEach((b) => b.addEventListener('click', () => {
+        const n = b.dataset.n, val = Number(b.dataset.val);
+        // tocar el mismo botón otra vez lo desmarca
+        cambiar({ [n]: v[n] === val ? null : val });
+      }));
+      const todos = cont.querySelector('.chk-todos');
+      if (todos) todos.addEventListener('click', () => {
+        const cambios = {};
+        nombres.forEach((n) => { if (v[n] !== 1 && v[n] !== 0) cambios[n] = 1; });
+        cambiar(cambios);
+      });
+    }
+
+    function aplicar(obj, dia, cambios) {
+      const reg = obj[dia] && typeof obj[dia] === 'object' ? obj[dia] : { v: {} };
+      reg.v = reg.v || {};
+      Object.entries(cambios).forEach(([n, val]) => { if (val === null) delete reg.v[n]; else reg.v[n] = val; });
+      reg.por = window.GH_NOMBRE || 'visor';
+      reg.en = new Date().toISOString();
+      if (Object.keys(reg.v).length) obj[dia] = reg; else delete obj[dia];
+    }
+
+    function cambiar(cambios) {
+      const dia = fecha;
+      aplicar(d.checkin, dia, cambios);   // se ve al instante
+      estado = 'Guardando…';
+      render();
+      cola = cola.then(async () => {
+        try {
+          // Lee lo último de la nube y solo cambia lo que se tocó, para no
+          // borrar lo que alguien más haya marcado desde otro teléfono.
+          let actual = {};
+          try { const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY); actual = r ? JSON.parse(r) : {}; } catch (e) {}
+          if (!actual || typeof actual !== 'object' || Array.isArray(actual)) actual = {};
+          aplicar(actual, dia, cambios);
+          // Solo se guardan los últimos 120 días
+          const corte = chkSumarDias(hoy, -120);
+          Object.keys(actual).forEach((k) => { if (k < corte) delete actual[k]; });
+          await window.GH_ESCRIBIR_EN_CUENTA(codigo, CHK_KEY, JSON.stringify(actual));
+          d.checkin = actual;
+          estado = 'Guardado ✓ ' + chkHora(new Date().toISOString());
+        } catch (e) {
+          estado = 'No se pudo guardar. Revisa tu conexión y vuelve a tocar.';
+          if (typeof toast === 'function') toast('No se pudo guardar el check-in', 'error');
+        }
+        if (fecha === dia) render();
+      });
+    }
+
+    render();
+  }
+
   // ---- HTML: tabla de Invoices guardados para una base de datos (solo lectura) ----
   function htmlInvoicesVisor(d) {
     if (!d.invoices || d.invoices.length === 0) {
@@ -12251,7 +12460,7 @@
   // estos paneles nuevos, no se puede editar nada (todo es texto/tablas, pero
   // esto es un respaldo).
   function aplicarBloqueoEdicionVisor() {
-    document.body.insertAdjacentHTML('afterbegin', `<div id="gh-banner-visor" style="background:#EAF3FF;color:#1A4B8C;font-size:12.5px;padding:10px 20px;text-align:center;border-bottom:1px solid #C7DFFB;">Modo visor — puedes ver y descargar, no editar.</div>`);
+    document.body.insertAdjacentHTML('afterbegin', `<div id="gh-banner-visor" style="background:#EAF3FF;color:#1A4B8C;font-size:12.5px;padding:10px 20px;text-align:center;border-bottom:1px solid #C7DFFB;">Modo visor — puedes ver y hacer el check-in de los trabajadores.</div>`);
     const style = document.createElement('style');
     style.textContent = `
       body.gh-modo-visor .visor-panel input,

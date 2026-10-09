@@ -333,6 +333,20 @@
     } catch (e) { return null; }
   };
 
+  // Escribe una clave en una base de datos ESPECÍFICA. Lo usa el visor para
+  // guardar el check-in de los trabajadores (la base de datos solo le deja
+  // escribir "gh-checkin" en las bases que el admin le dio).
+  window.GH_ESCRIBIR_EN_CUENTA = async (codigoCuenta, key, value) => {
+    await sesionLista;
+    const pfx = (codigoCuenta && codigoCuenta !== 'principal') ? ('c:' + codigoCuenta + '::') : '';
+    const { data: { user } } = await client.auth.getUser();
+    const { error } = await client.from('datos_app').upsert({
+      clave: pfx + key, valor: value, actualizado_por: user ? user.id : null, actualizado_en: new Date().toISOString()
+    });
+    if (error) throw error;
+    return true;
+  };
+
   // Lee qué cuenta tiene asignada el usuario actual (por defecto "principal")
   async function cargarCuentaActiva() {
     try {
