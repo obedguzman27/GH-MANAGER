@@ -1792,33 +1792,101 @@
   .gh-rec-val { font-size: 18px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); margin-top: 4px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gh-rec-sub { font-size: 12px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .gh-rec-nuevo { display: inline-block; vertical-align: 3px; margin-left: 7px; font-size: 9.5px; font-weight: 800; letter-spacing: .04em; padding: 2px 7px; border-radius: 6px; background: var(--gold-bg); color: var(--gold); }
-  /* Check-in (visor) */
-  .chk-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-  .chk-nav { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border-soft); background: var(--surface-2); color: var(--ink); font-size: 20px; cursor: pointer; flex-shrink: 0; }
-  .chk-nav:disabled { opacity: .3; cursor: default; }
-  .chk-titulo { text-align: center; min-width: 0; }
-  .chk-titulo b { display: block; font-size: 16px; font-weight: 800; color: var(--ink); }
-  .chk-titulo span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .chk-res { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
-  .chk-res span { background: var(--surface-2); border-radius: 12px; padding: 9px 8px; text-align: center; font-size: 11.5px; color: var(--muted); font-weight: 600; }
-  .chk-res b { display: block; font-size: 19px; font-weight: 800; color: var(--ink); }
-  .chk-res .si b { color: var(--teal-dk); } .chk-res .no b { color: var(--ember); }
-  .chk-res.dos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .chk-lista { display: flex; flex-direction: column; gap: 8px; }
-  .chk-fila { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; padding: 12px 14px; min-height: 58px; border-radius: 14px; border: 1.5px solid var(--border-soft); background: var(--card); cursor: pointer; color: var(--ink); transition: background .15s, border-color .15s; }
-  .chk-fila:active { transform: scale(.99); }
-  .chk-fila.es-si { border-color: var(--teal); background: var(--teal-bg); }
-  .chk-caja { width: 28px; height: 28px; border-radius: 9px; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #fff; background: var(--card); }
-  .chk-fila.es-si .chk-caja { background: var(--teal); border-color: var(--teal); }
-  .chk-nom { flex: 1; font-weight: 700; font-size: 15px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .chk-tag { font-size: 11.5px; font-weight: 800; color: var(--muted); flex-shrink: 0; }
-  .chk-fila.es-si .chk-tag { color: var(--teal-dk); }
-  .chk-acc { margin-top: 10px; }
-  .chk-acc .chk-todos { width: 100%; }
-  .chk-add { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-soft); }
-  .chk-add input { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface-2); color: var(--ink); }
-  .chk-add .gc-save-btn { flex-shrink: 0; padding: 11px 16px; }
-  .chk-estado { font-size: 12px; color: var(--muted); text-align: center; margin: 12px 0 0; min-height: 15px; }
+  /* ═══ MODO VISOR · Check-in ═══ */
+  body.gh-visor-v2 .gc-body { padding-bottom: 120px; }
+  .vz-hero { position: relative; overflow: hidden; background: linear-gradient(155deg, #1E2027 0%, #121317 70%); color: #fff; border-radius: 24px; padding: 20px 18px 16px; margin-bottom: 18px; box-shadow: 0 18px 40px -22px rgba(0,0,0,.55); }
+  .vz-hero::before { content: ''; position: absolute; width: 260px; height: 260px; right: -90px; top: -120px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 70%); opacity: .55; pointer-events: none; }
+  .vz-hero-top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+  .vz-hero-txt { min-width: 0; }
+  .vz-saludo { font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; }
+  .vz-base { display: inline-flex; align-items: center; gap: 7px; margin-top: 8px; font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.75); background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); padding: 5px 10px; border-radius: 999px; }
+  .vz-base i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .vz-ring { --p: 0; flex-shrink: 0; width: 86px; height: 86px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(#3ED1A6 calc(var(--p) * 1%), rgba(255,255,255,.12) 0); transition: background .4s; }
+  .vz-ring > div { width: 70px; height: 70px; border-radius: 50%; background: #17181D; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+  .vz-ring b { font-size: 26px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .vz-ring span { font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,.6); margin-top: 3px; }
+  .vz-semana { position: relative; display: flex; align-items: center; gap: 6px; }
+  .vz-sem-nav { width: 30px; height: 52px; flex-shrink: 0; border: 0; border-radius: 10px; background: transparent; color: rgba(255,255,255,.75); font-size: 22px; cursor: pointer; padding: 0; }
+  .vz-sem-nav:disabled { opacity: .22; cursor: default; }
+  .vz-dias { flex: 1; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .vz-dia { position: relative; border: 0; border-radius: 13px; height: 56px; padding: 0; cursor: pointer; background: rgba(255,255,255,.06); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-family: inherit; transition: background .15s, transform .1s; }
+  .vz-dia .l { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.55); }
+  .vz-dia .n { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .vz-dia .c { font-size: 9.5px; font-weight: 800; color: #3ED1A6; min-height: 11px; }
+  .vz-dia.hoy .l { color: var(--accent); }
+  .vz-dia.on { background: #fff; color: #16171B; }
+  .vz-dia.on .l { color: #6B6E78; }
+  .vz-dia.on .c { color: #0B7A6F; }
+  .vz-dia:disabled { opacity: .28; cursor: default; }
+  .vz-dia:not(:disabled):active { transform: scale(.94); }
+  .vz-dia-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 0 4px 12px; }
+  .vz-fecha { font-size: 19px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .vz-chip { font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--accent-dk); background: var(--accent-bg); padding: 4px 9px; border-radius: 999px; }
+  .vz-estado { font-size: 12.5px; color: var(--muted); margin-top: 4px; min-height: 16px; }
+  .vz-estado.ok { color: var(--teal-dk); font-weight: 700; }
+  .vz-estado.guardando { color: var(--muted); }
+  .vz-estado.error { color: var(--ember); font-weight: 700; }
+  .vz-estado.aviso { color: var(--gold); font-weight: 700; }
+  .vz-todos { flex-shrink: 0; border: 1.5px solid var(--border); background: var(--card); color: var(--ink); font-family: inherit; font-weight: 800; font-size: 13px; padding: 10px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+  .vz-todos[data-todos="1"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+  .vz-card { background: var(--card); border: 1px solid var(--border-soft); border-radius: 22px; padding: 14px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .vz-res { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .vz-res > div:not(.vz-barra) { background: var(--surface-2); border-radius: 14px; padding: 10px 12px; display: flex; align-items: baseline; gap: 7px; }
+  .vz-res b { font-size: 22px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .vz-res span { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .vz-res .si b { color: var(--teal-dk); } .vz-res .no b { color: var(--ember); }
+  .vz-barra { grid-column: 1 / -1; height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+  .vz-barra i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--teal), #3ED1A6); transition: width .35s var(--ease); }
+  .vz-buscar { display: flex; align-items: center; gap: 9px; background: var(--surface-2); border: 1.5px solid transparent; border-radius: 14px; padding: 0 13px; margin-bottom: 10px; transition: border-color .15s; }
+  .vz-buscar:focus-within { border-color: var(--accent); background: var(--card); }
+  .vz-buscar svg { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+  .vz-buscar input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 15px; padding: 12px 0; color: var(--ink); outline: none; }
+  .vz-lista { display: flex; flex-direction: column; gap: 6px; }
+  .vz-fila { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; padding: 9px 12px 9px 9px; min-height: 60px; border-radius: 16px; border: 1.5px solid transparent; background: var(--surface-2); cursor: pointer; color: var(--ink); transition: background .15s, border-color .15s, transform .1s; -webkit-tap-highlight-color: transparent; }
+  .vz-fila:active { transform: scale(.985); }
+  .vz-fila.es-si { background: var(--teal-bg); border-color: color-mix(in srgb, var(--teal) 45%, transparent); }
+  .vz-av { --c: #888; width: 42px; height: 42px; border-radius: 13px; flex-shrink: 0; display: grid; place-items: center; font-size: 14.5px; font-weight: 800; letter-spacing: .02em; color: #fff; background: var(--c); }
+  .vz-av.grande { width: 56px; height: 56px; border-radius: 18px; font-size: 19px; }
+  .vz-nom { flex: 1; min-width: 0; font-weight: 700; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vz-nom small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 1px; }
+  .vz-fila.es-si .vz-nom small { color: var(--teal-dk); font-weight: 700; }
+  .vz-check { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; border: 2px solid var(--border); background: var(--card); color: transparent; transition: all .15s; }
+  .vz-check svg { width: 18px; height: 18px; }
+  .vz-fila.es-si .vz-check { background: var(--teal); border-color: var(--teal); color: #fff; transform: scale(1.05); }
+  .vz-sinres { text-align: center; font-size: 13px; color: var(--muted); padding: 18px 0; }
+  .vz-vacio { text-align: center; padding: 26px 10px 18px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .vz-vacio-ic { font-size: 34px; margin-bottom: 6px; }
+  .vz-vacio b { font-size: 16px; color: var(--ink); } .vz-vacio span { font-size: 13px; color: var(--muted); }
+  .vz-add-abrir { width: 100%; margin-top: 10px; border: 1.5px dashed var(--border); background: transparent; color: var(--ink); font-family: inherit; font-weight: 700; font-size: 14px; padding: 14px; border-radius: 16px; cursor: pointer; }
+  .vz-add { margin-top: 12px; padding: 12px; border-radius: 16px; background: var(--surface-2); }
+  .vz-add input { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 12px 13px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--card); color: var(--ink); outline: none; }
+  .vz-add input:focus { border-color: var(--accent); }
+  .vz-add-btns, .vz-clave-btns { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+  .vz-add-cancel, .vz-add-ok { font-family: inherit; font-weight: 800; font-size: 14px; padding: 11px 18px; border-radius: 12px; cursor: pointer; border: 1.5px solid var(--border); background: var(--card); color: var(--ink); }
+  .vz-add-ok { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .vz-add-ok:disabled { opacity: .6; }
+  .vz-add-nota { font-size: 11.5px; color: var(--muted); margin: 8px 2px 0; }
+  /* Ajustes del visor */
+  .vz-perfil { display: flex; align-items: center; gap: 14px; padding: 18px; margin-bottom: 14px; border-radius: 22px; background: linear-gradient(155deg, #1E2027 0%, #121317 70%); color: #fff; }
+  .vz-perfil > div { min-width: 0; }
+  .vz-perfil b { display: block; font-size: 18px; font-weight: 800; }
+  .vz-perfil > div span { display: block; font-size: 12.5px; color: rgba(255,255,255,.65); margin-top: 3px; }
+  .vz-aj-tit { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 2px 2px 12px; }
+  .vz-aj-sub { font-size: 12.5px; font-weight: 700; color: var(--ink); margin: 16px 2px 10px; }
+  .vz-sws { display: flex; flex-wrap: wrap; gap: 10px; }
+  .visor-accent-sw { width: 38px; height: 38px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: var(--sw); box-shadow: 0 0 0 0 transparent; transition: box-shadow .15s, transform .1s; }
+  .visor-accent-sw.active { box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--ink); }
+  .visor-accent-sw:active { transform: scale(.92); }
+  .vz-aj-fila { width: 100%; display: flex; align-items: center; justify-content: space-between; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--ink); background: var(--surface-2); border: 0; border-radius: 14px; padding: 14px; cursor: pointer; }
+  .vz-aj-fila i { font-style: normal; font-size: 20px; color: var(--muted); }
+  .vz-clave { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .vz-clave .gc-field { margin: 0; }
+  .vz-clave small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+  .vz-clave-msg { font-size: 12.5px; min-height: 16px; color: var(--ember); }
+  .vz-salir { width: 100%; font-family: inherit; font-weight: 800; font-size: 15px; padding: 15px; border-radius: 16px; border: 1.5px solid color-mix(in srgb, var(--ember) 40%, transparent); background: var(--ember-bg); color: var(--ember); cursor: pointer; margin-bottom: 20px; }
+  :root[data-tema="oscuro"] .vz-dia.on { background: #F2F3F5; }
+  :root[data-tema="oscuro"] .vz-hero, :root[data-tema="oscuro"] .vz-perfil { background: linear-gradient(155deg, #23252D 0%, #18191E 70%); border: 1px solid #2A2C33; }
   /* Check-in en Nómina → Registrar pago */
   .nom-chk-aviso { display: none; background: var(--teal-bg); color: var(--teal-dk); border-radius: 12px; padding: 10px 13px; font-size: 12.5px; font-weight: 600; margin-bottom: 14px; line-height: 1.45; }
   .nom-chk-aviso.on { display: block; }
@@ -3326,7 +3394,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v121 · 8 oct';
+  const APP_VERSION = 'v122 · 8 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -12158,41 +12226,37 @@
     const panelAjustes = document.createElement('div');
     panelAjustes.className = 'gc-panel visor-panel';
     panelAjustes.dataset.visorCuenta = '__ajustes';
+    const vzNombre = window.GH_NOMBRE || 'Usuario';
     panelAjustes.innerHTML = `
-      <div class="gc-card">
-        <p class="gc-card-title" data-i18n="apariencia">Apariencia</p>
-        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige el color de la app en este teléfono.</p>
-        <div id="visor-accent-picker" style="display:flex;gap:12px;flex-wrap:wrap;">
-          <button type="button" class="visor-accent-sw" data-accent="cobre" title="Cobre" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C46E20,#A2560F);"></button>
-          <button type="button" class="visor-accent-sw" data-accent="teal" title="Teal" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#0E8F82,#0B6F65);"></button>
-          <button type="button" class="visor-accent-sw" data-accent="indigo" title="Índigo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4F6FA8,#3A5486);"></button>
-          <button type="button" class="visor-accent-sw" data-accent="verde" title="Verde" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4E9350,#397239);"></button>
-          <button type="button" class="visor-accent-sw" data-accent="azul" title="Azul" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#2F7BD9,#1F5FB0);"></button>
-          <button type="button" class="visor-accent-sw" data-accent="rojo" title="Rojo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C8402F,#A02E20);"></button>
-          <button type="button" class="visor-accent-sw" data-accent="morado" title="Morado" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#7A4FB5,#5E3990);"></button>
-          <button type="button" class="visor-accent-sw" data-accent="grafito" title="Grafito" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4A4D55,#22242A);"></button>
-        </div>
-        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin:20px 0 10px;">Tema de la app en este aparato. "Automático" sigue el modo claro/oscuro de tu teléfono.</p>
+      <section class="vz-perfil">
+        <span class="vz-av grande" style="--c:${vzColor(vzNombre)}">${escapeHtmlVisor(vzIniciales(vzNombre))}</span>
+        <div><b>${escapeHtmlVisor(vzNombre)}</b><span>Check-in · ${cuentas.map((c) => escapeHtmlVisor(datosPorCuenta[c].nombre)).join(', ')}</span></div>
+      </section>
+
+      <div class="vz-card vz-aj">
+        <p class="vz-aj-tit">Apariencia</p>
         <div class="gh-tema-seg">
           <button type="button" data-tema-opt="auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>Automático</button>
           <button type="button" data-tema-opt="claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Claro</button>
           <button type="button" data-tema-opt="oscuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Oscuro</button>
         </div>
+        <p class="vz-aj-sub">Color</p>
+        <div id="visor-accent-picker" class="vz-sws"><button type="button" class="visor-accent-sw" data-accent="cobre" title="Cobre" style="--sw:linear-gradient(135deg,#C46E20,#A2560F);"></button><button type="button" class="visor-accent-sw" data-accent="teal" title="Teal" style="--sw:linear-gradient(135deg,#0E8F82,#0B6F65);"></button><button type="button" class="visor-accent-sw" data-accent="indigo" title="Índigo" style="--sw:linear-gradient(135deg,#4F6FA8,#3A5486);"></button><button type="button" class="visor-accent-sw" data-accent="verde" title="Verde" style="--sw:linear-gradient(135deg,#4E9350,#397239);"></button><button type="button" class="visor-accent-sw" data-accent="azul" title="Azul" style="--sw:linear-gradient(135deg,#2F7BD9,#1F5FB0);"></button><button type="button" class="visor-accent-sw" data-accent="rojo" title="Rojo" style="--sw:linear-gradient(135deg,#C8402F,#A02E20);"></button><button type="button" class="visor-accent-sw" data-accent="morado" title="Morado" style="--sw:linear-gradient(135deg,#7A4FB5,#5E3990);"></button><button type="button" class="visor-accent-sw" data-accent="grafito" title="Grafito" style="--sw:linear-gradient(135deg,#4A4D55,#22242A);"></button></div>
       </div>
-      <div class="gc-card" style="margin-top:16px;">
-        <p class="gc-card-title" data-i18n="mi_cuenta">Mi cuenta</p>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Conectado como <strong>${escapeHtmlVisor(window.GH_NOMBRE || 'usuario')}</strong> (visor)</p>
-        <button type="button" class="gc-action-btn" id="visor-btn-cambiar-clave" style="margin-bottom:12px;">Cambiar contraseña</button>
-        <div id="visor-cambiar-clave-form" style="display:none;margin-bottom:16px;max-width:340px;">
-          <div class="gc-field" style="margin-bottom:10px;"><label>Contraseña actual</label><input type="password" id="visor-clave-actual" autocomplete="current-password"></div>
-          <div class="gc-field" style="margin-bottom:6px;"><label>Contraseña nueva</label><input type="password" id="visor-clave-nueva" autocomplete="new-password"></div>
-          <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Al menos 6 caracteres, con letras y números.</p>
-          <div class="gc-field" style="margin-bottom:12px;"><label>Repite la nueva</label><input type="password" id="visor-clave-nueva2" autocomplete="new-password"></div>
-          <div id="visor-clave-msg" style="font-size:12.5px;min-height:16px;margin-bottom:10px;"></div>
-          <div style="display:flex;gap:10px;"><button type="button" class="gc-save-btn" id="visor-btn-guardar-clave" style="padding:9px 18px;font-size:13px;">Guardar</button><button type="button" class="gc-action-btn" id="visor-btn-cancelar-clave" style="padding:9px 18px;font-size:13px;">Cancelar</button></div>
+
+      <div class="vz-card vz-aj">
+        <p class="vz-aj-tit">Seguridad</p>
+        <button type="button" class="vz-aj-fila" id="visor-btn-cambiar-clave"><span>Cambiar contraseña</span><i>›</i></button>
+        <div id="visor-cambiar-clave-form" class="vz-clave" style="display:none;">
+          <div class="gc-field"><label>Contraseña actual</label><input type="password" id="visor-clave-actual" autocomplete="current-password"></div>
+          <div class="gc-field"><label>Contraseña nueva</label><input type="password" id="visor-clave-nueva" autocomplete="new-password"><small>Al menos 6 caracteres, con letras y números.</small></div>
+          <div class="gc-field"><label>Repite la nueva</label><input type="password" id="visor-clave-nueva2" autocomplete="new-password"></div>
+          <div id="visor-clave-msg" class="vz-clave-msg"></div>
+          <div class="vz-clave-btns"><button type="button" class="vz-add-cancel" id="visor-btn-cancelar-clave">Cancelar</button><button type="button" class="vz-add-ok" id="visor-btn-guardar-clave">Guardar</button></div>
         </div>
-        <button type="button" class="gc-action-btn" data-i18n="cerrar_sesion" id="visor-btn-cerrar-sesion">Cerrar sesión</button>
       </div>
+
+      <button type="button" class="vz-salir" id="visor-btn-cerrar-sesion">Cerrar sesión</button>
     `;
     body.appendChild(panelAjustes);
 
@@ -12234,7 +12298,6 @@
       else document.documentElement.setAttribute('data-accent', nombre);
       panelAjustes.querySelectorAll('.visor-accent-sw').forEach((sw) => {
         sw.classList.toggle('active', sw.dataset.accent === nombre);
-        sw.style.boxShadow = sw.dataset.accent === nombre ? '0 0 0 2.5px #fff, 0 0 0 4.5px var(--accent, #C46E20)' : 'none';
       });
     }
     (() => {
@@ -12279,13 +12342,23 @@
     return d.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' });
   }
 
+  const VZ_COLORES = ['#0E8F82', '#C46E20', '#4F6FA8', '#7A4FB5', '#C8402F', '#3F8F45', '#B8860B', '#2F7BD9'];
+  function vzIniciales(n) {
+    const p = String(n || '').trim().split(/\s+/).filter(Boolean);
+    return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : (p[0] || '')[1] || '')).toUpperCase();
+  }
+  function vzColor(n) { let h = 0; for (const c of String(n)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return VZ_COLORES[h % VZ_COLORES.length]; }
+  function vzSaludo() { const h = new Date().getHours(); return h < 12 ? 'Buen día' : h < 19 ? 'Buenas tardes' : 'Buenas noches'; }
+
   function montarCheckinVisor(cont, codigo, d) {
     if (!cont) return;
     const hoy = ghFechaLocal(new Date());
+    const minimo = chkSumarDias(hoy, -CHK_MAX_ATRAS);
     let fecha = hoy;
     let cola = Promise.resolve();   // los guardados van uno tras otro
-    let estado = '';                 // "Guardando… / Guardado"
-    let agregando = false;
+    let estado = '', estadoTipo = '';
+    let filtro = '';
+    let agregarAbierto = false, agregando = false;
 
     const norm = (x) => String(x || '').replace(/\s+/g, ' ').trim();
     const trabajadores = () => {
@@ -12294,52 +12367,113 @@
       const delDia = Object.keys(((d.checkin[fecha] || {}).v) || {});
       return [...new Set([...lista, ...nuevos, ...delDia].map(norm).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
     };
+    const lunesDe = (iso) => { const x = new Date(iso + 'T00:00:00'); return chkSumarDias(iso, -((x.getDay() + 6) % 7)); };
+    const sinAcentos = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+    function aplicarFiltro() {
+      const q = sinAcentos(filtro.trim());
+      let visibles = 0;
+      cont.querySelectorAll('.chk-fila').forEach((f) => {
+        const ok = !q || sinAcentos(f.dataset.n).includes(q);
+        f.style.display = ok ? '' : 'none';
+        if (ok) visibles++;
+      });
+      const vacio = cont.querySelector('.vz-sinres');
+      if (vacio) vacio.style.display = visibles ? 'none' : '';
+    }
 
     function render() {
       const nombres = trabajadores();
       const reg = d.checkin[fecha] || { v: {} };
       const v = reg.v || {};
       const si = nombres.filter((n) => v[n] === 1).length;
+      const total = nombres.length;
+      const pct = total ? si / total : 0;
       const dt = new Date(fecha + 'T00:00:00');
-      const titulo = (fecha === hoy ? 'Hoy · ' : fecha === chkSumarDias(hoy, -1) ? 'Ayer · ' : '') + `${CHK_DIAS[dt.getDay()]} ${dt.getDate()} de ${CHK_MESES[dt.getMonth()]}`;
-      const minimo = chkSumarDias(hoy, -CHK_MAX_ATRAS);
-      const quien = reg.por ? `Último cambio: ${escapeHtmlVisor(reg.por)}${reg.en ? ' · ' + chkHora(reg.en) : ''}` : '';
-      const enfocar = document.activeElement && document.activeElement.classList.contains('chk-add-in');
+      const etiqueta = fecha === hoy ? 'Hoy' : fecha === chkSumarDias(hoy, -1) ? 'Ayer' : '';
+      const lunes = lunesDe(fecha);
+      const letras = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+      const dias = letras.map((l, i) => {
+        const f = chkSumarDias(lunes, i);
+        const n = Object.keys(((d.checkin[f] || {}).v) || {}).length;
+        const off = f > hoy || f < minimo;
+        return `<button type="button" class="vz-dia${f === fecha ? ' on' : ''}${f === hoy ? ' hoy' : ''}" data-f="${f}" ${off ? 'disabled' : ''} aria-label="${CHK_DIAS[new Date(f + 'T00:00:00').getDay()]} ${Number(f.slice(8))}">
+          <span class="l">${l}</span><span class="n">${Number(f.slice(8))}</span><span class="c">${n ? n : ''}</span></button>`;
+      }).join('');
+      const quien = reg.por ? `Marcado por ${escapeHtmlVisor(reg.por)}${reg.en ? ' · ' + chkHora(reg.en) : ''}` : 'Toca a los que vinieron';
+      const enfAdd = document.activeElement && document.activeElement.classList.contains('chk-add-in');
+      const enfQ = document.activeElement && document.activeElement.classList.contains('vz-q');
+      const valAdd = (cont.querySelector('.chk-add-in') || {}).value || '';
+
       cont.innerHTML = `
-        <div class="gc-card chk">
-          <div class="chk-head">
-            <button type="button" class="chk-nav" data-nav="-1" aria-label="Día anterior" ${fecha <= minimo ? 'disabled' : ''}>‹</button>
-            <div class="chk-titulo"><b>${titulo}</b><span>Toca a los que vinieron</span></div>
-            <button type="button" class="chk-nav" data-nav="1" aria-label="Día siguiente" ${fecha >= hoy ? 'disabled' : ''}>›</button>
+        <section class="vz-hero">
+          <div class="vz-hero-top">
+            <div class="vz-hero-txt">
+              <div class="vz-saludo">${vzSaludo()}${window.GH_NOMBRE ? ', ' + escapeHtmlVisor(window.GH_NOMBRE) : ''}</div>
+              <div class="vz-base"><i></i>${escapeHtmlVisor(d.nombre)}</div>
+            </div>
+            <div class="vz-ring" style="--p:${(pct * 100).toFixed(1)}" role="img" aria-label="${si} de ${total} vinieron">
+              <div><b>${si}</b><span>de ${total}</span></div>
+            </div>
           </div>
-          ${nombres.length ? `
-          <div class="chk-res dos">
-            <span class="si"><b>${si}</b> vinieron</span>
-            <span class="no"><b>${nombres.length - si}</b> no vinieron</span>
+          <div class="vz-semana">
+            <button type="button" class="vz-sem-nav chk-nav" data-nav="-7" aria-label="Semana anterior" ${lunes <= minimo ? 'disabled' : ''}>‹</button>
+            <div class="vz-dias">${dias}</div>
+            <button type="button" class="vz-sem-nav chk-nav" data-nav="7" aria-label="Semana siguiente" ${chkSumarDias(lunes, 7) > hoy ? 'disabled' : ''}>›</button>
           </div>
-          <div class="chk-lista">
+        </section>
+
+        <div class="vz-dia-head">
+          <div>
+            <div class="vz-fecha">${etiqueta ? `<span class="vz-chip">${etiqueta}</span>` : ''}${CHK_DIAS[dt.getDay()]} ${dt.getDate()} de ${CHK_MESES[dt.getMonth()]}</div>
+            <div class="chk-estado vz-estado ${estadoTipo}">${estado || quien}</div>
+          </div>
+          ${total ? `<button type="button" class="vz-todos chk-todos" data-todos="${si < total ? 1 : 0}">${si < total ? '✓ Todos' : 'Quitar todos'}</button>` : ''}
+        </div>
+
+        <div class="vz-card">
+          ${total ? `
+          <div class="vz-res">
+            <div class="si"><b>${si}</b><span>vinieron</span></div>
+            <div class="no"><b>${total - si}</b><span>no vinieron</span></div>
+            <div class="vz-barra" aria-hidden="true"><i style="width:${(pct * 100).toFixed(1)}%"></i></div>
+          </div>
+          ${total > 6 ? `<label class="vz-buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" class="vz-q" placeholder="Buscar trabajador" value="${escapeHtmlVisor(filtro)}" autocomplete="off" enterkeyhint="search"></label>` : ''}
+          <div class="vz-lista">
             ${nombres.map((n) => `
-              <button type="button" class="chk-fila${v[n] === 1 ? ' es-si' : ''}" data-n="${escapeHtmlVisor(n)}" aria-pressed="${v[n] === 1}">
-                <span class="chk-caja" aria-hidden="true">${v[n] === 1 ? '✓' : ''}</span>
-                <span class="chk-nom">${escapeHtmlVisor(n)}</span>
-                <span class="chk-tag">${v[n] === 1 ? 'Vino' : 'No vino'}</span>
+              <button type="button" class="chk-fila vz-fila${v[n] === 1 ? ' es-si' : ''}" data-n="${escapeHtmlVisor(n)}" aria-pressed="${v[n] === 1}">
+                <span class="vz-av" style="--c:${vzColor(n)}">${escapeHtmlVisor(vzIniciales(n))}</span>
+                <span class="chk-nom vz-nom">${escapeHtmlVisor(n)}<small>${v[n] === 1 ? 'Vino' : 'No vino'}</small></span>
+                <span class="vz-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
               </button>`).join('')}
-          </div>
-          <div class="chk-acc">
-            ${si < nombres.length ? `<button type="button" class="gc-action-btn chk-todos" data-todos="1">✓ Marcar a todos</button>` : `<button type="button" class="gc-action-btn chk-todos" data-todos="0">Quitar a todos</button>`}
+            <div class="vz-sinres" style="display:none;">Nadie con ese nombre.</div>
           </div>`
-          : `<div class="gc-empty">Todavía no hay trabajadores. Agrégalos abajo.</div>`}
-          <form class="chk-add" autocomplete="off">
-            <input type="text" class="chk-add-in" maxlength="60" placeholder="Agregar trabajador nuevo…" aria-label="Nombre del trabajador nuevo" ${agregando ? 'disabled' : ''}>
-            <button type="submit" class="gc-save-btn" ${agregando ? 'disabled' : ''}>+ Agregar</button>
-          </form>
-          <p class="chk-estado">${estado || quien}</p>
+          : `<div class="vz-vacio"><div class="vz-vacio-ic">👷</div><b>Todavía no hay trabajadores</b><span>Agrega al primero aquí abajo.</span></div>`}
+
+          ${agregarAbierto || !total ? `
+          <form class="chk-add vz-add" autocomplete="off">
+            <input type="text" class="chk-add-in" maxlength="60" placeholder="Nombre del trabajador nuevo" aria-label="Nombre del trabajador nuevo" value="${escapeHtmlVisor(valAdd)}" ${agregando ? 'disabled' : ''}>
+            <div class="vz-add-btns">
+              ${total ? `<button type="button" class="vz-add-cancel">Cancelar</button>` : ''}
+              <button type="submit" class="vz-add-ok" ${agregando ? 'disabled' : ''}>${agregando ? 'Agregando…' : 'Agregar'}</button>
+            </div>
+            <p class="vz-add-nota">Se marca como que vino este día. El sueldo lo pone el administrador.</p>
+          </form>`
+          : `<button type="button" class="vz-add-abrir">+ Agregar trabajador nuevo</button>`}
         </div>`;
-      if (enfocar) { const i = cont.querySelector('.chk-add-in'); if (i) i.focus(); }
-      cont.querySelectorAll('.chk-nav').forEach((b) => b.addEventListener('click', () => {
-        const nf = chkSumarDias(fecha, Number(b.dataset.nav));
-        if (nf > hoy || nf < minimo) return;
-        fecha = nf; estado = ''; render();
+
+      if (filtro) aplicarFiltro();
+      if (enfAdd) { const i = cont.querySelector('.chk-add-in'); if (i) i.focus(); }
+      if (enfQ) { const i = cont.querySelector('.vz-q'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }
+
+      cont.querySelectorAll('.vz-dia').forEach((b) => b.addEventListener('click', () => {
+        if (b.disabled) return; fecha = b.dataset.f; estado = ''; estadoTipo = ''; render();
+      }));
+      cont.querySelectorAll('.vz-sem-nav').forEach((b) => b.addEventListener('click', () => {
+        let nf = chkSumarDias(fecha, Number(b.dataset.nav));
+        if (nf > hoy) nf = hoy;
+        if (nf < minimo) nf = minimo;
+        fecha = nf; estado = ''; estadoTipo = ''; render();
       }));
       cont.querySelectorAll('.chk-fila').forEach((b) => b.addEventListener('click', () => {
         const n = b.dataset.n;
@@ -12351,14 +12485,20 @@
         nombres.forEach((n) => { marcar[n] = todos.dataset.todos === '1' ? 1 : null; });
         guardar({ dia: fecha, marcar });
       });
-      cont.querySelector('.chk-add').addEventListener('submit', (e) => {
+      const q = cont.querySelector('.vz-q');
+      if (q) q.addEventListener('input', () => { filtro = q.value; aplicarFiltro(); });
+      const abrir = cont.querySelector('.vz-add-abrir');
+      if (abrir) abrir.addEventListener('click', () => { agregarAbierto = true; render(); const i = cont.querySelector('.chk-add-in'); if (i) i.focus(); });
+      const cancelar = cont.querySelector('.vz-add-cancel');
+      if (cancelar) cancelar.addEventListener('click', () => { agregarAbierto = false; const i = cont.querySelector('.chk-add-in'); if (i) i.value = ''; render(); });
+      const form = cont.querySelector('.chk-add');
+      if (form) form.addEventListener('submit', (e) => {
         e.preventDefault();
         const inp = cont.querySelector('.chk-add-in');
         const nombre = norm(inp.value);
         if (!nombre) { inp.focus(); return; }
         const ya = trabajadores().find((x) => x.toLowerCase() === nombre.toLowerCase());
-        if (ya) { estado = `${escapeHtmlVisor(ya)} ya está en la lista.`; render(); return; }
-        // el nuevo se marca como que vino ese día
+        if (ya) { estado = `${escapeHtmlVisor(ya)} ya está en la lista.`; estadoTipo = 'aviso'; render(); return; }
         guardar({ dia: fecha, marcar: { [nombre]: 1 }, nuevo: nombre });
       });
     }
@@ -12383,7 +12523,7 @@
 
     function guardar(cambio) {
       aplicar(d.checkin, cambio);   // se ve al instante
-      estado = 'Guardando…';
+      estado = 'Guardando…'; estadoTipo = 'guardando';
       if (cambio.nuevo) agregando = true;
       render();
       cola = cola.then(async () => {
@@ -12399,13 +12539,12 @@
           await window.GH_ESCRIBIR_EN_CUENTA(codigo, CHK_KEY, JSON.stringify(actual));
           d.checkin = actual;
           estado = cambio.nuevo ? `${escapeHtmlVisor(cambio.nuevo)} agregado ✓` : 'Guardado ✓ ' + chkHora(new Date().toISOString());
+          estadoTipo = 'ok';
+          if (cambio.nuevo) { agregarAbierto = false; const i = cont.querySelector('.chk-add-in'); if (i) i.value = ''; }
         } catch (e) {
-          estado = 'No se pudo guardar. Revisa tu conexión y vuelve a tocar.';
+          estado = 'No se pudo guardar. Revisa tu conexión y vuelve a tocar.'; estadoTipo = 'error';
         }
-        if (cambio.nuevo) {
-          agregando = false;
-          const i = cont.querySelector('.chk-add-in'); if (i && !estado.startsWith('No se')) i.value = '';
-        }
+        agregando = false;
         if (fecha === cambio.dia) render();
       });
     }
@@ -12417,17 +12556,10 @@
   // estos paneles nuevos, no se puede editar nada (todo es texto/tablas, pero
   // esto es un respaldo).
   function aplicarBloqueoEdicionVisor() {
-    document.body.insertAdjacentHTML('afterbegin', `<div id="gh-banner-visor" style="background:#EAF3FF;color:#1A4B8C;font-size:12.5px;padding:10px 20px;text-align:center;border-bottom:1px solid #C7DFFB;">Modo visor — check-in de los trabajadores.</div>`);
-    const style = document.createElement('style');
-    style.textContent = `
-      body.gh-modo-visor .visor-panel input:not(.chk-add-in),
-      body.gh-modo-visor .visor-panel select,
-      body.gh-modo-visor .visor-panel textarea {
-        pointer-events: none !important;
-        opacity: .6 !important;
-      }
-    `;
-    document.head.appendChild(style);
+    // El visor ya solo tiene su check-in; lo que puede guardar lo controla la
+    // base de datos (solo "gh-checkin" de sus bases). No hace falta candado
+    // aquí, y el viejo bloqueaba también el formulario de la contraseña.
+    document.body.classList.add('gh-visor-v2');
   }
 })();
 </script>
