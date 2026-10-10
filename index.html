@@ -3509,7 +3509,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v130 · 10 oct';
+  const APP_VERSION = 'v131 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -5214,7 +5214,10 @@
   function renderInvoicesGuardados() {
     const tbody = $('tbody-invoices-guardados');
     tbody.innerHTML = '';
-    const sorted = [...invoicesGuardados].sort((a, b) => (b.guardadoEn || '').localeCompare(a.guardadoEn || ''));
+    // Ordenados por la fecha de la semana (la más reciente arriba); si dos son
+    // de la misma semana, el último guardado primero.
+    const fechaInv = (inv) => inv.key || (Array.isArray(inv.ingresoItems) && inv.ingresoItems[0] && inv.ingresoItems[0].fecha) || (inv.guardadoEn || '').slice(0, 10);
+    const sorted = [...invoicesGuardados].sort((a, b) => fechaInv(b).localeCompare(fechaInv(a)) || (b.guardadoEn || '').localeCompare(a.guardadoEn || ''));
     const hayDatos = sorted.length > 0;
     $('empty-invoices-guardados').style.display = hayDatos ? 'none' : 'block';
     $('tabla-invoices-guardados').style.display = hayDatos ? 'block' : 'none';
@@ -6110,9 +6113,20 @@
     // instalada a veces se queda en blanco si se cambia todo de un jalón.
     void overlay.offsetHeight;
     requestAnimationFrame(() => {
-      // Si algo raro en un invoice viejo hiciera fallar la vista nueva, se usa la de siempre.
-      try { const v = construirVistaInvoicePantalla(inv); sheet.classList.add('iv-sheet'); sheet.innerHTML = v; }
-      catch (e) { sheet.classList.remove('iv-sheet'); sheet.innerHTML = construirHTMLInvoice(inv); }
+      // Se ve igual que la hoja impresa: el mismo documento dentro de un marco.
+      sheet.classList.remove('iv-sheet');
+      const frame = document.createElement('iframe');
+      frame.title = 'Invoice';
+      frame.style.cssText = 'display:block;width:100%;min-height:600px;border:0;background:#fff;border-radius:6px;';
+      const ajustarAlto = () => {
+        try { const d = frame.contentWindow.document; frame.style.height = (Math.max(d.body.scrollHeight, d.documentElement.scrollHeight) + 8) + 'px'; } catch (e) {}
+      };
+      frame.addEventListener('load', () => { ajustarAlto(); setTimeout(ajustarAlto, 300); });
+      try { frame.srcdoc = ghDocImpresion(construirHTMLInvoice(inv), 'Invoice ' + (inv.label || '')); sheet.appendChild(frame); }
+      catch (e) {
+        try { const v = construirVistaInvoicePantalla(inv); sheet.classList.add('iv-sheet'); sheet.innerHTML = v; }
+        catch (e2) { sheet.innerHTML = construirHTMLInvoice(inv); }
+      }
     });
   }
 
@@ -10621,7 +10635,12 @@
   function ghImprimirEnVentana(htmlCuerpo, titulo, docCompleto) {
     // docCompleto: documento HTML ya armado con su propio estilo (ej. las
     // Completion Sheets, que deben salir idénticas al papel original).
-    const html = docCompleto || `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(titulo || 'Invoice')}</title>
+    const html = docCompleto || ghDocImpresion(htmlCuerpo, titulo);
+    ghImprimirDoc(html);
+  }
+  // Documento con el mismo estilo de la hoja impresa (lo usan Imprimir y "Ver" de invoices)
+  function ghDocImpresion(htmlCuerpo, titulo) {
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(titulo || 'Invoice')}</title>
       <style>
         @page { margin: 14mm; }
         body { font-family: Arial, Helvetica, sans-serif; color:#1a1a1a; margin:0; padding:24px; max-width:820px; }
@@ -10642,6 +10661,8 @@
         .ps-split-box .ps-total { font-size:19px; font-weight:700; }
         .ps-split-box .ps-note { font-size:11px; color:#555; margin-top:4px; }
       </style></head><body>${htmlCuerpo}</body></html>`;
+  }
+  function ghImprimirDoc(html) {
     // Imprime desde un marco oculto dentro de la misma página: funciona en
     // Windows y también dentro de la app instalada del iPhone (donde abrir
     // ventanas nuevas está bloqueado). Se espera a que el contenido esté

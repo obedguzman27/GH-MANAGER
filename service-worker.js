@@ -3,7 +3,7 @@
 // Los datos NO se guardan aquí (eso vive en localStorage / futuro backend),
 // solo el "cascarón" de la app (HTML, íconos).
 
-const CACHE_NAME = 'gh-manager-v130';
+const CACHE_NAME = 'gh-manager-v131';
 const ARCHIVOS_CACHE = [
   './',
   './index.html',
