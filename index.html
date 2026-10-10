@@ -2748,12 +2748,18 @@
     <div class="gc-card">
       <p class="gc-card-title">Imprimir cheque</p>
       <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Para cheques láser de hoja carta con el cheque arriba (8½" x 3½") y dos talones abajo. Escoge un pago de nómina o llena los datos a mano.</p>
-      <div class="gc-field" style="margin-bottom:14px;"><label>Cargar desde un pago de nómina (opcional)</label>
-        <select id="chq-desde-nomina"><option value="">— Escribir a mano —</option></select>
+      <div class="gc-field" style="margin-bottom:14px;"><label>Pagos de nómina en este cheque (opcional)</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <select id="chq-semana" style="flex:1;min-width:200px;"><option value="">— Escribir a mano —</option></select>
+          <button type="button" class="gc-action-btn" id="chq-btn-toda-semana" style="display:none;">Marcar todos</button>
+        </div>
+        <div id="chq-pagos-lista" style="display:none;margin-top:10px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 12px;"></div>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:6px;">Marca uno para pagarle a ese trabajador, o varios para hacer un solo cheque (por ejemplo a CRA HVAC) con el sueldo de todos. La cantidad se suma sola.</p>
       </div>
       <div class="gc-form-row">
         <div class="gc-field"><label>Páguese a</label>
-          <input type="text" id="chq-a" list="dl-trab-todos" placeholder="Nombre de quien recibe" autocomplete="off">
+          <input type="text" id="chq-a" list="dl-chq-a" placeholder="Nombre de quien recibe" autocomplete="off">
+          <datalist id="dl-chq-a"></datalist>
         </div>
         <div class="gc-field"><label>Cantidad ($)</label>
           <input type="number" id="chq-monto" step="0.01" min="0" inputmode="decimal" placeholder="0.00">
@@ -3481,7 +3487,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v126 · 10 oct';
+  const APP_VERSION = 'v127 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -12208,14 +12214,64 @@
     return Math.max(Number(chqCfg.siguiente) || 1, usados.length ? Math.max(...usados) + 1 : 0);
   }
 
+  // Semana de un pago de nómina (lunes de la semana del primer día trabajado)
+  function chqSemanaDe(n) {
+    const dd = Array.isArray(n.dias) ? n.dias.slice().sort() : [];
+    const ref = dd[0] || (n.creadoEn || '').slice(0, 10);
+    return ref ? nomWeekKey(ref) : '';
+  }
   function chqLlenarSelectNomina() {
-    const sel = $('chq-desde-nomina');
-    const recientes = (nomDocs || []).slice()
-      .sort((a, b) => (b.creadoEn || '').localeCompare(a.creadoEn || ''))
-      .slice(0, 40);
-    sel.innerHTML = '<option value="">— Escribir a mano —</option>' + recientes.map((n) =>
-      `<option value="${escapeHtml(n.id)}">${escapeHtml(n.trabajador || '')} · ${escapeHtml(nomFechasTexto(n.dias))} · ${nomFmt(n.monto)}</option>`
-    ).join('');
+    const sel = $('chq-semana');
+    const actual = sel.value;
+    const semanas = {};
+    (nomDocs || []).forEach((n) => { const k = chqSemanaDe(n); if (k) (semanas[k] = semanas[k] || []).push(n); });
+    const claves = Object.keys(semanas).sort().reverse().slice(0, 16);
+    sel.innerHTML = '<option value="">— Escribir a mano —</option>' + claves.map((k) => {
+      const r = nomWeekRango(k);
+      const total = semanas[k].reduce((t, n) => t + (Number(n.monto) || 0), 0);
+      return `<option value="${k}">Semana ${chqFechaUS(r.inicio)} – ${chqFechaUS(r.fin)} · ${semanas[k].length} pago(s) · ${nomFmt(total)}</option>`;
+    }).join('');
+    if (actual && claves.includes(actual)) sel.value = actual;
+    chqRenderPagosSemana();
+    // Sugerencias para "Páguese a": socios (ej. CRA HVAC), trabajadores y a quien ya se le hizo cheque
+    const nombres = new Set();
+    (cfgSocios || []).forEach((x) => x && x.nombre && nombres.add(x.nombre));
+    (empleados || []).filter((e) => e.estado !== 'inactivo').forEach((e) => nombres.add(empNombreCompleto(e)));
+    chqLista.forEach((c) => c.a && nombres.add(c.a));
+    $('dl-chq-a').innerHTML = [...nombres].map((x) => `<option value="${escapeHtml(x)}">`).join('');
+  }
+  function chqRenderPagosSemana() {
+    const k = $('chq-semana').value;
+    const cont = $('chq-pagos-lista');
+    const pagos = k ? (nomDocs || []).filter((n) => chqSemanaDe(n) === k)
+      .sort((a, b) => (a.trabajador || '').localeCompare(b.trabajador || '')) : [];
+    cont.style.display = pagos.length ? 'block' : 'none';
+    $('chq-btn-toda-semana').style.display = pagos.length > 1 ? '' : 'none';
+    cont.innerHTML = pagos.map((n) => `
+      <label style="display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer;font-size:13.5px;">
+        <input type="checkbox" class="chq-pago" value="${escapeHtml(n.id)}" style="width:18px;height:18px;">
+        <span style="flex:1;">${escapeHtml(n.trabajador || '')} <span style="color:var(--muted);font-size:12px;">· ${nomCuentaDias(n.dias)} día(s)</span></span>
+        <strong>${nomFmt(n.monto)}</strong>
+      </label>`).join('');
+    cont.querySelectorAll('.chq-pago').forEach((cb) => cb.addEventListener('change', chqAplicarPagos));
+  }
+  function chqPagosMarcados() {
+    return [...document.querySelectorAll('#chq-pagos-lista .chq-pago:checked')]
+      .map((cb) => (nomDocs || []).find((n) => n.id === cb.value)).filter(Boolean);
+  }
+  // Suma lo marcado. Con un solo pago pone al trabajador como "Páguese a";
+  // con varios deja el nombre para que escribas a quién (ej. CRA HVAC).
+  function chqAplicarPagos() {
+    const pagos = chqPagosMarcados();
+    if (!pagos.length) return;
+    const total = pagos.reduce((t, n) => t + (Number(n.monto) || 0), 0);
+    $('chq-monto').value = (Math.round(total * 100) / 100).toFixed(2);
+    const a = $('chq-a');
+    const nombresPagos = (nomDocs || []).map((n) => n.trabajador);
+    if (pagos.length === 1) { if (!a.value.trim() || nombresPagos.includes(a.value.trim())) a.value = pagos[0].trabajador || ''; }
+    else if (nombresPagos.includes(a.value.trim())) { a.value = ''; a.focus(); }
+    if (!$('chq-memo').value.trim()) $('chq-memo').value = 'WORK';
+    chqActualizarLetras();
   }
 
   function chqActualizarLetras() {
@@ -12278,7 +12334,7 @@
       fecha: $('chq-fecha').value || nomToday(),
       memo: $('chq-memo').value.trim(),
       numero: parseInt($('chq-numero').value, 10) || chqSiguienteNumero(),
-      nomId: $('chq-desde-nomina').value || ''
+      nomIds: chqPagosMarcados().map((n) => n.id)
     };
   }
 
@@ -12291,10 +12347,16 @@
   }
 
   // Talón (stub): comprobante en inglés con los días trabajados (se imprime 2 veces).
+  // Si el cheque cubre varios trabajadores (ej. a CRA HVAC), sale cada uno con sus días.
+  function chqPagosDeCheque(c) {
+    const ids = Array.isArray(c.nomIds) ? c.nomIds : (c.nomId ? [c.nomId] : []);
+    return ids.map((id) => (nomDocs || []).find((x) => x.id === id)).filter(Boolean);
+  }
   function chqTalonHTML(c, top, titulo) {
-    const n = c.nomId ? (nomDocs || []).find((x) => x.id === c.nomId) : null;
+    const pagos = chqPagosDeCheque(c);
     let detalle = '';
-    if (n) {
+    if (pagos.length === 1) {
+      const n = pagos[0];
       const dias = (Array.isArray(n.dias) ? n.dias.slice() : []).sort();
       const cuantos = nomCuentaDias(n.dias); // pagos viejos guardaban solo el número de días
       const lineas = dias.map((d) => `<tr><td class="dia">${escapeHtml(chqDiaEnIngles(d))}</td><td class="r"></td></tr>`);
@@ -12302,6 +12364,19 @@
       if (Number(n.sueldoDia) && cuantos) filas.push(`<tr><td>Daily rate: ${nomFmt(n.sueldoDia)} × ${cuantos}</td><td class="r">${nomFmt(Number(n.sueldoDia) * cuantos)}</td></tr>`);
       if (Number(n.extraMonto)) filas.push(`<tr><td>Extra${n.extraDesc ? ': ' + escapeHtml(n.extraDesc) : ''}</td><td class="r">${nomFmt(n.extraMonto)}</td></tr>`);
       detalle = `<table class="t-det">${filas.join('')}</table>`;
+    } else if (pagos.length > 1) {
+      const filas = pagos.map((n) => {
+        const dias = (Array.isArray(n.dias) ? n.dias.slice() : []).sort();
+        const cuantos = nomCuentaDias(n.dias);
+        const diasTxt = dias.map((d) => {
+          const f = new Date(d + 'T00:00:00');
+          return isNaN(f) ? d : f.toLocaleDateString('en-US', { weekday: 'long', month: 'numeric', day: 'numeric' });
+        }).join(', ');
+        const extra = Number(n.extraMonto) ? ` · Extra${n.extraDesc ? ' (' + escapeHtml(n.extraDesc) + ')' : ''}: ${nomFmt(n.extraMonto)}` : '';
+        return `<tr><td><strong>${escapeHtml(n.trabajador || '')}</strong> — ${cuantos} day${cuantos === 1 ? '' : 's'}${Number(n.sueldoDia) ? ' × ' + nomFmt(n.sueldoDia) : ''}${extra}
+          ${diasTxt ? `<div class="dias">${escapeHtml(diasTxt)}</div>` : ''}</td><td class="r">${nomFmt(n.monto)}</td></tr>`;
+      });
+      detalle = `<table class="t-det multi"><tr><td><strong>Payroll — ${pagos.length} workers</strong></td><td class="r"></td></tr>${filas.join('')}</table>`;
     }
     return `<div class="talon" style="top:${top}in;">
       <div class="t-head"><span>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</span><span>${titulo} · Check #${escapeHtml(String(c.numero))}</span></div>
@@ -12351,6 +12426,8 @@
   .t-det { margin-top: 6px; border-top: 1px solid #bbb; }
   .t-det td.r { text-align: right; white-space: nowrap; }
   .t-det td.dia { padding-left: 14px; }
+  .t-det.multi td { padding: 3px 0; border-bottom: 1px solid #e2e2e2; font-size: 9.5pt; }
+  .t-det .dias { font-size: 8.5pt; color: #333; padding-left: 12px; margin-top: 1px; }
   .t-total { margin-top: 8px; font-weight: bold; font-size: 12pt; text-align: right; }
 </style></head><body><div class="pg">
   ${guia}
@@ -12359,7 +12436,7 @@
   <div class="f letras" style="${pos('letras')}">${escapeHtml(letras)} ${relleno}</div>
   <div class="f" style="${pos('a')}">${escapeHtml(c.a)}</div>
   ${c.memo ? `<div class="f memo" style="${pos('memo')}">${escapeHtml(c.memo)}</div>` : ''}
-  ${talones ? chqTalonHTML(c, 3.85 + dy, 'Employee copy') + chqTalonHTML(c, 7.6 + dy, 'Company copy') : ''}
+  ${talones ? chqTalonHTML(c, 3.85 + dy, chqPagosDeCheque(c).length > 1 ? 'Payee copy' : 'Employee copy') + chqTalonHTML(c, 7.6 + dy, 'Company copy') : ''}
 </div></body></html>`;
   }
 
@@ -12369,13 +12446,10 @@
     return true;
   }
 
-  $('chq-desde-nomina').addEventListener('change', () => {
-    const n = (nomDocs || []).find((x) => x.id === $('chq-desde-nomina').value);
-    if (!n) return;
-    $('chq-a').value = n.trabajador || '';
-    $('chq-monto').value = (Number(n.monto) || 0).toFixed(2);
-    $('chq-memo').value = 'WORK';
-    chqActualizarLetras();
+  $('chq-semana').addEventListener('change', chqRenderPagosSemana);
+  $('chq-btn-toda-semana').addEventListener('click', () => {
+    document.querySelectorAll('#chq-pagos-lista .chq-pago').forEach((cb) => { cb.checked = true; });
+    chqAplicarPagos();
   });
   $('chq-monto').addEventListener('input', chqActualizarLetras);
 
@@ -12402,7 +12476,7 @@
     catch (e) { toast('No se pudo guardar el cheque', 'error'); }
     ghImprimirEnVentana('', `Cheque ${c.numero}`, chqDocumento(c, false));
     // Deja el formulario listo para el siguiente
-    $('chq-desde-nomina').value = '';
+    document.querySelectorAll('#chq-pagos-lista .chq-pago').forEach((cb) => { cb.checked = false; });
     $('chq-a').value = ''; $('chq-monto').value = ''; $('chq-memo').value = 'WORK';
     $('chq-numero').value = chqSiguienteNumero();
     chqActualizarLetras();
