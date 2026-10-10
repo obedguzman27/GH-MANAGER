@@ -3509,7 +3509,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v129 · 10 oct';
+  const APP_VERSION = 'v130 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -6211,7 +6211,7 @@
       g.items.forEach((m) => {
         filasMov += `<tr>
           <td style="padding:6px;border-bottom:1px solid #ddd;">${m.fecha || ''}</td>
-          <td style="padding:6px;border-bottom:1px solid #ddd;">${m.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}</td>
+          <td style="padding:6px;border-bottom:1px solid #ddd;">${m.tipo === 'ingreso' ? 'Ingreso' : (m.tipo === 'ajuste' ? ('Ajuste ' + (m.ajusteDir === 'restar' ? '−' : '+') + (m.ajusteSocioNombre ? ' ' + escapeHtml(m.ajusteSocioNombre) : '')) : 'Gasto')}</td>
           <td style="padding:6px;border-bottom:1px solid #ddd;">${escapeHtml(m.cat || '')}</td>
           <td style="padding:6px;border-bottom:1px solid #ddd;">${escapeHtml(m.desc || '')}</td>
           <td style="padding:6px;border-bottom:1px solid #ddd;text-align:right;">${fmt(m.monto)}</td>
@@ -6219,24 +6219,37 @@
       });
     });
 
+    // Reparto: una columna por cada quien entra (la empresa y, si hay, cada
+    // socio). Sin socios solo sale la empresa y su tax.
     const semanas = calcularSemanas();
+    const nombreEmp = (cfgFacturaNombre || 'Empresa').trim();
+    const colsReparto = [];
+    semanas.forEach((s) => (s.pagos || []).forEach((p) => { if (!colsReparto.some((c) => c.id === p.id)) colsReparto.push({ id: p.id, nombre: p.nombre }); }));
+    if (!colsReparto.length) colsReparto.push({ id: 'empresa', nombre: nombreEmp });
+    const tdR = 'padding:6px;border-bottom:1px solid #ddd;text-align:right;';
+    const thR = 'text-align:right;border-bottom:2px solid #1B2A4A;padding:6px;font-size:10px;text-transform:uppercase;';
     let filasReparto = '';
     semanas.forEach((s) => {
+      const celdas = colsReparto.map((c) => {
+        const p = (s.pagos || []).find((x) => x.id === c.id);
+        return `<td style="${tdR}">${p ? fmt(p.total) : '—'}</td>`;
+      }).join('');
       filasReparto += `<tr>
         <td style="padding:6px;border-bottom:1px solid #ddd;">${escapeHtml(s.label)}</td>
-        <td style="padding:6px;border-bottom:1px solid #ddd;text-align:right;">${fmt(s.ingresos)}</td>
-        <td style="padding:6px;border-bottom:1px solid #ddd;text-align:right;">${fmt(s.gastos)}</td>
-        <td style="padding:6px;border-bottom:1px solid #ddd;text-align:right;">${fmt(s.taxas)}</td>
-        <td style="padding:6px;border-bottom:1px solid #ddd;text-align:right;">${fmt(s.neto)}</td>
-        <td style="padding:6px;border-bottom:1px solid #ddd;text-align:right;">${fmt(s.pagoCra)}</td>
-        <td style="padding:6px;border-bottom:1px solid #ddd;text-align:right;">${fmt(s.pagoGuzman)}</td>
-        <td style="padding:6px;border-bottom:1px solid #ddd;text-align:right;">${fmt(s.taxGuzman)}</td>
+        <td style="${tdR}">${fmt(s.ingresos)}</td>
+        <td style="${tdR}">${fmt(s.gastos)}</td>
+        <td style="${tdR}">${fmt(s.taxas)}</td>
+        <td style="${tdR}">${fmt(s.neto)}</td>
+        ${celdas}
+        <td style="${tdR}">${fmt(s.taxGuzman)}</td>
       </tr>`;
     });
+    const thSocios = colsReparto.map((c) => `<th style="${thR}">${escapeHtml(c.nombre)}</th>`).join('');
+    const totalCols = 6 + colsReparto.length;
 
     const cuerpoHTML = `
       <div style="font-family:Arial,Helvetica,sans-serif;color:#2A2A2A;">
-        <h1 style="font-size:20px;margin:0;">${cfgFacturaNombre}</h1>
+        <h1 style="font-size:20px;margin:0;">${escapeHtml(nombreEmp)}</h1>
         <h2 style="font-size:14px;margin:20px 0 8px;color:#1B2A4A;">Movimientos</h2>
         <table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:16px;">
           <thead><tr>
@@ -6256,11 +6269,10 @@
             <th style="text-align:right;border-bottom:2px solid #1B2A4A;padding:6px;font-size:10px;text-transform:uppercase;" data-i18n="h_gastos">Gastos</th>
             <th style="text-align:right;border-bottom:2px solid #1B2A4A;padding:6px;font-size:10px;text-transform:uppercase;" data-i18n="h_taxas">Taxas</th>
             <th style="text-align:right;border-bottom:2px solid #1B2A4A;padding:6px;font-size:10px;text-transform:uppercase;" data-i18n="h_neto">Neto</th>
-            <th style="text-align:right;border-bottom:2px solid #1B2A4A;padding:6px;font-size:10px;text-transform:uppercase;">${cfgSocioBonus}</th>
-            <th style="text-align:right;border-bottom:2px solid #1B2A4A;padding:6px;font-size:10px;text-transform:uppercase;">${cfgSocioMitad}</th>
-            <th style="text-align:right;border-bottom:2px solid #1B2A4A;padding:6px;font-size:10px;text-transform:uppercase;" data-i18n="h_tax_guzman">Tax Guzman</th>
+            ${thSocios}
+            <th style="${thR}">Tax ${escapeHtml(nombreEmp)}</th>
           </tr></thead>
-          <tbody>${filasReparto || '<tr><td colspan="8" style="padding:6px;">Sin datos</td></tr>'}</tbody>
+          <tbody>${filasReparto || `<tr><td colspan="${totalCols}" style="padding:6px;">Sin datos</td></tr>`}</tbody>
         </table>
       </div>`;
 
