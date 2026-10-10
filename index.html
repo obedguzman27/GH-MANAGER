@@ -2764,7 +2764,7 @@
       </div>
       <div class="gc-form-row">
         <div class="gc-field"><label>Memo</label>
-          <input type="text" id="chq-memo" placeholder="Ej. Nómina semana 5–11 oct" autocomplete="off">
+          <input type="text" id="chq-memo" value="WORK" placeholder="WORK" autocomplete="off">
         </div>
         <div class="gc-field"><label>Número de cheque</label>
           <input type="number" id="chq-numero" step="1" min="1" inputmode="numeric">
@@ -3481,7 +3481,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v125 · 10 oct';
+  const APP_VERSION = 'v126 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -12283,20 +12283,31 @@
   }
 
   // Talón: comprobante con el detalle del pago (se imprime 2 veces).
+  // "2026-10-05" → "Monday, October 5, 2026"
+  function chqDiaEnIngles(iso) {
+    const d = new Date(String(iso) + 'T00:00:00');
+    if (isNaN(d)) return String(iso || '');
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  // Talón (stub): comprobante en inglés con los días trabajados (se imprime 2 veces).
   function chqTalonHTML(c, top, titulo) {
     const n = c.nomId ? (nomDocs || []).find((x) => x.id === c.nomId) : null;
     let detalle = '';
     if (n) {
-      const dias = nomCuentaDias(n.dias);
-      const filas = [`<tr><td>Días trabajados: ${dias}${n.dias && n.dias.length ? ' (' + escapeHtml(nomFechasTexto(n.dias)) + ')' : ''}</td><td class="r">${n.sueldoDia ? '× ' + nomFmt(n.sueldoDia) : ''}</td></tr>`];
-      if (Number(n.extraMonto)) filas.push(`<tr><td>${escapeHtml(n.extraDesc || 'Extra')}</td><td class="r">${nomFmt(n.extraMonto)}</td></tr>`);
+      const dias = (Array.isArray(n.dias) ? n.dias.slice() : []).sort();
+      const cuantos = nomCuentaDias(n.dias); // pagos viejos guardaban solo el número de días
+      const lineas = dias.map((d) => `<tr><td class="dia">${escapeHtml(chqDiaEnIngles(d))}</td><td class="r"></td></tr>`);
+      const filas = [`<tr><td><strong>Days worked: ${cuantos}</strong></td><td class="r"></td></tr>`, ...lineas];
+      if (Number(n.sueldoDia) && cuantos) filas.push(`<tr><td>Daily rate: ${nomFmt(n.sueldoDia)} × ${cuantos}</td><td class="r">${nomFmt(Number(n.sueldoDia) * cuantos)}</td></tr>`);
+      if (Number(n.extraMonto)) filas.push(`<tr><td>Extra${n.extraDesc ? ': ' + escapeHtml(n.extraDesc) : ''}</td><td class="r">${nomFmt(n.extraMonto)}</td></tr>`);
       detalle = `<table class="t-det">${filas.join('')}</table>`;
     }
     return `<div class="talon" style="top:${top}in;">
-      <div class="t-head"><span>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</span><span>${titulo} · Cheque #${escapeHtml(String(c.numero))}</span></div>
+      <div class="t-head"><span>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</span><span>${titulo} · Check #${escapeHtml(String(c.numero))}</span></div>
       <table class="t-main">
-        <tr><td class="k">Fecha</td><td>${escapeHtml(chqFechaUS(c.fecha))}</td></tr>
-        <tr><td class="k">Pagado a</td><td>${escapeHtml(c.a)}</td></tr>
+        <tr><td class="k">Date</td><td>${escapeHtml(chqFechaUS(c.fecha))}</td></tr>
+        <tr><td class="k">Paid to</td><td>${escapeHtml(c.a)}</td></tr>
         ${c.memo ? `<tr><td class="k">Memo</td><td>${escapeHtml(c.memo)}</td></tr>` : ''}
       </table>
       ${detalle}
@@ -12314,14 +12325,14 @@
     const relleno = '*'.repeat(Math.max(3, 78 - letras.length));
     const talones = chqCfg.talones !== 'no';
     const guia = prueba ? `
-      <div class="guia" style="top:0;height:3.5in;"><span>Cheque 8½" x 3½" — PRUEBA, no es un cheque</span></div>
-      <div class="guia" style="top:3.5in;height:3.75in;"><span>Talón 1</span></div>
-      <div class="guia" style="top:7.25in;height:3.75in;"><span>Talón 2</span></div>
+      <div class="guia" style="top:0;height:3.5in;"><span>Check 8½" x 3½" — TEST PRINT, NOT A CHECK</span></div>
+      <div class="guia" style="top:3.5in;height:3.75in;"><span>Stub 1</span></div>
+      <div class="guia" style="top:7.25in;height:3.75in;"><span>Stub 2</span></div>
       <div class="lbl" style="left:${(CHQ_POS.fecha.x - 0.05).toFixed(2)}in;top:${(CHQ_POS.fecha.y - 0.2).toFixed(2)}in;">DATE</div>
       <div class="lbl" style="left:${(CHQ_POS.monto.x - 0.05).toFixed(2)}in;top:${(CHQ_POS.monto.y - 0.2).toFixed(2)}in;">AMOUNT</div>
       <div class="lbl" style="left:0.3in;top:${(CHQ_POS.letras.y).toFixed(2)}in;">PAY</div>
       <div class="lbl" style="left:0.3in;top:${(CHQ_POS.a.y - 0.2).toFixed(2)}in;">TO THE ORDER OF</div>` : '';
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cheque ${escapeHtml(String(c.numero))}</title>
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Check ${escapeHtml(String(c.numero))}</title>
 <style>
   @page { size: letter; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; }
@@ -12339,6 +12350,7 @@
   .t-main td.k { width: 1.1in; color: #444; }
   .t-det { margin-top: 6px; border-top: 1px solid #bbb; }
   .t-det td.r { text-align: right; white-space: nowrap; }
+  .t-det td.dia { padding-left: 14px; }
   .t-total { margin-top: 8px; font-weight: bold; font-size: 12pt; text-align: right; }
 </style></head><body><div class="pg">
   ${guia}
@@ -12347,7 +12359,7 @@
   <div class="f letras" style="${pos('letras')}">${escapeHtml(letras)} ${relleno}</div>
   <div class="f" style="${pos('a')}">${escapeHtml(c.a)}</div>
   ${c.memo ? `<div class="f memo" style="${pos('memo')}">${escapeHtml(c.memo)}</div>` : ''}
-  ${talones ? chqTalonHTML(c, 3.85 + dy, 'Copia del trabajador') + chqTalonHTML(c, 7.6 + dy, 'Copia de la empresa') : ''}
+  ${talones ? chqTalonHTML(c, 3.85 + dy, 'Employee copy') + chqTalonHTML(c, 7.6 + dy, 'Company copy') : ''}
 </div></body></html>`;
   }
 
@@ -12362,7 +12374,7 @@
     if (!n) return;
     $('chq-a').value = n.trabajador || '';
     $('chq-monto').value = (Number(n.monto) || 0).toFixed(2);
-    $('chq-memo').value = 'Nómina ' + nomFechasTexto(n.dias);
+    $('chq-memo').value = 'WORK';
     chqActualizarLetras();
   });
   $('chq-monto').addEventListener('input', chqActualizarLetras);
@@ -12391,7 +12403,7 @@
     ghImprimirEnVentana('', `Cheque ${c.numero}`, chqDocumento(c, false));
     // Deja el formulario listo para el siguiente
     $('chq-desde-nomina').value = '';
-    $('chq-a').value = ''; $('chq-monto').value = ''; $('chq-memo').value = '';
+    $('chq-a').value = ''; $('chq-monto').value = ''; $('chq-memo').value = 'WORK';
     $('chq-numero').value = chqSiguienteNumero();
     chqActualizarLetras();
     chqRenderLista();
