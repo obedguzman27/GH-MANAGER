@@ -1693,11 +1693,14 @@
     #trab-nom-tbl tbody td:nth-child(2) { grid-column: 2; grid-row: 1; font-size: 16px; text-align: right; }
     #trab-nom-tbl tbody td:nth-child(3) { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 8px; }
     #trab-nom-tbl tbody td:nth-child(3) input { flex: 1; width: auto !important; min-height: 40px; font-size: 16px !important; }
-    #trab-nom-tbl tbody td:nth-child(4) { grid-column: 1 / -1; grid-row: 3; display: flex; justify-content: flex-end; }
+    #trab-nom-tbl tbody td:nth-child(4) { grid-column: 1 / -1; grid-row: 4; display: flex; justify-content: flex-end; }
+    #trab-nom-tbl tbody td:nth-child(5) { grid-column: 1 / -1; grid-row: 3; }
+    #trab-nom-tbl tbody td:nth-child(5) select { width: 100%; min-height: 40px; font-size: 16px !important; }
     #trab-nom-tbl tbody td:nth-child(1):has(.trab-nombre-input) { grid-column: 1 / -1; }
     #trab-nom-tbl tbody td:nth-child(1):has(.trab-nombre-input) + td { grid-row: 2; grid-column: 1 / -1; text-align: left; }
     #trab-nom-tbl tbody tr:has(.trab-nombre-input) td:nth-child(3) { grid-row: 3; }
-    #trab-nom-tbl tbody tr:has(.trab-nombre-input) td:nth-child(4) { grid-row: 4; }
+    #trab-nom-tbl tbody tr:has(.trab-nombre-input) td:nth-child(4) { grid-row: 5; }
+    #trab-nom-tbl tbody tr:has(.trab-nombre-input) td:nth-child(5) { grid-row: 4; }
     .trab-nombre-cel .trab-nombre-edit { padding: 6px 10px !important; }
   }
   /* Sin textos de descripción/ayuda (pedido del usuario) */
@@ -2065,6 +2068,22 @@
           <button class="gc-type-btn active" data-i18n="ingreso" data-type="ingreso">↑ Ingreso</button>
           <button class="gc-type-btn" data-i18n="gasto" data-type="gasto">↓ Gasto</button>
           <button class="gc-type-btn" data-i18n="ajuste" data-type="ajuste">± Ajuste</button>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin:-4px 0 12px;">
+          <button type="button" class="gc-action-btn" id="mov-nom-abrir">+ Agregar nómina de la semana</button>
+        </div>
+        <div id="mov-nom-panel" style="display:none;margin-bottom:16px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:14px;background:var(--surface-2);">
+          <p style="font-weight:700;font-size:14px;margin:0 0 4px;">Agregar nómina</p>
+          <p class="gh-ayuda" style="font-size:12px;color:var(--muted);margin:0 0 12px;">La nómina se cobra <strong>una sola vez</strong> como gasto. Lo que va a un socio (ej. CRA HVAC) además se le suma como <strong>ajuste</strong>, y ese socio gana su % encima (sale de las taxas). Los trabajadores normales no llevan %. A quién se le paga cada trabajador se escoge en Nómina → Trabajadores.</p>
+          <div class="gc-form-row" style="grid-template-columns:2fr 1fr;">
+            <div class="gc-field"><label>Semana de nómina</label><select id="mov-nom-semana"></select></div>
+            <div class="gc-field"><label>Fecha del movimiento</label><input type="date" id="mov-nom-fecha"></div>
+          </div>
+          <div id="mov-nom-resumen"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px;">
+            <button type="button" class="gc-action-btn" id="mov-nom-cerrar">Cerrar</button>
+            <button type="button" class="gc-save-btn" id="mov-nom-agregar">Agregar nómina a movimientos</button>
+          </div>
         </div>
         <div id="ajuste-direccion-row" style="display:none;margin-bottom:14px;">
           <div class="gc-form-row wide" style="margin-bottom:0;">
@@ -2736,7 +2755,7 @@
       <div class="gc-empty" id="trab-nom-empty" style="display:none;">No hay trabajadores. Agrega el primero arriba.</div>
       <div style="overflow-x:auto;">
         <table class="inv-list-t" id="trab-nom-tbl" style="display:none;">
-          <thead><tr><th data-i18n="trabajador">Trabajador</th><th class="num" data-i18n="h_sueldo_por_dia">Sueldo por día</th><th data-i18n="h_ajustar_sueldo">Ajustar sueldo</th><th></th></tr></thead>
+          <thead><tr><th data-i18n="trabajador">Trabajador</th><th class="num" data-i18n="h_sueldo_por_dia">Sueldo por día</th><th data-i18n="h_ajustar_sueldo">Ajustar sueldo</th><th></th><th>Se le paga a</th></tr></thead>
           <tbody id="trab-nom-tbody"></tbody>
         </table>
       </div>
@@ -3487,7 +3506,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v127 · 10 oct';
+  const APP_VERSION = 'v128 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -11746,8 +11765,19 @@
           <input type="text" inputmode="decimal" class="trab-sueldo-input" data-id="${emp.id}" placeholder="Nuevo sueldo $" style="width:110px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;">
           <button class="gc-action-btn trab-sueldo-set" data-i18n="guardar" data-id="${emp.id}" style="padding:5px 12px;font-size:11.5px;margin-left:4px;">Guardar</button>
         </td>
-        <td><button class="gc-action-btn trab-nom-del" data-i18n="inactivo" data-id="${emp.id}" style="padding:5px 10px;font-size:11px;" title="Marcar inactivo (no se borra su información)">Inactivo</button></td>`;
+        <td><button class="gc-action-btn trab-nom-del" data-i18n="inactivo" data-id="${emp.id}" style="padding:5px 10px;font-size:11px;" title="Marcar inactivo (no se borra su información)">Inactivo</button></td>
+        <td><select class="trab-pagar-a" data-id="${emp.id}" style="min-width:170px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12.5px;">${nomOpcionesPagarA(emp)}</select></td>`;
       tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('.trab-pagar-a').forEach((sel) => {
+      sel.addEventListener('change', async () => {
+        const emp = empleados.find((e) => e.id === sel.dataset.id);
+        if (!emp) return;
+        emp.pagarA = sel.value;
+        try { await saveEmpleados(); toast(sel.value ? `${empNombreCompleto(emp)}: se le paga a ${sel.options[sel.selectedIndex].text}` : `${empNombreCompleto(emp)}: se le paga directo`); }
+        catch (e) { toast('No se pudo guardar', 'error'); }
+      });
     });
 
     // ✎ Nombre: se edita ahí mismo; al guardar, el nombre nuevo también se
@@ -12151,6 +12181,149 @@
   // ---- Carga inicial ----
   // Empleados y papeles se cargan solo al abrir su sección en Ajustes (más rápido el arranque)
   loadAll();
+  // ===================== NÓMINA: A QUIÉN SE LE PAGA =====================
+  // Cada trabajador puede cobrar directo, o su sueldo se le da a un socio
+  // (ej. CRA HVAC, que gana su % encima) o a otro trabajador (ej. Ariel
+  // Chirinos cobra lo de él y su esposa). Se guarda en emp.pagarA:
+  // '' = directo, 'socio:<id>' o 'trab:<id del empleado>'.
+  function nomSociosParaPago() {
+    const clave = (cfgFacturaNombre || '').trim().toLowerCase();
+    return (cfgSocios || []).filter((x) => x && x.nombre && x.nombre.trim().toLowerCase() !== clave);
+  }
+  function nomOpcionesPagarA(emp) {
+    const actual = emp.pagarA || '';
+    const op = (v, t) => `<option value="${escapeHtml(v)}"${v === actual ? ' selected' : ''}>${escapeHtml(t)}</option>`;
+    const socios = nomSociosParaPago().map((x) => op('socio:' + x.id, x.nombre + ' (socio)'));
+    const otros = empleados.filter((e) => e.estado !== 'inactivo' && e.id !== emp.id)
+      .map((e) => op('trab:' + e.id, empNombreCompleto(e)));
+    return op('', 'Directo (a él)') + socios.join('') + otros.join('');
+  }
+  // Quién cobra el pago de un trabajador → { key, nombre, tipo: 'socio' | 'trab', socioId, bonoPct }
+  function nomReceptorDe(nombreTrab) {
+    const emp = nomBuscarTrab(nombreTrab);
+    const pa = (emp && emp.pagarA) || '';
+    if (pa.startsWith('socio:')) {
+      const socio = nomSociosParaPago().find((x) => x.id === pa.slice(6));
+      if (socio) return { key: pa, nombre: socio.nombre, tipo: 'socio', socioId: socio.id, bonoPct: Number(socio.bonoPct) || 0 };
+    }
+    if (pa.startsWith('trab:')) {
+      const t = empleados.find((e) => e.id === pa.slice(5) && e.estado !== 'inactivo');
+      if (t) return { key: 'trab:' + t.id, nombre: empNombreCompleto(t), tipo: 'trab' };
+    }
+    return { key: 'trab:' + (emp ? emp.id : String(nombreTrab || '').toLowerCase()), nombre: emp ? empNombreCompleto(emp) : (nombreTrab || ''), tipo: 'trab' };
+  }
+  // Pagos de una semana agrupados por quién cobra (socios primero)
+  function nomAgruparSemana(weekKey) {
+    const grupos = new Map();
+    (nomDocs || []).filter((n) => chqSemanaDe(n) === weekKey && Number(n.monto) > 0).forEach((n) => {
+      const r = nomReceptorDe(n.trabajador);
+      if (!grupos.has(r.key)) grupos.set(r.key, Object.assign({}, r, { pagos: [], total: 0 }));
+      const g = grupos.get(r.key);
+      g.pagos.push(n);
+      g.total += Number(n.monto) || 0;
+    });
+    return [...grupos.values()].map((g) => Object.assign(g, { total: Math.round(g.total * 100) / 100 }))
+      .sort((a, b) => (a.tipo === b.tipo ? a.nombre.localeCompare(b.nombre) : (a.tipo === 'socio' ? -1 : 1)));
+  }
+  function nomSemanasConPagos() {
+    const set = new Set();
+    (nomDocs || []).forEach((n) => { const k = chqSemanaDe(n); if (k) set.add(k); });
+    return [...set].sort().reverse();
+  }
+  function nomEtiquetaSemana(k) {
+    const r = nomWeekRango(k);
+    const f = (iso) => { const d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }); };
+    return `${f(r.inicio)} – ${f(r.fin)}`;
+  }
+
+  // ---- Movimientos → Agregar nómina de la semana ----
+  async function movNomAbrir() {
+    try {
+      if (!nomDocs || !nomDocs.length) { const r = await window.storage.get(NOM_KEY); nomDocs = JSON.parse(r.value) || []; }
+    } catch (e) {}
+    const semanas = nomSemanasConPagos();
+    const sel = $('mov-nom-semana');
+    if (!semanas.length) { toast('No hay nómina registrada todavía (Nómina → Registrar pago)', 'error', 3500); return; }
+    // Por defecto la semana pasada (la que se paga esta semana), si existe
+    const hoy = nomToday();
+    const pasada = (() => { const d = new Date(nomWeekKey(hoy) + 'T00:00:00'); d.setDate(d.getDate() - 7); return ghFechaLocal(d); })();
+    const yaAgregadas = new Set(movimientos.filter((m) => m.nominaSemana).map((m) => m.nominaSemana));
+    sel.innerHTML = semanas.slice(0, 20).map((k) => `<option value="${k}">${escapeHtml(nomEtiquetaSemana(k))}${yaAgregadas.has(k) ? ' · ya agregada' : ''}</option>`).join('');
+    sel.value = semanas.includes(pasada) ? pasada : semanas[0];
+    $('mov-nom-fecha').value = today();
+    $('mov-nom-panel').style.display = 'block';
+    movNomResumen();
+  }
+  function movNomResumen() {
+    const k = $('mov-nom-semana').value;
+    const grupos = nomAgruparSemana(k);
+    const total = grupos.reduce((t, g) => t + g.total, 0);
+    const filas = grupos.map((g) => {
+      const quienes = g.pagos.map((n) => `${escapeHtml(n.trabajador || '')} (${nomCuentaDias(n.dias)} d)`).join(', ');
+      const pct = g.tipo === 'socio' ? g.bonoPct : 0;
+      let nota = '';
+      if (g.tipo === 'socio') {
+        nota = pct > 0
+          ? `<div style="font-size:12px;color:var(--teal);margin-top:3px;">Gasto + ajuste a ${escapeHtml(g.nombre)} · su ${pct}%: ${nomFmt(g.total * pct / 100)} (de las taxas)</div>`
+          : `<div style="font-size:12px;color:var(--ember);margin-top:3px;">${escapeHtml(g.nombre)} tiene 0% en Ajustes → Socios. Ponle 10% para que gane su porcentaje.</div>`;
+      } else {
+        nota = `<div style="font-size:12px;color:var(--muted);margin-top:3px;">Gasto de nómina, sin %</div>`;
+      }
+      return `<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border-soft);">
+        <div style="min-width:0;"><strong>${escapeHtml(g.nombre)}</strong>${g.tipo === 'socio' ? ' <span style="font-size:11px;color:var(--muted);">socio</span>' : ''}
+          <div style="font-size:12.5px;color:var(--muted);">${quienes}</div>${nota}</div>
+        <strong style="white-space:nowrap;">${nomFmt(g.total)}</strong></div>`;
+    }).join('');
+    $('mov-nom-resumen').innerHTML = grupos.length
+      ? filas + `<div style="display:flex;justify-content:space-between;padding-top:10px;font-weight:700;font-size:14.5px;"><span>Total nómina (se cobra una vez)</span><span>${nomFmt(total)}</span></div>`
+      : '<div class="gc-empty" style="display:block;">Esa semana no tiene pagos.</div>';
+  }
+  async function movNomAgregar() {
+    const k = $('mov-nom-semana').value;
+    const fecha = $('mov-nom-fecha').value || today();
+    const grupos = nomAgruparSemana(k);
+    if (!grupos.length) { toast('Esa semana no tiene pagos', 'error'); return; }
+    const previos = movimientos.filter((m) => m.nominaSemana === k);
+    if (previos.length) {
+      const ok = await gcConfirm(`La nómina de ${nomEtiquetaSemana(k)} ya está en movimientos (${previos.length} movimiento(s)).\n\n¿Reemplazarla con la de ahora?`, { okText: 'Reemplazar' });
+      if (!ok) return;
+      movimientos = movimientos.filter((m) => m.nominaSemana !== k);
+    }
+    const semanaTxt = nomEtiquetaSemana(k);
+    let base = Date.now();
+    let nuevasCats = false;
+    grupos.forEach((g) => {
+      const detalle = g.pagos.map((n) => ({ trabajador: n.trabajador, dias: Array.isArray(n.dias) ? n.dias.slice().sort() : n.dias, sueldoDia: n.sueldoDia || 0, extraDesc: n.extraDesc || '', extraMonto: n.extraMonto || 0, monto: n.monto }));
+      const quienes = g.pagos.map((n) => `${n.trabajador} ${nomCuentaDias(n.dias)}d`).join(', ');
+      if (!catGastos.includes(g.nombre)) { catGastos.push(g.nombre); nuevasCats = true; }
+      movimientos.push({ id: base++, fecha, tipo: 'gasto', cat: g.nombre, monto: g.total,
+        desc: `Nómina ${semanaTxt}: ${quienes}`, deducible: false, nominaSemana: k, nominaDetalle: detalle });
+      if (g.tipo === 'socio') {
+        movimientos.push({ id: base++, fecha, tipo: 'ajuste', cat: 'Ajuste +', monto: g.total,
+          desc: `Nómina ${semanaTxt} (${g.pagos.length} trabajador${g.pagos.length === 1 ? '' : 'es'}): ${quienes}`, deducible: false,
+          ajusteDir: 'sumar', ajusteSocioId: g.socioId, ajusteSocioNombre: nombreDeAjuste(g.socioId) || g.nombre,
+          nominaSemana: k, nominaDetalle: detalle });
+      }
+    });
+    if (nuevasCats) { try { await saveCatGastos(); } catch (e) {} renderCatSelect(); try { renderCategorias(); } catch (e) {} }
+    await saveMov();
+    renderMovimientos();
+    try { renderReparto(); } catch (e) {}
+    try { actualizarStats(); } catch (e) {}
+    try { refrescarSugerenciasDesc(); ghActualizarHero(); } catch (e) {}
+    $('mov-nom-panel').style.display = 'none';
+    const total = grupos.reduce((t, g) => t + g.total, 0);
+    toast(`Nómina ${semanaTxt} agregada: ${nomFmt(total)}`, 'success', 3200);
+  }
+  $('mov-nom-abrir').addEventListener('click', () => {
+    if ($('mov-nom-panel').style.display === 'block') { $('mov-nom-panel').style.display = 'none'; return; }
+    movNomAbrir();
+  });
+  $('mov-nom-cerrar').addEventListener('click', () => { $('mov-nom-panel').style.display = 'none'; });
+  $('mov-nom-semana').addEventListener('change', movNomResumen);
+  $('mov-nom-agregar').addEventListener('click', movNomAgregar);
+  // ===================== /NÓMINA: A QUIÉN SE LE PAGA =====================
+
   // ===================== CHEQUES =====================
   // Imprime en cheques láser de hoja carta con el cheque arriba (8½" x 3½")
   // y dos talones abajo. Las posiciones están en pulgadas desde la esquina
@@ -12254,6 +12427,21 @@
         <strong>${nomFmt(n.monto)}</strong>
       </label>`).join('');
     cont.querySelectorAll('.chq-pago').forEach((cb) => cb.addEventListener('change', chqAplicarPagos));
+    // Botones rápidos: un cheque por quien cobra (ej. CRA HVAC con sus 4, Ariel con lo de él y su esposa)
+    const grupos = k ? nomAgruparSemana(k) : [];
+    if (grupos.length) {
+      const chips = document.createElement('div');
+      chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 8px;border-bottom:1px solid var(--border-soft);margin-bottom:4px;';
+      chips.innerHTML = grupos.map((g, i) => `<button type="button" class="gc-action-btn chq-grupo" data-i="${i}" style="padding:6px 12px;font-size:12.5px;">${escapeHtml(g.nombre)} · ${g.pagos.length} · ${nomFmt(g.total)}</button>`).join('');
+      cont.prepend(chips);
+      chips.querySelectorAll('.chq-grupo').forEach((btn) => btn.addEventListener('click', () => {
+        const g = grupos[Number(btn.dataset.i)];
+        const ids = new Set(g.pagos.map((n) => n.id));
+        cont.querySelectorAll('.chq-pago').forEach((cb) => { cb.checked = ids.has(cb.value); });
+        chqAplicarPagos();
+        $('chq-a').value = g.nombre;
+      }));
+    }
   }
   function chqPagosMarcados() {
     return [...document.querySelectorAll('#chq-pagos-lista .chq-pago:checked')]
