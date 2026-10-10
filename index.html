@@ -2630,6 +2630,7 @@
     <button class="nom-subtab" data-i18n="historial" data-nsub="historial">Historial</button>
     <button class="nom-subtab" data-i18n="buscar_por_persona" data-nsub="buscar">Buscar por persona</button>
     <button class="nom-subtab" data-i18n="trabajadores" data-nsub="trabajadores">Trabajadores</button>
+    <button class="nom-subtab" data-nsub="cheques">Cheques</button>
   </div>
 
   <!-- Registrar pago -->
@@ -2737,6 +2738,70 @@
         <table class="inv-list-t" id="trab-nom-tbl" style="display:none;">
           <thead><tr><th data-i18n="trabajador">Trabajador</th><th class="num" data-i18n="h_sueldo_por_dia">Sueldo por día</th><th data-i18n="h_ajustar_sueldo">Ajustar sueldo</th><th></th></tr></thead>
           <tbody id="trab-nom-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cheques (imprimir en cheques láser de 8½" x 3½", cheque arriba + 2 talones) -->
+  <div class="nom-subpanel" id="nom-sub-cheques">
+    <div class="gc-card">
+      <p class="gc-card-title">Imprimir cheque</p>
+      <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Para cheques láser de hoja carta con el cheque arriba (8½" x 3½") y dos talones abajo. Escoge un pago de nómina o llena los datos a mano.</p>
+      <div class="gc-field" style="margin-bottom:14px;"><label>Cargar desde un pago de nómina (opcional)</label>
+        <select id="chq-desde-nomina"><option value="">— Escribir a mano —</option></select>
+      </div>
+      <div class="gc-form-row">
+        <div class="gc-field"><label>Páguese a</label>
+          <input type="text" id="chq-a" list="dl-trab-todos" placeholder="Nombre de quien recibe" autocomplete="off">
+        </div>
+        <div class="gc-field"><label>Cantidad ($)</label>
+          <input type="number" id="chq-monto" step="0.01" min="0" inputmode="decimal" placeholder="0.00">
+        </div>
+        <div class="gc-field"><label>Fecha</label>
+          <input type="date" id="chq-fecha">
+        </div>
+      </div>
+      <div class="gc-form-row">
+        <div class="gc-field"><label>Memo</label>
+          <input type="text" id="chq-memo" placeholder="Ej. Nómina semana 5–11 oct" autocomplete="off">
+        </div>
+        <div class="gc-field"><label>Número de cheque</label>
+          <input type="number" id="chq-numero" step="1" min="1" inputmode="numeric">
+        </div>
+        <div class="gc-field"><label>En letras</label>
+          <div id="chq-letras" style="font-size:12.5px;color:var(--muted);padding:10px 0;line-height:1.35;">—</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:6px;">
+        <button type="button" class="gc-action-btn" id="chq-btn-prueba">Imprimir prueba (papel blanco)</button>
+        <button type="button" class="gc-save-btn" id="chq-btn-imprimir">Imprimir cheque</button>
+      </div>
+      <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:10px;">Al imprimir: tamaño <strong>Carta</strong>, márgenes <strong>Ninguno</strong>, escala <strong>Tamaño real</strong> (100%). Primero haz la prueba en papel blanco y ponla encima de un cheque contra la luz.</p>
+    </div>
+
+    <div class="gc-card">
+      <p class="gc-card-title">Ajuste de impresión</p>
+      <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Si los datos no caen en las líneas, mueve todo unos milímetros. Se guarda para la próxima vez.</p>
+      <div class="gc-form-row">
+        <div class="gc-field"><label>Mover → derecha (mm)</label><input type="number" id="chq-off-x" step="0.5" value="0"></div>
+        <div class="gc-field"><label>Mover ↓ abajo (mm)</label><input type="number" id="chq-off-y" step="0.5" value="0"></div>
+        <div class="gc-field"><label>Talones</label>
+          <select id="chq-talones"><option value="si">Imprimir los 2 talones</option><option value="no">Solo el cheque</option></select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button type="button" class="gc-action-btn" id="chq-btn-guardar-ajuste">Guardar ajuste</button>
+      </div>
+    </div>
+
+    <div class="gc-card">
+      <p class="gc-card-title">Cheques emitidos</p>
+      <div class="gc-empty" id="chq-empty">Todavía no has impreso cheques.</div>
+      <div style="overflow-x:auto;">
+        <table class="inv-list-t" id="chq-tbl" style="display:none;">
+          <thead><tr><th>#</th><th>Fecha</th><th>Páguese a</th><th class="num">Cantidad</th><th>Memo</th><th></th></tr></thead>
+          <tbody id="chq-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -3416,7 +3481,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v124 · 8 oct';
+  const APP_VERSION = 'v125 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -12080,6 +12145,274 @@
   // ---- Carga inicial ----
   // Empleados y papeles se cargan solo al abrir su sección en Ajustes (más rápido el arranque)
   loadAll();
+  // ===================== CHEQUES =====================
+  // Imprime en cheques láser de hoja carta con el cheque arriba (8½" x 3½")
+  // y dos talones abajo. Las posiciones están en pulgadas desde la esquina
+  // de arriba a la izquierda de la hoja; el ajuste en mm mueve todo junto.
+  const CHQ_KEY = 'gh-cheques';
+  const CHQ_CFG_KEY = 'gh-cheques-cfg';
+  const CHQ_POS = {
+    fecha:  { x: 5.95, y: 1.30 },
+    monto:  { x: 7.30, y: 1.30 },
+    letras: { x: 0.80, y: 1.50 },
+    a:      { x: 1.00, y: 1.98 },
+    memo:   { x: 0.80, y: 2.82 }
+  };
+  let chqLista = [];
+  let chqCfg = { siguiente: 2000, offX: 0, offY: 0, talones: 'si' };
+  let chqCargado = false;
+
+  const CHQ_UNOS = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
+    'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const CHQ_DECENAS = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  function chqMenosDeMil(n) {
+    const p = [];
+    if (n >= 100) { p.push(CHQ_UNOS[Math.floor(n / 100)] + ' Hundred'); n %= 100; }
+    if (n >= 20) p.push(CHQ_DECENAS[Math.floor(n / 10)] + (n % 10 ? '-' + CHQ_UNOS[n % 10] : ''));
+    else if (n > 0) p.push(CHQ_UNOS[n]);
+    return p.join(' ');
+  }
+  // 1250.5 → "One Thousand Two Hundred Fifty and 50/100"
+  function chqEnLetras(monto) {
+    const centavos = Math.round((Number(monto) || 0) * 100);
+    let d = Math.floor(centavos / 100);
+    const c = centavos % 100;
+    const p = [];
+    if (d === 0) p.push('Zero');
+    [[1e6, 'Million'], [1e3, 'Thousand']].forEach(([v, nom]) => {
+      if (d >= v) { p.push(chqMenosDeMil(Math.floor(d / v)) + ' ' + nom); d %= v; }
+    });
+    if (d > 0) p.push(chqMenosDeMil(d));
+    return p.join(' ') + ' and ' + String(c).padStart(2, '0') + '/100';
+  }
+  const chqDinero = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function chqFechaUS(iso) {
+    const [y, m, d] = String(iso || '').split('-');
+    return y && m && d ? `${m}/${d}/${y}` : '';
+  }
+
+  async function chqCargar() {
+    try { const r = await window.storage.get(CHQ_KEY); chqLista = JSON.parse(r.value) || []; } catch (e) { chqLista = []; }
+    try {
+      const r = await window.storage.get(CHQ_CFG_KEY);
+      const c = JSON.parse(r.value);
+      if (c && typeof c === 'object') chqCfg = Object.assign(chqCfg, c);
+    } catch (e) {}
+    chqCargado = true;
+  }
+  async function chqGuardarLista() { await window.storage.set(CHQ_KEY, JSON.stringify(chqLista)); }
+  async function chqGuardarCfg() { await window.storage.set(CHQ_CFG_KEY, JSON.stringify(chqCfg)); }
+
+  function chqSiguienteNumero() {
+    const usados = chqLista.map((c) => Number(c.numero) || 0);
+    return Math.max(Number(chqCfg.siguiente) || 1, usados.length ? Math.max(...usados) + 1 : 0);
+  }
+
+  function chqLlenarSelectNomina() {
+    const sel = $('chq-desde-nomina');
+    const recientes = (nomDocs || []).slice()
+      .sort((a, b) => (b.creadoEn || '').localeCompare(a.creadoEn || ''))
+      .slice(0, 40);
+    sel.innerHTML = '<option value="">— Escribir a mano —</option>' + recientes.map((n) =>
+      `<option value="${escapeHtml(n.id)}">${escapeHtml(n.trabajador || '')} · ${escapeHtml(nomFechasTexto(n.dias))} · ${nomFmt(n.monto)}</option>`
+    ).join('');
+  }
+
+  function chqActualizarLetras() {
+    const m = parseFloat($('chq-monto').value);
+    $('chq-letras').textContent = m > 0 ? chqEnLetras(m) : '—';
+  }
+
+  async function chqRender() {
+    if (!chqCargado) await chqCargar();
+    chqLlenarSelectNomina();
+    if (!$('chq-fecha').value) $('chq-fecha').value = nomToday();
+    if (!$('chq-numero').value) $('chq-numero').value = chqSiguienteNumero();
+    $('chq-off-x').value = chqCfg.offX || 0;
+    $('chq-off-y').value = chqCfg.offY || 0;
+    $('chq-talones').value = chqCfg.talones || 'si';
+    chqActualizarLetras();
+    chqRenderLista();
+  }
+
+  function chqRenderLista() {
+    const tbody = $('chq-tbody');
+    const lista = chqLista.slice().sort((a, b) => (Number(b.numero) || 0) - (Number(a.numero) || 0));
+    $('chq-empty').style.display = lista.length ? 'none' : 'block';
+    $('chq-tbl').style.display = lista.length ? 'table' : 'none';
+    tbody.innerHTML = lista.map((c) => `
+      <tr${c.anulado ? ' style="opacity:.5;text-decoration:line-through;"' : ''}>
+        <td style="font-weight:600;">${escapeHtml(String(c.numero))}</td>
+        <td>${escapeHtml(chqFechaUS(c.fecha))}</td>
+        <td>${escapeHtml(c.a || '')}${c.anulado ? ' <span style="font-size:11px;">(anulado)</span>' : ''}</td>
+        <td class="num" style="font-weight:700;">${nomFmt(c.monto)}</td>
+        <td style="font-size:12.5px;color:var(--muted);">${escapeHtml(c.memo || '')}</td>
+        <td style="white-space:nowrap;">
+          <button class="gc-action-btn chq-reimp" data-id="${escapeHtml(c.id)}" style="padding:4px 10px;font-size:11.5px;">Reimprimir</button>
+          ${c.anulado ? '' : `<button class="gc-del chq-anular" data-id="${escapeHtml(c.id)}" title="Anular" style="margin-left:3px;">✕</button>`}
+        </td>
+      </tr>`).join('');
+    tbody.querySelectorAll('.chq-reimp').forEach((b) => b.addEventListener('click', () => {
+      const c = chqLista.find((x) => x.id === b.dataset.id);
+      if (c) ghImprimirEnVentana('', `Cheque ${c.numero}`, chqDocumento(c, false));
+    }));
+    tbody.querySelectorAll('.chq-anular').forEach((b) => b.addEventListener('click', async () => {
+      const c = chqLista.find((x) => x.id === b.dataset.id);
+      if (!c) return;
+      if (b.dataset.confirmar !== '1') {
+        b.dataset.confirmar = '1';
+        b.textContent = '¿Anular?';
+        setTimeout(() => { if (b.isConnected) { b.dataset.confirmar = ''; b.textContent = '✕'; } }, 4000);
+        return;
+      }
+      c.anulado = true;
+      try { await chqGuardarLista(); toast(`Cheque #${c.numero} anulado`); } catch (e) { toast('No se pudo guardar', 'error'); }
+      chqRenderLista();
+    }));
+  }
+
+  function chqDatosFormulario() {
+    return {
+      a: $('chq-a').value.trim(),
+      monto: Math.round((parseFloat($('chq-monto').value) || 0) * 100) / 100,
+      fecha: $('chq-fecha').value || nomToday(),
+      memo: $('chq-memo').value.trim(),
+      numero: parseInt($('chq-numero').value, 10) || chqSiguienteNumero(),
+      nomId: $('chq-desde-nomina').value || ''
+    };
+  }
+
+  // Talón: comprobante con el detalle del pago (se imprime 2 veces).
+  function chqTalonHTML(c, top, titulo) {
+    const n = c.nomId ? (nomDocs || []).find((x) => x.id === c.nomId) : null;
+    let detalle = '';
+    if (n) {
+      const dias = nomCuentaDias(n.dias);
+      const filas = [`<tr><td>Días trabajados: ${dias}${n.dias && n.dias.length ? ' (' + escapeHtml(nomFechasTexto(n.dias)) + ')' : ''}</td><td class="r">${n.sueldoDia ? '× ' + nomFmt(n.sueldoDia) : ''}</td></tr>`];
+      if (Number(n.extraMonto)) filas.push(`<tr><td>${escapeHtml(n.extraDesc || 'Extra')}</td><td class="r">${nomFmt(n.extraMonto)}</td></tr>`);
+      detalle = `<table class="t-det">${filas.join('')}</table>`;
+    }
+    return `<div class="talon" style="top:${top}in;">
+      <div class="t-head"><span>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</span><span>${titulo} · Cheque #${escapeHtml(String(c.numero))}</span></div>
+      <table class="t-main">
+        <tr><td class="k">Fecha</td><td>${escapeHtml(chqFechaUS(c.fecha))}</td></tr>
+        <tr><td class="k">Pagado a</td><td>${escapeHtml(c.a)}</td></tr>
+        ${c.memo ? `<tr><td class="k">Memo</td><td>${escapeHtml(c.memo)}</td></tr>` : ''}
+      </table>
+      ${detalle}
+      <div class="t-total">Total: $${chqDinero(c.monto)}</div>
+    </div>`;
+  }
+
+  // Documento completo de una hoja carta. prueba=true dibuja el contorno del
+  // cheque y de los talones para comparar contra la luz en papel blanco.
+  function chqDocumento(c, prueba) {
+    const dx = (Number(chqCfg.offX) || 0) / 25.4;
+    const dy = (Number(chqCfg.offY) || 0) / 25.4;
+    const pos = (k) => `left:${(CHQ_POS[k].x + dx).toFixed(3)}in;top:${(CHQ_POS[k].y + dy).toFixed(3)}in;`;
+    const letras = chqEnLetras(c.monto);
+    const relleno = '*'.repeat(Math.max(3, 78 - letras.length));
+    const talones = chqCfg.talones !== 'no';
+    const guia = prueba ? `
+      <div class="guia" style="top:0;height:3.5in;"><span>Cheque 8½" x 3½" — PRUEBA, no es un cheque</span></div>
+      <div class="guia" style="top:3.5in;height:3.75in;"><span>Talón 1</span></div>
+      <div class="guia" style="top:7.25in;height:3.75in;"><span>Talón 2</span></div>
+      <div class="lbl" style="left:${(CHQ_POS.fecha.x - 0.05).toFixed(2)}in;top:${(CHQ_POS.fecha.y - 0.2).toFixed(2)}in;">DATE</div>
+      <div class="lbl" style="left:${(CHQ_POS.monto.x - 0.05).toFixed(2)}in;top:${(CHQ_POS.monto.y - 0.2).toFixed(2)}in;">AMOUNT</div>
+      <div class="lbl" style="left:0.3in;top:${(CHQ_POS.letras.y).toFixed(2)}in;">PAY</div>
+      <div class="lbl" style="left:0.3in;top:${(CHQ_POS.a.y - 0.2).toFixed(2)}in;">TO THE ORDER OF</div>` : '';
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cheque ${escapeHtml(String(c.numero))}</title>
+<style>
+  @page { size: letter; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  .pg { position: relative; width: 8.5in; height: 11in; overflow: hidden; color: #000; font-family: Arial, Helvetica, sans-serif; }
+  .f { position: absolute; white-space: nowrap; font-size: 11pt; font-weight: bold; }
+  .f.letras { width: 6.3in; overflow: hidden; }
+  .f.memo { font-size: 9.5pt; font-weight: normal; }
+  .guia { position: absolute; left: 0.1in; width: 8.3in; box-sizing: border-box; border: 1px dashed #777; }
+  .guia span { position: absolute; left: 6px; bottom: 4px; font-size: 8pt; color: #777; }
+  .lbl { position: absolute; font-size: 7pt; color: #888; }
+  .talon { position: absolute; left: 0.5in; width: 7.5in; font-size: 10pt; }
+  .t-head { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 6px; }
+  .t-main, .t-det { border-collapse: collapse; width: 100%; }
+  .t-main td, .t-det td { padding: 2px 0; vertical-align: top; }
+  .t-main td.k { width: 1.1in; color: #444; }
+  .t-det { margin-top: 6px; border-top: 1px solid #bbb; }
+  .t-det td.r { text-align: right; white-space: nowrap; }
+  .t-total { margin-top: 8px; font-weight: bold; font-size: 12pt; text-align: right; }
+</style></head><body><div class="pg">
+  ${guia}
+  <div class="f" style="${pos('fecha')}">${escapeHtml(chqFechaUS(c.fecha))}</div>
+  <div class="f" style="${pos('monto')}">**${chqDinero(c.monto)}</div>
+  <div class="f letras" style="${pos('letras')}">${escapeHtml(letras)} ${relleno}</div>
+  <div class="f" style="${pos('a')}">${escapeHtml(c.a)}</div>
+  ${c.memo ? `<div class="f memo" style="${pos('memo')}">${escapeHtml(c.memo)}</div>` : ''}
+  ${talones ? chqTalonHTML(c, 3.85 + dy, 'Copia del trabajador') + chqTalonHTML(c, 7.6 + dy, 'Copia de la empresa') : ''}
+</div></body></html>`;
+  }
+
+  function chqValidar(c) {
+    if (!c.a) { toast('Escribe a quién se le paga', 'error'); $('chq-a').focus(); return false; }
+    if (!(c.monto > 0)) { toast('Escribe la cantidad', 'error'); $('chq-monto').focus(); return false; }
+    return true;
+  }
+
+  $('chq-desde-nomina').addEventListener('change', () => {
+    const n = (nomDocs || []).find((x) => x.id === $('chq-desde-nomina').value);
+    if (!n) return;
+    $('chq-a').value = n.trabajador || '';
+    $('chq-monto').value = (Number(n.monto) || 0).toFixed(2);
+    $('chq-memo').value = 'Nómina ' + nomFechasTexto(n.dias);
+    chqActualizarLetras();
+  });
+  $('chq-monto').addEventListener('input', chqActualizarLetras);
+
+  $('chq-btn-prueba').addEventListener('click', () => {
+    const c = chqDatosFormulario();
+    if (!c.a) c.a = 'John Smith';
+    if (!(c.monto > 0)) c.monto = 1250;
+    ghImprimirEnVentana('', 'Prueba de cheque', chqDocumento(c, true));
+  });
+
+  $('chq-btn-imprimir').addEventListener('click', async () => {
+    const c = chqDatosFormulario();
+    if (!chqValidar(c)) return;
+    const repetido = chqLista.find((x) => Number(x.numero) === c.numero && !x.anulado);
+    if (repetido) {
+      toast(`El cheque #${c.numero} ya se usó (${repetido.a}). Usa Reimprimir abajo o cambia el número.`, 'error', 5000);
+      return;
+    }
+    c.id = Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7);
+    c.creadoEn = new Date().toISOString();
+    chqLista.push(c);
+    chqCfg.siguiente = c.numero + 1;
+    try { await chqGuardarLista(); await chqGuardarCfg(); }
+    catch (e) { toast('No se pudo guardar el cheque', 'error'); }
+    ghImprimirEnVentana('', `Cheque ${c.numero}`, chqDocumento(c, false));
+    // Deja el formulario listo para el siguiente
+    $('chq-desde-nomina').value = '';
+    $('chq-a').value = ''; $('chq-monto').value = ''; $('chq-memo').value = '';
+    $('chq-numero').value = chqSiguienteNumero();
+    chqActualizarLetras();
+    chqRenderLista();
+    toast(`Cheque #${c.numero} guardado`);
+  });
+
+  $('chq-btn-guardar-ajuste').addEventListener('click', async () => {
+    chqCfg.offX = parseFloat($('chq-off-x').value) || 0;
+    chqCfg.offY = parseFloat($('chq-off-y').value) || 0;
+    chqCfg.talones = $('chq-talones').value;
+    try { await chqGuardarCfg(); toast('Ajuste guardado'); } catch (e) { toast('No se pudo guardar', 'error'); }
+  });
+  ['chq-off-x', 'chq-off-y', 'chq-talones'].forEach((id) => $(id).addEventListener('change', () => {
+    chqCfg.offX = parseFloat($('chq-off-x').value) || 0;
+    chqCfg.offY = parseFloat($('chq-off-y').value) || 0;
+    chqCfg.talones = $('chq-talones').value;
+  }));
+
+  document.querySelector('.nom-subtab[data-nsub="cheques"]').addEventListener('click', () => { chqRender(); });
+  // ===================== /CHEQUES =====================
+
 })();
 </script>
 
