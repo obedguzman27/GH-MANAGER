@@ -2767,6 +2767,9 @@
     <div class="gc-card">
       <p class="gc-card-title">Imprimir cheque</p>
       <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Para cheques láser de hoja carta con el cheque arriba (8½" x 3½") y dos talones abajo. Escoge un pago de nómina o llena los datos a mano.</p>
+      <div class="gc-field" style="margin-bottom:10px;" id="chq-base-wrap"><label>Nómina de qué base de datos</label>
+        <select id="chq-base"><option value="todas">Todas las bases de datos</option></select>
+      </div>
       <div class="gc-field" style="margin-bottom:14px;"><label>Pagos de nómina en este cheque (opcional)</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
           <select id="chq-semana" style="flex:1;min-width:200px;"><option value="">— Escribir a mano —</option></select>
@@ -3506,7 +3509,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v128 · 10 oct';
+  const APP_VERSION = 'v129 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -12199,26 +12202,32 @@
     return op('', 'Directo (a él)') + socios.join('') + otros.join('');
   }
   // Quién cobra el pago de un trabajador → { key, nombre, tipo: 'socio' | 'trab', socioId, bonoPct }
-  function nomReceptorDe(nombreTrab) {
-    const emp = nomBuscarTrab(nombreTrab);
+  function nomReceptorDe(nombreTrab, ctx) {
+    // ctx = { empleados, socios } de otra base de datos (para cheques); sin ctx, la base actual
+    const emps = ctx ? ctx.empleados : empleados;
+    const nBusca = String(nombreTrab || '').trim().toLowerCase();
+    const emp = ctx ? emps.find((e) => empNombreCompleto(e).toLowerCase() === nBusca) : nomBuscarTrab(nombreTrab);
+    // Si en la otra base no se escogió a quién se le paga, se usa lo de esta base (mismo nombre)
+    if (ctx && !(emp && emp.pagarA) && nomBuscarTrab(nombreTrab) && nomBuscarTrab(nombreTrab).pagarA) return nomReceptorDe(nombreTrab);
     const pa = (emp && emp.pagarA) || '';
     if (pa.startsWith('socio:')) {
-      const socio = nomSociosParaPago().find((x) => x.id === pa.slice(6));
+      const socio = (ctx ? ctx.socios : nomSociosParaPago()).find((x) => x.id === pa.slice(6));
       if (socio) return { key: pa, nombre: socio.nombre, tipo: 'socio', socioId: socio.id, bonoPct: Number(socio.bonoPct) || 0 };
     }
     if (pa.startsWith('trab:')) {
-      const t = empleados.find((e) => e.id === pa.slice(5) && e.estado !== 'inactivo');
+      const t = emps.find((e) => e.id === pa.slice(5) && e.estado !== 'inactivo');
       if (t) return { key: 'trab:' + t.id, nombre: empNombreCompleto(t), tipo: 'trab' };
     }
     return { key: 'trab:' + (emp ? emp.id : String(nombreTrab || '').toLowerCase()), nombre: emp ? empNombreCompleto(emp) : (nombreTrab || ''), tipo: 'trab' };
   }
   // Pagos de una semana agrupados por quién cobra (socios primero)
-  function nomAgruparSemana(weekKey) {
+  function nomAgruparSemana(weekKey, docs) {
     const grupos = new Map();
-    (nomDocs || []).filter((n) => chqSemanaDe(n) === weekKey && Number(n.monto) > 0).forEach((n) => {
-      const r = nomReceptorDe(n.trabajador);
-      if (!grupos.has(r.key)) grupos.set(r.key, Object.assign({}, r, { pagos: [], total: 0 }));
-      const g = grupos.get(r.key);
+    (docs || nomDocs || []).filter((n) => chqSemanaDe(n) === weekKey && Number(n.monto) > 0).forEach((n) => {
+      const r = nomReceptorDe(n.trabajador, n._ctx);
+      const clave = r.tipo + ':' + String(r.nombre || '').trim().toLowerCase();
+      if (!grupos.has(clave)) grupos.set(clave, Object.assign({}, r, { pagos: [], total: 0 }));
+      const g = grupos.get(clave);
       g.pagos.push(n);
       g.total += Number(n.monto) || 0;
     });
@@ -12393,11 +12402,52 @@
     const ref = dd[0] || (n.creadoEn || '').slice(0, 10);
     return ref ? nomWeekKey(ref) : '';
   }
+  // Nómina de las OTRAS bases de datos (para hacer cheques con trabajadores que
+  // se apuntaron en otra base). Se lee sin cambiar de base.
+  let chqOtras = [];        // pagos de otras bases, con id "base|id" y su contexto
+  let chqBasesInfo = [];    // [{ codigo, nombre }]
+  async function chqCargarOtrasBases() {
+    chqOtras = [];
+    chqBasesInfo = [];
+    if (typeof window.GH_LEER_DE_CUENTA !== 'function' || typeof window.GH_GET_CUENTA !== 'function') return;
+    let cuentas = [];
+    try { cuentas = await ajCargarCuentas(); } catch (e) { cuentas = []; }
+    const actual = window.GH_GET_CUENTA() || 'principal';
+    chqBasesInfo = cuentas.map((c) => ({ codigo: c.codigo, nombre: c.nombre }));
+    if (!chqBasesInfo.some((c) => c.codigo === actual)) chqBasesInfo.unshift({ codigo: actual, nombre: 'Esta base' });
+    const leer = async (codigo, key) => { try { const v = await window.GH_LEER_DE_CUENTA(codigo, key); return v ? JSON.parse(v) : null; } catch (e) { return null; } };
+    await Promise.all(cuentas.filter((c) => c.codigo !== actual).map(async (c) => {
+      const [docs, emps, cfg] = await Promise.all([leer(c.codigo, 'gh-nomina'), leer(c.codigo, 'empleados'), leer(c.codigo, 'kontaly-config')]);
+      if (!Array.isArray(docs) || !docs.length) return;
+      const ctx = {
+        empleados: Array.isArray(emps) ? emps : [],
+        socios: (cfg && Array.isArray(cfg.socios) ? cfg.socios : []).filter((x) => x && x.nombre)
+      };
+      docs.forEach((n) => chqOtras.push(Object.assign({}, n, { id: c.codigo + '|' + n.id, _base: c.codigo, _baseNombre: c.nombre, _ctx: ctx })));
+    }));
+  }
+  function chqFuente() {
+    const actual = (typeof window.GH_GET_CUENTA === 'function' && window.GH_GET_CUENTA()) || 'principal';
+    const propios = (nomDocs || []).map((n) => Object.assign({}, n, { _base: actual }));
+    const sel = $('chq-base').value || 'todas';
+    const todos = propios.concat(chqOtras);
+    return sel === 'todas' ? todos : todos.filter((n) => n._base === sel);
+  }
+  function chqLlenarBases() {
+    const sel = $('chq-base');
+    const previo = sel.value || 'todas';
+    const actual = (typeof window.GH_GET_CUENTA === 'function' && window.GH_GET_CUENTA()) || 'principal';
+    const lista = chqBasesInfo.length ? chqBasesInfo : [{ codigo: actual, nombre: 'Esta base' }];
+    sel.innerHTML = '<option value="todas">Todas las bases de datos</option>' +
+      lista.map((c) => `<option value="${escapeHtml(c.codigo)}">${escapeHtml(c.nombre)}${c.codigo === actual ? ' (esta)' : ''}</option>`).join('');
+    sel.value = [...sel.options].some((o) => o.value === previo) ? previo : 'todas';
+    $('chq-base-wrap').style.display = lista.length > 1 ? '' : 'none';
+  }
   function chqLlenarSelectNomina() {
     const sel = $('chq-semana');
     const actual = sel.value;
     const semanas = {};
-    (nomDocs || []).forEach((n) => { const k = chqSemanaDe(n); if (k) (semanas[k] = semanas[k] || []).push(n); });
+    chqFuente().forEach((n) => { const k = chqSemanaDe(n); if (k) (semanas[k] = semanas[k] || []).push(n); });
     const claves = Object.keys(semanas).sort().reverse().slice(0, 16);
     sel.innerHTML = '<option value="">— Escribir a mano —</option>' + claves.map((k) => {
       const r = nomWeekRango(k);
@@ -12416,19 +12466,22 @@
   function chqRenderPagosSemana() {
     const k = $('chq-semana').value;
     const cont = $('chq-pagos-lista');
-    const pagos = k ? (nomDocs || []).filter((n) => chqSemanaDe(n) === k)
+    const marcadosAntes = new Set([...document.querySelectorAll('#chq-pagos-lista .chq-pago:checked')].map((cb) => cb.value));
+    const fuente = chqFuente();
+    const variasBases = new Set(fuente.map((n) => n._base)).size > 1;
+    const pagos = k ? fuente.filter((n) => chqSemanaDe(n) === k)
       .sort((a, b) => (a.trabajador || '').localeCompare(b.trabajador || '')) : [];
     cont.style.display = pagos.length ? 'block' : 'none';
     $('chq-btn-toda-semana').style.display = pagos.length > 1 ? '' : 'none';
     cont.innerHTML = pagos.map((n) => `
       <label style="display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer;font-size:13.5px;">
         <input type="checkbox" class="chq-pago" value="${escapeHtml(n.id)}" style="width:18px;height:18px;">
-        <span style="flex:1;">${escapeHtml(n.trabajador || '')} <span style="color:var(--muted);font-size:12px;">· ${nomCuentaDias(n.dias)} día(s)</span></span>
+        <span style="flex:1;">${escapeHtml(n.trabajador || '')} <span style="color:var(--muted);font-size:12px;">· ${nomCuentaDias(n.dias)} día(s)${variasBases && n._baseNombre ? ' · ' + escapeHtml(n._baseNombre) : ''}</span></span>
         <strong>${nomFmt(n.monto)}</strong>
       </label>`).join('');
-    cont.querySelectorAll('.chq-pago').forEach((cb) => cb.addEventListener('change', chqAplicarPagos));
+    cont.querySelectorAll('.chq-pago').forEach((cb) => { if (marcadosAntes.has(cb.value)) cb.checked = true; cb.addEventListener('change', chqAplicarPagos); });
     // Botones rápidos: un cheque por quien cobra (ej. CRA HVAC con sus 4, Ariel con lo de él y su esposa)
-    const grupos = k ? nomAgruparSemana(k) : [];
+    const grupos = k ? nomAgruparSemana(k, fuente) : [];
     if (grupos.length) {
       const chips = document.createElement('div');
       chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 8px;border-bottom:1px solid var(--border-soft);margin-bottom:4px;';
@@ -12445,7 +12498,7 @@
   }
   function chqPagosMarcados() {
     return [...document.querySelectorAll('#chq-pagos-lista .chq-pago:checked')]
-      .map((cb) => (nomDocs || []).find((n) => n.id === cb.value)).filter(Boolean);
+      .map((cb) => chqFuente().find((n) => n.id === cb.value)).filter(Boolean);
   }
   // Suma lo marcado. Con un solo pago pone al trabajador como "Páguese a";
   // con varios deja el nombre para que escribas a quién (ej. CRA HVAC).
@@ -12455,7 +12508,7 @@
     const total = pagos.reduce((t, n) => t + (Number(n.monto) || 0), 0);
     $('chq-monto').value = (Math.round(total * 100) / 100).toFixed(2);
     const a = $('chq-a');
-    const nombresPagos = (nomDocs || []).map((n) => n.trabajador);
+    const nombresPagos = chqFuente().map((n) => n.trabajador);
     if (pagos.length === 1) { if (!a.value.trim() || nombresPagos.includes(a.value.trim())) a.value = pagos[0].trabajador || ''; }
     else if (nombresPagos.includes(a.value.trim())) { a.value = ''; a.focus(); }
     if (!$('chq-memo').value.trim()) $('chq-memo').value = 'WORK';
@@ -12469,7 +12522,9 @@
 
   async function chqRender() {
     if (!chqCargado) await chqCargar();
+    chqLlenarBases();
     chqLlenarSelectNomina();
+    chqCargarOtrasBases().then(() => { chqLlenarBases(); chqLlenarSelectNomina(); }).catch(() => {});
     if (!$('chq-fecha').value) $('chq-fecha').value = nomToday();
     if (!$('chq-numero').value) $('chq-numero').value = chqSiguienteNumero();
     $('chq-off-x').value = chqCfg.offX || 0;
@@ -12522,7 +12577,8 @@
       fecha: $('chq-fecha').value || nomToday(),
       memo: $('chq-memo').value.trim(),
       numero: parseInt($('chq-numero').value, 10) || chqSiguienteNumero(),
-      nomIds: chqPagosMarcados().map((n) => n.id)
+      nomIds: chqPagosMarcados().map((n) => n.id),
+      pagosSnap: chqPagosMarcados().map((n) => ({ id: n.id, trabajador: n.trabajador, dias: n.dias, sueldoDia: n.sueldoDia || 0, extraDesc: n.extraDesc || '', extraMonto: n.extraMonto || 0, monto: n.monto }))
     };
   }
 
@@ -12537,6 +12593,7 @@
   // Talón (stub): comprobante en inglés con los días trabajados (se imprime 2 veces).
   // Si el cheque cubre varios trabajadores (ej. a CRA HVAC), sale cada uno con sus días.
   function chqPagosDeCheque(c) {
+    if (Array.isArray(c.pagosSnap) && c.pagosSnap.length) return c.pagosSnap;
     const ids = Array.isArray(c.nomIds) ? c.nomIds : (c.nomId ? [c.nomId] : []);
     return ids.map((id) => (nomDocs || []).find((x) => x.id === id)).filter(Boolean);
   }
@@ -12635,6 +12692,7 @@
   }
 
   $('chq-semana').addEventListener('change', chqRenderPagosSemana);
+  $('chq-base').addEventListener('change', chqLlenarSelectNomina);
   $('chq-btn-toda-semana').addEventListener('click', () => {
     document.querySelectorAll('#chq-pagos-lista .chq-pago').forEach((cb) => { cb.checked = true; });
     chqAplicarPagos();
