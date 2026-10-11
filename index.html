@@ -565,6 +565,10 @@
   .pay-per-top { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; }
   .pay-per-top small { color: var(--muted); font-size: 12px; }
   .pay-per-top strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pay-per-der { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .pay-per-del { width: 32px; height: 32px; border-radius: 9px; border: 1.5px solid var(--border); background: var(--card); color: var(--ember); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .pay-per-del:hover { background: var(--ember-bg); border-color: var(--ember); }
+  .pay-per-del svg { width: 15px; height: 15px; }
   .pay-bar { height: 6px; border-radius: 4px; background: var(--border-soft); margin-top: 6px; overflow: hidden; }
   .pay-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-dk)); border-radius: 4px; }
 
@@ -3886,7 +3890,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v147 · 11 oct';
+  const APP_VERSION = 'v148 · 11 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -13363,14 +13367,14 @@
   }
   // Totales por persona (plegable con barritas)
   const payPersonasAbiertas = {};
-  function payPersonasHTML(id, grupos, titulo, extra) {
+  function payPersonasHTML(id, grupos, titulo, extra, borrar) {
     if (!grupos.length) return '';
     const max = Math.max(1, ...grupos.map((g) => g.total));
     const tot = grupos.reduce((t, g) => t + g.total, 0);
     return `<details class="pay-personas" data-pp="${id}"${payPersonasAbiertas[id] ? ' open' : ''}>
       <summary>${titulo}<span class="r">${grupos.length} persona${grupos.length === 1 ? '' : 's'} · ${nomFmt(tot)}</span></summary>
       <div class="pay-personas-b">${grupos.map((g) => `<div class="pay-per" data-n="${escapeHtml(g.nombre)}">
-        <div class="pay-per-top"><span>${escapeHtml(g.nombre)} <small>· ${g.n} pago${g.n === 1 ? '' : 's'}${extra ? extra(g) : ''}</small></span><strong>${nomFmt(g.total)}</strong></div>
+        <div class="pay-per-top"><span>${escapeHtml(g.nombre)} <small>· ${g.n} pago${g.n === 1 ? '' : 's'}${extra ? extra(g) : ''}</small></span><span class="pay-per-der"><strong>${nomFmt(g.total)}</strong>${borrar ? `<button type="button" class="pay-per-del" data-n="${escapeHtml(g.nombre)}" title="Borrar todos los pagos de ${escapeHtml(g.nombre)}" aria-label="Borrar todos los pagos de ${escapeHtml(g.nombre)}">${PAY_SVG.del}</button>` : ''}</span></div>
         <div class="pay-bar"><i style="width:${Math.max(2, Math.round(g.total / max * 100))}%"></i></div></div>`).join('')}</div>
     </details>`;
   }
@@ -13832,9 +13836,24 @@
     $('zc-resumen').innerHTML = (lista.length ? `<div class="pay-stats">
         <div class="pay-stat"><div class="l">Zelle${anio ? ' ' + anio : ''}</div><div class="v">${nomFmt(tz)}</div></div>
         <div class="pay-stat"><div class="l">Cash${anio ? ' ' + anio : ''}</div><div class="v">${nomFmt(tc)}</div></div></div>` : '') +
-      payPersonasHTML('zc', grupos, 'Total por persona', (g) => g.z && g.cash ? ` · Zelle ${nomFmt(g.z)} · Cash ${nomFmt(g.cash)}` : '');
+      payPersonasHTML('zc', grupos, 'Total por persona', (g) => g.z && g.cash ? ` · Zelle ${nomFmt(g.z)} · Cash ${nomFmt(g.cash)}` : '', true);
     payPersonasRecordar($('zc-resumen'));
-    $('zc-resumen').querySelectorAll('.pay-per').forEach((d) => d.addEventListener('click', () => { $('zc-buscar').value = d.dataset.n === 'Sin nombre' ? '' : d.dataset.n; zcRender(); }));
+    $('zc-resumen').querySelectorAll('.pay-per').forEach((d) => d.addEventListener('click', (e) => { if (e.target.closest('.pay-per-del')) return; $('zc-buscar').value = d.dataset.n === 'Sin nombre' ? '' : d.dataset.n; zcRender(); }));
+    // Borrar todos los pagos (Zelle/Cash) de una persona, de lo que se está viendo
+    $('zc-resumen').querySelectorAll('.pay-per-del').forEach((b) => b.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const nombre = b.dataset.n;
+      const clave = nombre === 'Sin nombre' ? '' : nombre.toLowerCase();
+      const ids = new Set(lista.filter((c) => (c.a || '').trim().toLowerCase() === clave).map((c) => c.id));
+      if (!ids.size) return;
+      const total = lista.filter((c) => ids.has(c.id)).reduce((t, c) => t + (Number(c.monto) || 0), 0);
+      const que = tipo === 'cash' ? 'pago(s) en Cash' : (tipo === 'zelle' ? 'Zelle' : 'pago(s) de Zelle y Cash');
+      if (!await gcConfirm(`¿Borrar los ${ids.size} ${que} de ${nombre}${anio ? ' en ' + anio : ''}?\n\nSon ${nomFmt(total)}. Se quitan para siempre. Los cheques no se tocan.`, { okText: 'Borrar ' + ids.size, danger: true })) return;
+      chqLista = chqLista.filter((x) => !ids.has(x.id));
+      try { await chqGuardarLista(); toast(`${ids.size} pago(s) de ${nombre} borrados`, 'success'); } catch (err) { toast('No se pudo borrar', 'error'); }
+      if ($('zc-buscar').value.trim().toLowerCase() === clave) $('zc-buscar').value = '';
+      zcRender(); payResumen();
+    }));
     document.querySelectorAll('[data-zc-tipo]').forEach((b) => b.classList.toggle('on', b.dataset.zcTipo === tipo));
     $('zc-empty').style.display = lista.length ? 'none' : 'block';
     $('zc-tbl').style.display = lista.length ? 'block' : 'none';
