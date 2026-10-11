@@ -217,6 +217,7 @@
 
         aplicarPerfilGlobal(perfil);
         await cargarCuentaActiva();
+        iniciarPrecarga();
         overlay.remove();
         programarExpiracion();
         resolverSesion();
@@ -244,6 +245,7 @@
         if (perfil && perfil.activo) {
           aplicarPerfilGlobal(perfil);
           await cargarCuentaActiva();
+          iniciarPrecarga();
           programarExpiracion();
           resolverSesion();
           return;
@@ -324,9 +326,8 @@
   window.GH_ESCRIBIR_EN_CUENTA = async (codigoCuenta, key, value) => {
     await sesionLista;
     const pfx = (codigoCuenta && codigoCuenta !== 'principal') ? ('c:' + codigoCuenta + '::') : '';
-    const { data: { user } } = await client.auth.getUser();
     const { error } = await client.from('datos_app').upsert({
-      clave: pfx + key, valor: value, actualizado_por: user ? user.id : null, actualizado_en: new Date().toISOString()
+      clave: pfx + key, valor: value, actualizado_por: await miUsuarioId(), actualizado_en: new Date().toISOString()
     });
     if (error) throw error;
     return true;
@@ -335,12 +336,43 @@
   // Lee qué cuenta tiene asignada el usuario actual (por defecto "principal")
   async function cargarCuentaActiva() {
     try {
-      const { data: { user } } = await client.auth.getUser();
+      const { data: { session } } = await client.auth.getSession();
+      const user = session && session.user;
       if (!user) { cuentaActiva = 'principal'; return; }
       window.GH_USER_ID = user.id;
       const { data } = await client.from('datos_app').select('valor').eq('clave', '__cuenta::' + user.id).maybeSingle();
       cuentaActiva = (data && data.valor) ? data.valor : 'principal';
     } catch (e) { cuentaActiva = 'principal'; }
+  }
+
+  // ---------- Precarga (velocidad) ----------
+  // Al abrir, UNA sola consulta trae todos los datos de la base de datos
+  // activa (menos las fotos, que son pesadas). La primera lectura de cada
+  // clave sale de aquí al instante; después se lee de la nube como siempre.
+  let precargaMapa = null, precargaPromesa = null;
+  function iniciarPrecarga() {
+    precargaMapa = null;
+    if (window.GH_ROL === 'visor') { precargaPromesa = null; return; }
+    const pfx = prefijoActual();
+    let q = client.from('datos_app').select('clave, valor').not('clave', 'like', '%fotos%');
+    q = pfx ? q.like('clave', pfx + '%') : q.not('clave', 'like', 'c:%');
+    precargaPromesa = q.then(({ data, error }) => {
+      if (error || !data) return null;
+      const m = new Map(); data.forEach((r) => m.set(r.clave, r.valor));
+      precargaMapa = m; return m;
+    }, () => null);
+  }
+  async function leerPrecarga(claveCompleta) {
+    if (!precargaPromesa) return undefined;
+    const m = await Promise.race([precargaPromesa, new Promise((r) => setTimeout(() => r(null), 6000))]);
+    if (!m || !m.has(claveCompleta)) return undefined;
+    const v = m.get(claveCompleta); m.delete(claveCompleta);
+    return v;
+  }
+  function olvidarPrecarga(claveCompleta) { if (precargaMapa) precargaMapa.delete(claveCompleta); }
+  async function miUsuarioId() {
+    if (window.GH_USER_ID) return window.GH_USER_ID;
+    try { const { data: { session } } = await client.auth.getSession(); return session && session.user ? session.user.id : null; } catch (e) { return null; }
   }
 
   window.GH_GET_CUENTA = () => cuentaActiva;
@@ -367,6 +399,7 @@
       });
     }
     cuentaActiva = c;
+    precargaMapa = null; precargaPromesa = null;
     return c;
   };
 
@@ -440,6 +473,8 @@
       // El visor solo usa el check-in (con sus propias funciones): la app
       // normal, que queda escondida para él, no lee ni escribe nada.
       if (window.GH_ROL === 'visor' && !key.startsWith('__')) throw new Error('not found');
+      const pre = await leerPrecarga(claveConCuenta(key));
+      if (pre !== undefined) return { key, value: pre, shared: false };
       const { data, error } = await client.from('datos_app').select('valor').eq('clave', claveConCuenta(key)).maybeSingle();
       if (error || !data) throw new Error('not found');
       return { key, value: data.valor, shared: false };
@@ -447,9 +482,9 @@
     set: async (key, value) => {
       await sesionLista;
       if (window.GH_ROL === 'visor') return { key, value, shared: false };
-      const { data: { user } } = await client.auth.getUser();
+      olvidarPrecarga(claveConCuenta(key));
       const { error } = await client.from('datos_app').upsert({
-        clave: claveConCuenta(key), valor: value, actualizado_por: user ? user.id : null, actualizado_en: new Date().toISOString()
+        clave: claveConCuenta(key), valor: value, actualizado_por: await miUsuarioId(), actualizado_en: new Date().toISOString()
       });
       if (error) throw error;
       return { key, value, shared: false };
@@ -457,6 +492,7 @@
     delete: async (key) => {
       await sesionLista;
       if (window.GH_ROL === 'visor') return { key, deleted: false, shared: false };
+      olvidarPrecarga(claveConCuenta(key));
       const { error } = await client.from('datos_app').delete().eq('clave', claveConCuenta(key));
       if (error) throw error;
       return { key, deleted: true, shared: false };

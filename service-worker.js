@@ -3,7 +3,7 @@
 // Los datos NO se guardan aquí (eso vive en localStorage / futuro backend),
 // solo el "cascarón" de la app (HTML, íconos).
 
-const CACHE_NAME = 'gh-manager-v149';
+const CACHE_NAME = 'gh-manager-v150';
 const ARCHIVOS_CACHE = [
   './',
   './index.html',
@@ -14,7 +14,8 @@ const ARCHIVOS_CACHE = [
   './icon-maskable-512.png',
   './apple-touch-icon.png',
   './browser-storage.js',
-  './supabase-storage.js'
+  './supabase-storage.js',
+  './vendor/supabase-2.117.1.min.js'
 ];
 
 // Al instalar se bajan los archivos SIN usar la copia vieja del navegador
@@ -44,7 +45,7 @@ self.addEventListener('activate', (evento) => {
     caches.keys().then((nombres) =>
       Promise.all(
         nombres
-          .filter((n) => n !== CACHE_NAME)
+          .filter((n) => n !== CACHE_NAME && n !== 'gh-fuentes-v1')
           .map((n) => caches.delete(n))
       )
     )
@@ -62,7 +63,23 @@ self.addEventListener('activate', (evento) => {
 // siempre directo a la red, sin pasar por aquí ni guardarse en caché.
 self.addEventListener('fetch', (evento) => {
   if (evento.request.method !== 'GET') return;
-  if (new URL(evento.request.url).origin !== self.location.origin) return;
+  const url = new URL(evento.request.url);
+  // Fuentes de Google: se guardan la primera vez y después salen del
+  // teléfono (no cambian), así la app no espera la red para pintar letras.
+  if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
+    evento.respondWith((async () => {
+      const cache = await caches.open('gh-fuentes-v1');
+      const enCache = await cache.match(evento.request);
+      if (enCache) return enCache;
+      try {
+        const r = await fetch(evento.request);
+        if (r && (r.ok || r.type === 'opaque')) cache.put(evento.request, r.clone());
+        return r;
+      } catch (e) { return Response.error(); }
+    })());
+    return;
+  }
+  if (url.origin !== self.location.origin) return;
 
   evento.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
