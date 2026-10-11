@@ -2840,6 +2840,7 @@
   </div>
   <div class="inv-subnav">
     <button class="pay-subtab active" data-psub="cheques">Cheques</button>
+    <button class="pay-subtab" data-psub="guardados">Cheques guardados</button>
     <button class="pay-subtab" data-psub="zelle">Zelle y Cash</button>
     <button class="pay-subtab" data-psub="r1099">1099</button>
   </div>
@@ -2851,7 +2852,7 @@
       <div class="gc-field" style="margin-bottom:10px;" id="chq-base-wrap"><label>Nómina de qué base de datos</label>
         <select id="chq-base"><option value="todas">Todas las bases de datos</option></select>
       </div>
-      <div class="gc-field" style="margin-bottom:14px;"><label>Pagos de nómina en este cheque (opcional)</label>
+      <div class="gc-field" style="margin-bottom:14px;"><label>¿A quién le haces el cheque? (opcional)</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
           <select id="chq-semana" style="flex:1;min-width:200px;"><option value="">— Escribir a mano —</option></select>
           <button type="button" class="gc-action-btn" id="chq-btn-toda-semana" style="display:none;">Marcar todos</button>
@@ -2861,7 +2862,7 @@
           <label style="font-size:12px;font-weight:600;color:var(--muted);">Ganancia de socio (después de gastos, sin los ajustes)</label>
           <div id="chq-gan-lista" style="margin-top:6px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 12px;"></div>
         </div>
-        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:6px;">Marca uno para pagarle a ese trabajador, o varios para hacer un solo cheque (por ejemplo a CRA HVAC) con el sueldo de todos. La cantidad se suma sola.</p>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:6px;">Solo salen los que cobran cheque. Los trabajadores que se le pagan a otro (por ejemplo a CRA HVAC) van adentro de su cheque. La cantidad se suma sola.</p>
       </div>
       <div class="gc-form-row">
         <div class="gc-field"><label>Páguese a</label>
@@ -2908,9 +2909,14 @@
       </div>
     </div>
 
+  </div>
+
+
+  <!-- Cheques guardados: el registro, aparte para no revolver la página de imprimir -->
+  <div class="pay-subpanel" id="pay-sub-guardados">
     <div class="gc-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-        <p class="gc-card-title" style="margin:0;">Registro de cheques</p>
+        <p class="gc-card-title" style="margin:0;">Cheques guardados</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" class="gc-action-btn" id="chq-btn-importar">⬆ Importar archivo</button>
           <button type="button" class="gc-action-btn" id="chq-btn-manual">+ Agregar cheque a mano</button>
@@ -2961,7 +2967,6 @@
       </div>
     </div>
   </div>
-
 
   <!-- Zelle y Cash: pagos que no son cheque -->
   <div class="pay-subpanel" id="pay-sub-zelle">
@@ -3707,7 +3712,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v145 · 10 oct';
+  const APP_VERSION = 'v146 · 11 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -12995,40 +13000,52 @@
     chqLista.forEach((c) => c.a && nombres.add(c.a));
     $('dl-chq-a').innerHTML = [...nombres].map((x) => `<option value="${escapeHtml(x)}">`).join('');
   }
+  // Lista de la semana: SOLO quien cobra cheque (ej. CRA HVAC con sus trabajadores
+  // adentro, Ariel con lo de él y su esposa). Los trabajadores ya no salen sueltos.
+  // Los checkboxes .chq-pago (escondidos) siguen diciendo qué va en el cheque.
+  function chqChequeDePago(id) {
+    return chqLista.find((c) => !c.anulado && (c.metodo || 'cheque') === 'cheque' &&
+      ((Array.isArray(c.nomIds) && c.nomIds.includes(id)) || c.nomId === id));
+  }
   function chqRenderPagosSemana() {
     const k = $('chq-semana').value;
     const cont = $('chq-pagos-lista');
-    const marcadosAntes = new Set([...document.querySelectorAll('#chq-pagos-lista .chq-pago:checked')].map((cb) => cb.value));
+    const gruposAntes = new Set([...document.querySelectorAll('#chq-pagos-lista .chq-grupo-cb:checked')].map((cb) => cb.value));
     const fuente = chqFuente();
     const variasBases = new Set(fuente.map((n) => n._base)).size > 1;
-    const pagos = k ? fuente.filter((n) => chqSemanaDe(n) === k)
-      .sort((a, b) => (a.trabajador || '').localeCompare(b.trabajador || '')) : [];
-    cont.style.display = pagos.length ? 'block' : 'none';
-    $('chq-btn-toda-semana').style.display = pagos.length > 1 ? '' : 'none';
-    cont.innerHTML = pagos.map((n) => `
-      <label style="display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer;font-size:13.5px;">
-        <input type="checkbox" class="chq-pago" value="${escapeHtml(n.id)}" style="width:18px;height:18px;">
-        <span style="flex:1;">${escapeHtml(n.trabajador || '')} <span style="color:var(--muted);font-size:12px;">· ${nomCuentaDias(n.dias)} día(s)${variasBases && n._baseNombre ? ' · ' + escapeHtml(n._baseNombre) : ''}</span></span>
-        <strong>${nomFmt(n.monto)}</strong>
-      </label>`).join('');
-    cont.querySelectorAll('.chq-pago').forEach((cb) => { if (marcadosAntes.has(cb.value)) cb.checked = true; cb.addEventListener('change', chqAplicarPagos); });
-    // Botones rápidos: un cheque por quien cobra (ej. CRA HVAC con sus 4, Ariel con lo de él y su esposa)
     const grupos = k ? nomAgruparSemana(k, fuente) : [];
-    if (grupos.length) {
-      const chips = document.createElement('div');
-      chips.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 8px;border-bottom:1px solid var(--border-soft);margin-bottom:4px;';
-      chips.innerHTML = grupos.map((g, i) => `<button type="button" class="gc-action-btn chq-grupo" data-i="${i}" style="padding:6px 12px;font-size:12.5px;">${escapeHtml(g.nombre)} · ${g.pagos.length} · ${nomFmt(g.total)}</button>`).join('');
-      cont.prepend(chips);
-      chips.querySelectorAll('.chq-grupo').forEach((btn) => btn.addEventListener('click', () => {
-        const g = grupos[Number(btn.dataset.i)];
-        const ids = new Set(g.pagos.map((n) => n.id));
-        cont.querySelectorAll('.chq-pago').forEach((cb) => { cb.checked = ids.has(cb.value); });
-        chqAplicarPagos();
-        $('chq-a').value = g.nombre;
+    const dTxt = (n) => { const d = nomCuentaDias(n.dias); return `${d} día${d === 1 ? '' : 's'}${variasBases && n._baseNombre ? ' · ' + escapeHtml(n._baseNombre) : ''}`; };
+    $('chq-btn-toda-semana').style.display = 'none';
+    cont.style.display = grupos.length ? 'block' : 'none';
+    cont.innerHTML = grupos.map((g, i) => {
+      const clave = String(g.nombre || '').trim().toLowerCase();
+      const hechos = [...new Set(g.pagos.map((n) => chqChequeDePago(n.id)).filter(Boolean).map((c) => '#' + c.numero))];
+      const soloEl = g.pagos.length === 1 && String(g.pagos[0].trabajador || '').trim().toLowerCase() === clave;
+      const detalle = soloEl ? dTxt(g.pagos[0]) : g.pagos.map((n) => `${escapeHtml(n.trabajador || '')} (${dTxt(n)})`).join(', ');
+      return `
+      <label style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;cursor:pointer;font-size:13.5px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);margin:0;${i ? 'border-top:1px solid var(--border-soft);' : ''}${hechos.length ? 'opacity:.6;' : ''}">
+        <input type="checkbox" class="chq-grupo-cb" value="${escapeHtml(clave)}" data-i="${i}" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;">
+        <span style="flex:1;min-width:0;">
+          <strong>${escapeHtml(g.nombre)}</strong>${hechos.length ? ` <span style="font-size:11.5px;color:var(--muted);">· ya tiene cheque ${hechos.join(', ')}</span>` : ''}
+          <span style="display:block;color:var(--muted);font-size:12px;margin-top:2px;">${detalle}</span>
+        </span>
+        <strong>${nomFmt(g.total)}</strong>
+        ${g.pagos.map((n) => `<input type="checkbox" class="chq-pago" value="${escapeHtml(n.id)}" hidden>`).join('')}
+      </label>`;
+    }).join('');
+    cont.querySelectorAll('.chq-grupo-cb').forEach((cb) => {
+      const marcar = () => cb.closest('label').querySelectorAll('.chq-pago').forEach((p) => { p.checked = cb.checked; });
+      if (gruposAntes.has(cb.value)) { cb.checked = true; marcar(); }
+      cb.addEventListener('change', () => {
+        marcar();
+        const sel = [...cont.querySelectorAll('.chq-grupo-cb:checked')].map((x) => grupos[Number(x.dataset.i)]);
+        const a = $('chq-a');
+        if (sel.length === 1) a.value = sel[0].nombre;
+        else if (!sel.length && grupos.some((g) => g.nombre === a.value.trim())) a.value = '';
         chqRenderGanancias();
         chqRecalcularMonto();
-      }));
-    }
+      });
+    });
   }
   function chqRenderGanancias() {
     const quien = $('chq-a').value.trim().toLowerCase();
@@ -13463,7 +13480,7 @@
     if (!chqValidar(c)) return;
     const repetido = chqLista.find((x) => x.metodo !== 'zelle' && Number(x.numero) === c.numero && !x.anulado);
     if (repetido) {
-      toast(`El cheque #${c.numero} ya se usó (${repetido.a}). Usa Reimprimir abajo o cambia el número.`, 'error', 5000);
+      toast(`El cheque #${c.numero} ya se usó (${repetido.a}). Reimprímelo desde Cheques guardados o cambia el número.`, 'error', 5000);
       return;
     }
     c.id = Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7);
@@ -13475,13 +13492,14 @@
     catch (e) { toast('No se pudo guardar el cheque', 'error'); }
     ghImprimirEnVentana('', `Cheque ${c.numero}`, chqDocumento(c, false));
     // Deja el formulario listo para el siguiente
-    document.querySelectorAll('#chq-pagos-lista .chq-pago, #chq-gan-lista .chq-gan').forEach((cb) => { cb.checked = false; });
+    document.querySelectorAll('#chq-pagos-lista .chq-pago, #chq-pagos-lista .chq-grupo-cb, #chq-gan-lista .chq-gan').forEach((cb) => { cb.checked = false; });
     $('chq-gan-wrap').style.display = 'none';
     $('chq-a').value = ''; $('chq-monto').value = ''; $('chq-memo').value = 'WORK';
     $('chq-numero').value = chqSiguienteNumero();
     chqActualizarLetras();
     chqRenderLista();
-    toast(`Cheque #${c.numero} guardado`);
+    chqRenderPagosSemana();
+    toast(`Cheque #${c.numero} guardado en Cheques guardados`);
   });
 
   $('chq-btn-guardar-ajuste').addEventListener('click', async () => {
@@ -13508,6 +13526,7 @@
     await r99CargarInfo();
     payResumen();
     if (sub === 'cheques') chqRender();
+    if (sub === 'guardados') chqRenderLista();
     if (sub === 'zelle') { try { chqLlenarSelectNomina(); } catch (e) {} zcRender(); }
     if (sub === 'r1099') { $('r99-anio').dataset.ok = ''; r99Render(); }
   }
@@ -13763,15 +13782,15 @@
     $('pay-res-anio').textContent = anio;
     $('pay-kpis').innerHTML = `
       <div class="pay-kpi"><div class="l">Pagado en ${anio}</div><div class="v">${nomFmt(tCh + tZ + tCa)}</div><div class="s">Cheques ${nomFmt(tCh)} · Zelle ${nomFmt(tZ)}${tCa ? ' · Cash ' + nomFmt(tCa) : ''}</div></div>
-      <div class="pay-kpi click" data-ir="cheques"><div class="l">Cheques</div><div class="v">${nCh}</div><div class="s">Próximo: #${chqSiguienteNumero()}</div></div>
+      <div class="pay-kpi click" data-ir="guardados"><div class="l">Cheques</div><div class="v">${nCh}</div><div class="s">Próximo: #${chqSiguienteNumero()}</div></div>
       <div class="pay-kpi click ${sinNombre ? 'alerta' : ''}" data-ir="sin-nombre"><div class="l">Sin nombre</div><div class="v">${sinNombre}</div><div class="s">${sinNombre ? 'Toca para ponérselo' : 'Todo con nombre ✓'}</div></div>
       <div class="pay-kpi click ${faltaW9 ? 'alerta' : ''}" data-ir="r1099"><div class="l">Llevan 1099</div><div class="v">${llevan}</div><div class="s">${faltaW9 ? faltaW9 + ' sin W-9' : (llevan ? 'Con W-9 ✓' : 'Ninguno todavía')}</div></div>`;
     $('pay-kpis').querySelectorAll('.pay-kpi.click').forEach((k) => k.addEventListener('click', () => {
       const ir = k.dataset.ir;
       if (ir === 'sin-nombre') {
         const hayCh = chqLista.some((c) => !c.anulado && !(c.a || '').trim() && (c.metodo || 'cheque') === 'cheque');
-        const sub = hayCh ? 'cheques' : 'zelle';
-        payMostrar(sub); payAbrir(sub).then(() => { if (sub === 'cheques') { $('chq-sin-nombre').checked = true; chqRenderLista(); $('chq-tbl').scrollIntoView({ behavior: 'smooth' }); } });
+        const sub = hayCh ? 'guardados' : 'zelle';
+        payMostrar(sub); payAbrir(sub).then(() => { if (sub === 'guardados') { $('chq-sin-nombre').checked = true; chqRenderLista(); $('chq-tbl').scrollIntoView({ behavior: 'smooth' }); } });
       } else { payMostrar(ir); payAbrir(ir); }
     }));
     const meses = new Array(12).fill(0);
