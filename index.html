@@ -181,7 +181,7 @@
   .gc-panel.active { display: block; animation: gc-fade .22s var(--ease); }
   @keyframes gc-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   .mov-subpanel.active, .inv-subpanel.active, .nom-subpanel.active, .aj-subpanel.active,
-  .pln-subpanel.active, .doc-subpanel.active { animation: gc-fade .2s var(--ease); }
+  .pln-subpanel.active, .doc-subpanel.active , .pay-subpanel.active{ animation: gc-fade .2s var(--ease); }
   @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   .inv-list-t tbody tr, .gc-ledger tbody tr { content-visibility: auto; contain-intrinsic-size: auto 40px; }
   body { text-rendering: optimizeSpeed; }
@@ -513,12 +513,18 @@
   .cs-item input[type=checkbox]{width:17px;height:17px;margin-top:1px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
   .cs-item input[type=text]{width:58px;padding:3px 6px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;text-align:center;margin:0 3px;}
   @media (max-width:720px){ .cs-checklist{grid-template-columns:1fr;} }
-  .nom-subtab{flex:1;padding:12px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;transition:all .16s var(--ease);border-right:1px solid var(--border-soft);}
-  .nom-subtab:last-child{border-right:none;}
-  .nom-subtab:hover{background:var(--surface-2);color:var(--ink);}
-  .nom-subtab.active{background:linear-gradient(120deg,var(--accent),var(--accent-dk));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2);}
-  .nom-subpanel{display:none;}
-  .nom-subpanel.active{display:block;}
+  .nom-subtab,
+  .pay-subtab{flex:1;padding:12px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;transition:all .16s var(--ease);border-right:1px solid var(--border-soft);}
+  .nom-subtab:last-child,
+  .pay-subtab:last-child{border-right:none;}
+  .nom-subtab:hover,
+  .pay-subtab:hover{background:var(--surface-2);color:var(--ink);}
+  .nom-subtab.active,
+  .pay-subtab.active{background:linear-gradient(120deg,var(--accent),var(--accent-dk));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2);}
+  .nom-subpanel,
+  .pay-subpanel{display:none;}
+  .nom-subpanel.active,
+  .pay-subpanel.active{display:block;}
   .aj-subtab{flex:1;padding:12px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;transition:all .16s var(--ease);border-right:1px solid var(--border-soft);}
   .aj-subtab:last-child{border-right:none;}
   .aj-subtab:hover{background:var(--surface-2);color:var(--ink);}
@@ -531,7 +537,7 @@
   .mov-subtab.active{background:linear-gradient(120deg,var(--accent),var(--accent-dk));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2);}
   .mov-subpanel{display:none;}
   .mov-subpanel.active{display:block;}
-  .inv-subtab:active, .nom-subtab:active, .aj-subtab:active, .mov-subtab:active { transform: scale(.97); }
+  .inv-subtab:active, .nom-subtab:active, .aj-subtab:active, .mov-subtab:active , .pay-subtab:active{ transform: scale(.97); }
   .doc-subtab{flex:1;padding:12px 16px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;transition:all .16s var(--ease);border-right:1px solid var(--border-soft);}
   .doc-subtab:last-child{border-right:none;}
   .doc-subtab:hover{background:#F5F7FC;color:var(--ink);}
@@ -952,12 +958,12 @@
     overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
   .inv-subnav::-webkit-scrollbar, .pln-subnav::-webkit-scrollbar { display: none; }
-  .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab {
+  .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab , .pay-subtab{
     flex: 1 0 auto; padding: 10px 14px; border-radius: 12px; border-right: 0; white-space: nowrap;
     font-size: 13px; font-weight: 700; color: var(--muted); background: transparent; line-height: 1.25;
   }
-  .inv-subtab:hover, .nom-subtab:hover, .aj-subtab:hover, .mov-subtab:hover, .doc-subtab:hover, .pln-subtab:hover { background: rgba(255,255,255,.55); color: var(--ink); }
-  .inv-subtab.active, .nom-subtab.active, .aj-subtab.active, .mov-subtab.active, .doc-subtab.active, .pln-subtab.active {
+  .inv-subtab:hover, .nom-subtab:hover, .aj-subtab:hover, .mov-subtab:hover, .doc-subtab:hover, .pln-subtab:hover , .pay-subtab:hover{ background: rgba(255,255,255,.55); color: var(--ink); }
+  .inv-subtab.active, .nom-subtab.active, .aj-subtab.active, .mov-subtab.active, .doc-subtab.active, .pln-subtab.active , .pay-subtab.active{
     background: #fff; color: var(--accent-dk); box-shadow: 0 1px 2px rgba(14,24,48,.1), 0 4px 10px rgba(14,24,48,.08);
   }
   .cs-tipos { background: var(--track); border: 0; padding: 4px; gap: 4px; border-radius: 14px; overflow-x: auto; scrollbar-width: none; }
@@ -1095,7 +1101,7 @@
     .gc-sheet-actions .gc-save-btn { flex: 1 1 auto; }
 
     /* Navegación interna con menos relleno */
-    .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab { padding: 10px 13px; font-size: 12.5px; }
+    .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab , .pay-subtab{ padding: 10px 13px; font-size: 12.5px; }
 
     /* Diálogo de confirmación estilo hoja inferior */
     .gc-confirm-overlay { align-items: flex-end; padding: 0; }
@@ -1395,12 +1401,12 @@
     background: transparent; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 0; gap: 2px;
     margin-bottom: 18px; box-shadow: none;
   }
-  .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab {
+  .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab , .pay-subtab{
     flex: 0 0 auto; background: transparent; border: 0; border-radius: 0; padding: 12px 12px 11px; margin-bottom: -1px;
     border-bottom: 2.5px solid transparent; color: var(--muted); font-weight: 700; font-size: 13.5px; box-shadow: none;
   }
-  .inv-subtab:hover, .nom-subtab:hover, .aj-subtab:hover, .mov-subtab:hover, .doc-subtab:hover, .pln-subtab:hover { background: transparent; color: var(--ink); }
-  .inv-subtab.active, .nom-subtab.active, .aj-subtab.active, .mov-subtab.active, .doc-subtab.active, .pln-subtab.active {
+  .inv-subtab:hover, .nom-subtab:hover, .aj-subtab:hover, .mov-subtab:hover, .doc-subtab:hover, .pln-subtab:hover , .pay-subtab:hover{ background: transparent; color: var(--ink); }
+  .inv-subtab.active, .nom-subtab.active, .aj-subtab.active, .mov-subtab.active, .doc-subtab.active, .pln-subtab.active , .pay-subtab.active{
     background: transparent; color: var(--ink); border-bottom-color: var(--accent); box-shadow: none;
   }
   .cs-tipos { background: var(--surface-3); border-radius: 12px; padding: 3px; gap: 3px; border: 0; }
@@ -1544,7 +1550,7 @@
     #gc-toast { bottom: calc(152px + env(safe-area-inset-bottom, 0px)); }
 
     .inv-subnav, .pln-subnav { margin-left: -14px; margin-right: -14px; padding: 0 8px; }
-    .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab { padding: 12px 10px 11px; font-size: 13px; }
+    .inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab , .pay-subtab{ padding: 12px 10px 11px; font-size: 13px; }
 
     .gh-hero { border-radius: 20px; }
     .gc-stats { gap: 8px; }
@@ -1973,6 +1979,7 @@
     <button class="gc-tab active" data-tab="movimientos" data-i18n="tab_principal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>Principal</button>
     <button class="gc-tab" data-tab="facturas" data-i18n="facturas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h12v19l-3-2-3 2-3-2-3 2z"/><path d="M9 7.5h6M9 11.5h6"/></svg>Facturas</button>
     <button class="gc-tab" data-tab="nomina" data-i18n="nomina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Nómina</button>
+    <button class="gc-tab" data-tab="payroll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 14.5h5M15 10.5h3M6 10.5h2"/></svg>Payroll</button>
     <button class="gc-tab" data-tab="buscar" data-i18n="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Buscar</button>
     <button class="gc-tab" data-tab="respaldo" data-i18n="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Ajustes</button>
   </nav>
@@ -2654,9 +2661,7 @@
     <button class="nom-subtab" data-i18n="historial" data-nsub="historial">Historial</button>
     <button class="nom-subtab" data-i18n="buscar_por_persona" data-nsub="buscar">Buscar por persona</button>
     <button class="nom-subtab" data-i18n="trabajadores" data-nsub="trabajadores">Trabajadores</button>
-    <button class="nom-subtab" data-nsub="cheques">Cheques</button>
-    <button class="nom-subtab" data-nsub="zelle">Zelle y Cash</button>
-    <button class="nom-subtab" data-nsub="r1099">1099</button>
+
   </div>
 
   <!-- Registrar pago -->
@@ -2769,8 +2774,17 @@
     </div>
   </div>
 
+</div><!-- /panel-nomina -->
+
+<!-- ===== PAYROLL: cheques, Zelle y cash, 1099 ===== -->
+<div class="gc-panel" id="panel-payroll">
+  <div class="inv-subnav">
+    <button class="pay-subtab active" data-psub="cheques">Cheques</button>
+    <button class="pay-subtab" data-psub="zelle">Zelle y Cash</button>
+    <button class="pay-subtab" data-psub="r1099">1099</button>
+  </div>
   <!-- Cheques (imprimir en cheques láser de 8½" x 3½", cheque arriba + 2 talones) -->
-  <div class="nom-subpanel" id="nom-sub-cheques">
+  <div class="pay-subpanel active" id="pay-sub-cheques">
     <div class="gc-card">
       <p class="gc-card-title">Imprimir cheque</p>
       <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Para cheques láser de hoja carta con el cheque arriba (8½" x 3½") y dos talones abajo. Escoge un pago de nómina o llena los datos a mano.</p>
@@ -2890,7 +2904,7 @@
 
 
   <!-- Zelle y Cash: pagos que no son cheque -->
-  <div class="nom-subpanel" id="nom-sub-zelle">
+  <div class="pay-subpanel" id="pay-sub-zelle">
     <div class="gc-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
         <p class="gc-card-title" style="margin:0;">Zelle y Cash</p>
@@ -2931,7 +2945,7 @@
   </div>
 
   <!-- 1099: lo pagado a cada persona en el año (cheques + Zelle + cash) -->
-  <div class="nom-subpanel" id="nom-sub-r1099">
+  <div class="pay-subpanel" id="pay-sub-r1099">
     <div class="gc-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
         <p class="gc-card-title" style="margin:0;">1099 — pagado por persona</p>
@@ -2957,7 +2971,9 @@
     </div>
   </div>
 
-</div><!-- /panel-nomina -->
+</div><!-- /panel-payroll -->
+
+
 
 <!-- Overlay de recibo de nómina -->
 <div class="gc-print-overlay" id="nom-ov" style="display:none;">
@@ -3631,7 +3647,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v142 · 10 oct';
+  const APP_VERSION = 'v143 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -12085,6 +12101,24 @@
     if (tab.dataset.tab === 'nomina') {
       tab.addEventListener('click', async () => {
         if (!nomCargado) {
+          await nomAsegurarCargado();
+        } else {
+          // Ya estaba abierta: trae el check-in más reciente. Si el admin no
+          // ha tocado nada a mano en esta semana, se vuelve a armar la lista.
+          try { chkAvisarNuevos(await chkSincronizarTrabajadores()); } catch (e) {}
+          const antes = JSON.stringify(nomCheckin);
+          await nomCargarCheckin();
+          const sinTocar = !nomGridFilas.some((f) => f.tocado && !f.deCheckin);
+          if (JSON.stringify(nomCheckin) !== antes && sinTocar) nomGridAbrirSemana();
+        }
+      });
+    }
+  });
+  // Carga la nómina una sola vez (la usan Nómina y Payroll)
+  let nomCargaPromesa = null;
+  function nomAsegurarCargado() {
+    if (nomCargado && !nomCargaPromesa) return Promise.resolve();
+    if (!nomCargaPromesa) nomCargaPromesa = (async () => {
           nomCargado = true;
           // Las tres lecturas son independientes: se piden a la vez (más rápido,
           // sobre todo con conexión lenta) en vez de una tras otra.
@@ -12105,18 +12139,9 @@
           nomRegSemanaOffset = 0;
           nomGridAbrirSemana();
           nomRenderRegLedger();
-        } else {
-          // Ya estaba abierta: trae el check-in más reciente. Si el admin no
-          // ha tocado nada a mano en esta semana, se vuelve a armar la lista.
-          try { chkAvisarNuevos(await chkSincronizarTrabajadores()); } catch (e) {}
-          const antes = JSON.stringify(nomCheckin);
-          await nomCargarCheckin();
-          const sinTocar = !nomGridFilas.some((f) => f.tocado && !f.deCheckin);
-          if (JSON.stringify(nomCheckin) !== antes && sinTocar) nomGridAbrirSemana();
-        }
-      });
-    }
-  });
+    })();
+    return nomCargaPromesa;
+  }
 
   // ====================================================================
   // RECIBO SEMANAL
@@ -13381,7 +13406,23 @@
     chqCfg.talones = $('chq-talones').value;
   }));
 
-  document.querySelector('.nom-subtab[data-nsub="cheques"]').addEventListener('click', () => { chqRender(); });
+  // ---- Payroll: pestaña principal y sus sub-pestañas ----
+  function payMostrar(sub) {
+    document.querySelectorAll('.pay-subtab').forEach((t) => t.classList.toggle('active', t.dataset.psub === sub));
+    document.querySelectorAll('.pay-subpanel').forEach((p) => p.classList.toggle('active', p.id === 'pay-sub-' + sub));
+  }
+  async function payAbrir(sub) {
+    await nomAsegurarCargado();
+    if (!chqCargado) await chqCargar();
+    if (sub === 'cheques') chqRender();
+    if (sub === 'zelle') { try { chqLlenarSelectNomina(); } catch (e) {} zcRender(); }
+    if (sub === 'r1099') { $('r99-anio').dataset.ok = ''; r99Render(); }
+  }
+  document.querySelectorAll('.pay-subtab').forEach((t) => t.addEventListener('click', () => { payMostrar(t.dataset.psub); payAbrir(t.dataset.psub); }));
+  document.querySelector('.gc-tab[data-tab="payroll"]').addEventListener('click', () => {
+    const activa = document.querySelector('.pay-subtab.active');
+    payAbrir(activa ? activa.dataset.psub : 'cheques');
+  });
 
   // ===================== ZELLE Y CASH =====================
   // Se guardan en la misma lista que los cheques (gh-cheques) con metodo
@@ -13467,11 +13508,7 @@
   ['zc-fecha', 'zc-monto', 'zc-a', 'zc-memo'].forEach((id) => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); zcGuardar(); } }));
   ['zc-buscar'].forEach((id) => $(id).addEventListener('input', zcRender));
   ['zc-anio', 'zc-tipo'].forEach((id) => $(id).addEventListener('change', zcRender));
-  document.querySelector('.nom-subtab[data-nsub="zelle"]').addEventListener('click', async () => {
-    if (!chqCargado) await chqCargar();
-    try { chqLlenarSelectNomina(); } catch (e) {}
-    zcRender();
-  });
+
 
   // ===================== 1099 =====================
   function r99Datos() {
@@ -13549,10 +13586,7 @@
     const a = document.createElement('a'); a.href = url; a.download = `pagos-1099-${anio}.csv`; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   });
-  document.querySelector('.nom-subtab[data-nsub="r1099"]').addEventListener('click', async () => {
-    if (!chqCargado) await chqCargar();
-    r99Render();
-  });
+
   // ===================== /ZELLE Y CASH · 1099 =====================
   // ===================== /CHEQUES =====================
 
