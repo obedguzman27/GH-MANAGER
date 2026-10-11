@@ -2958,7 +2958,6 @@
     <div id="pay-meses" style="margin-top:14px;"></div>
     <div id="pay-unir" style="display:none;margin-top:14px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px;background:var(--surface-2);">
       <p style="font-weight:700;font-size:14px;margin:0 0 4px;">Unir nombres</p>
-      <p class="gh-ayuda" style="font-size:12px;color:var(--muted);margin:0 0 10px;">Marca los nombres que son la misma persona y escribe cómo debe quedar. Se cambia en todos sus cheques, Zelle y cash.</p>
       <input type="text" id="pay-unir-buscar" placeholder="Buscar nombre…" autocomplete="off" style="width:100%;font-size:14px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--card);color:var(--ink);margin-bottom:8px;">
       <div id="pay-unir-lista" style="max-height:260px;overflow:auto;border:1px solid var(--border-soft);border-radius:8px;padding:4px 10px;background:var(--card);"></div>
       <div class="gc-form-row" style="margin-top:10px;grid-template-columns:2fr 1fr;">
@@ -2979,7 +2978,6 @@
       <div class="pay-card-hd">
         <div>
           <p class="gc-card-title">Hacer cheque</p>
-          <p class="pay-sub">Escoge la semana y a quién, o llénalo a mano.</p>
         </div>
       </div>
 
@@ -2999,7 +2997,6 @@
             <p class="pay-mini-t">Ganancia de socio (después de gastos, sin los ajustes)</p>
             <div id="chq-gan-lista" class="pay-quien" style="margin-top:6px;"></div>
           </div>
-          <p class="pay-nota">Solo salen los que cobran cheque. Los trabajadores que se le pagan a otro (por ejemplo a CRA HVAC) van adentro de su cheque.</p>
         </div>
       </div>
 
@@ -3059,7 +3056,6 @@
             <button type="button" class="gc-action-btn" id="chq-btn-prueba">Imprimir prueba</button>
             <button type="button" class="gc-save-btn" id="chq-btn-imprimir">Imprimir cheque</button>
           </div>
-          <p class="pay-nota">Al imprimir: tamaño <strong>Carta</strong>, márgenes <strong>Ninguno</strong>, escala <strong>Tamaño real</strong> (100%). La prueba sale en papel blanco: ponla encima de un cheque contra la luz.</p>
         </div>
       </div>
 
@@ -3085,7 +3081,7 @@
       <div class="pay-card-hd">
         <div>
           <p class="gc-card-title">Cheques guardados</p>
-          <p class="pay-sub" id="chq-sub">Todos los cheques que has hecho, por mes.</p>
+          <p class="pay-sub" id="chq-sub"></p>
         </div>
         <div class="pay-hd-acts">
           <button type="button" class="gc-action-btn" id="chq-btn-manual">+ Agregar a mano</button>
@@ -3145,7 +3141,6 @@
       <div class="pay-card-hd">
         <div>
           <p class="gc-card-title">Zelle y Cash</p>
-          <p class="pay-sub">Pagos que no fueron con cheque.</p>
         </div>
         <div class="pay-hd-acts">
           <button type="button" class="gc-action-btn" id="zc-btn-nuevo">+ Agregar pago</button>
@@ -3190,7 +3185,6 @@
       <div class="pay-card-hd">
         <div>
           <p class="gc-card-title">1099 — pagado por persona</p>
-          <p class="pay-sub">Suma cheques, Zelle y cash del año (sin anulados). Toca a una persona para ver sus pagos y guardar su W-9.</p>
         </div>
         <div class="pay-hd-acts">
           <button type="button" class="gc-action-btn" id="r99-imprimir">Imprimir</button>
@@ -3207,10 +3201,6 @@
       <div id="r99-resumen"></div>
       <div class="pay-lista" id="r99-tbl"><div id="r99-tbody"></div></div>
       <div id="r99-detalle" style="margin-top:14px;"></div>
-      <details class="pay-plegable" style="margin-top:14px;">
-        <summary>¿Quién lleva 1099?</summary>
-        <p class="pay-nota" style="margin-top:10px;">A quien le pagaste el límite o más por su trabajo normalmente se le hace un 1099-NEC. Para pagos de 2026 el límite es $2,000 (antes era $600). Pregúntale a tu contador por los que son corporación. Puedes marcar a alguien como "No le toca" en su detalle.</p>
-      </details>
     </div>
   </div>
 
@@ -3890,7 +3880,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v148 · 11 oct';
+  const APP_VERSION = 'v149 · 11 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -8056,16 +8046,7 @@
     let credId = null;
     try { credId = localStorage.getItem(APPLOCK_CRED_KEY); } catch (e) {}
     overlay.innerHTML = `
-      <svg width="60" height="60" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
-        <defs><linearGradient id="applock-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C2611B"/><stop offset="1" stop-color="#0E1830"/></linearGradient></defs>
-        <rect x="8" y="8" width="144" height="144" rx="40" fill="url(#applock-grad)"/>
-        <rect x="8" y="8" width="144" height="144" rx="40" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
-        <path d="M 83.5 89.55 A 25 25 0 1 1 83.5 72.45" fill="none" stroke="#fff" stroke-width="11.5" stroke-linecap="round"/>
-        <path d="M 83.5 89.55 L 67 89.55" fill="none" stroke="#fff" stroke-width="11.5" stroke-linecap="round"/>
-        <path d="M 100 56 L 100 106" fill="none" stroke="#fff" stroke-width="11.5" stroke-linecap="round"/>
-        <path d="M 126 56 L 126 106" fill="none" stroke="#fff" stroke-width="11.5" stroke-linecap="round"/>
-        <path d="M 100 81 L 126 81" fill="none" stroke="#1CB8A8" stroke-width="11.5" stroke-linecap="round"/>
-      </svg>
+      <svg width="72" height="72" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style="border-radius:17px;box-shadow:0 6px 24px rgba(0,0,0,.35);"><rect width="512" height="512" rx="116" fill="#FFFFFF"/><path d="M212.8 206.1 A65.1 65.1 0 1 0 235.9 260.5" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><path d="M176.8 256.0 H367.7" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><path d="M305.6 190.9 V321.1 M367.7 190.9 V321.1" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><circle cx="406.2" cy="314.5" r="11.1" fill="#E8803A"/></svg>
       <div style="font-size:16.5px;font-weight:700;">GH Manager bloqueada</div>
       <div id="gh-applock-msg" style="font-size:12.5px;color:rgba(255,255,255,.72);min-height:18px;max-width:280px;"></div>
       ${credId ? `<button id="gh-applock-btn-faceid" style="background:#0C9184;color:#fff;border:none;padding:14px 28px;border-radius:999px;font-weight:700;font-size:14.5px;cursor:pointer;">Desbloquear con Face ID</button>` : ''}
@@ -13419,7 +13400,7 @@
     const nAnul = lista.filter((c) => c.anulado).length;
     $('chq-sub').textContent = lista.length
       ? `${lista.length - nAnul} cheque${lista.length - nAnul === 1 ? '' : 's'}${anio ? ' en ' + anio : ''} · ${nomFmt(granTotal)}${nAnul ? ` · ${nAnul} anulado${nAnul === 1 ? '' : 's'}` : ''}`
-      : 'Todos los cheques que has hecho, por mes.';
+      : '';
     $('chq-resumen').innerHTML = payPersonasHTML('chq', grupos, 'Total por persona');
     payPersonasRecordar($('chq-resumen'));
     $('chq-resumen').querySelectorAll('.pay-per').forEach((d) => d.addEventListener('click', () => {

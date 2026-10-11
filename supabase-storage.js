@@ -112,29 +112,14 @@
     `;
     overlay.innerHTML = `
       <div style="background:#fff; border-radius:16px; padding:36px 32px; width:90%; max-width:360px; box-shadow:0 12px 40px rgba(0,0,0,.35); text-align:center;">
-        <svg width="52" height="52" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px;">
-          <defs>
-            <linearGradient id="gh-login-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#C2611B"/>
-              <stop offset="1" stop-color="#0E1830"/>
-            </linearGradient>
-          </defs>
-          <rect x="8" y="8" width="144" height="144" rx="40" fill="url(#gh-login-grad)"/>
-          <rect x="8" y="8" width="144" height="144" rx="40" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
-          <path d="M 83.5 89.55 A 25 25 0 1 1 83.5 72.45" fill="none" stroke="#fff" stroke-width="11.5" stroke-linecap="round"/>
-          <path d="M 83.5 89.55 L 67 89.55" fill="none" stroke="#fff" stroke-width="11.5" stroke-linecap="round"/>
-          <path d="M 100 56 L 100 106" fill="none" stroke="#fff" stroke-width="11.5" stroke-linecap="round"/>
-          <path d="M 126 56 L 126 106" fill="none" stroke="#fff" stroke-width="11.5" stroke-linecap="round"/>
-          <path d="M 100 81 L 126 81" fill="none" stroke="#1CB8A8" stroke-width="11.5" stroke-linecap="round"/>
-        </svg>
+        <svg width="72" height="72" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:12px;border-radius:17px;box-shadow:0 4px 18px rgba(14,24,48,.22);"><rect width="512" height="512" rx="116" fill="#FFFFFF"/><path d="M212.8 206.1 A65.1 65.1 0 1 0 235.9 260.5" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><path d="M176.8 256.0 H367.7" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><path d="M305.6 190.9 V321.1 M367.7 190.9 V321.1" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><circle cx="406.2" cy="314.5" r="11.1" fill="#E8803A"/></svg>
         <div style="font-family:'Zilla Slab',serif; font-weight:700; font-size:20px; color:#0E1830; margin-bottom:4px;">GH Manager</div>
-        <div id="gh-login-subtitulo" style="font-size:12.5px; color:#5A6A88; margin-bottom:6px;">Inicia sesión</div>
-        <div style="font-size:11px; color:#9AA6BE; margin-bottom:16px;">El usuario NO es tu correo — solo un nombre corto (ej. "juan")</div>
+        <div id="gh-login-subtitulo" style="font-size:12.5px; color:#5A6A88; margin-bottom:18px;">Inicia sesión</div>
         <!-- Formulario de verdad (con name, autocomplete y botón submit): así el
              iPhone, Chrome y los gestores de contraseñas ofrecen guardar y
              rellenar el usuario y la contraseña. -->
         <form id="gh-login-form" method="post" action="#" autocomplete="on" novalidate style="margin:0;">
-        <input id="gh-usuario-input" name="username" type="text" placeholder="Usuario (no es tu correo)" autocomplete="username"
+        <input id="gh-usuario-input" name="username" type="text" placeholder="Usuario" autocomplete="username"
           autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text"
           style="width:100%; padding:12px 14px; border:1.5px solid #D0D8E8; border-radius:9px; font-size:16px; margin-bottom:10px; box-sizing:border-box;">
         <input id="gh-clave-input" name="password" type="password" placeholder="Contraseña" autocomplete="current-password"
