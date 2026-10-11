@@ -2128,6 +2128,41 @@
   .gh-tema-seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
   body:has(.sel-actionbar.show) .gh-fab, body:has(.gc-print-overlay[style*="display: flex"]) .gh-fab, body:has(.gc-print-overlay[style*="display:flex"]) .gh-fab { display: none; }
 
+  /* ═══════════ v151 — gastos por categoría ═══════════ */
+  .gp-total { font-size: 13px; color: var(--muted); margin: 10px 0 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .gp-total b { font-size: 26px; font-weight: 800; color: var(--ink); letter-spacing: -.5px; }
+  .gp-delta { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+  .gp-delta.sube { background: var(--ember-bg); color: var(--ember); }
+  .gp-delta.baja { background: var(--teal-bg); color: var(--teal-dk); }
+  #gp-cat-card .gc-donut-row { align-items: center; }
+  #gp-cat-card .gh-res-nav button:disabled { opacity: .35; }
+
+  .nr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .nr-kpi { background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 14px; padding: 12px 14px; }
+  .nr-kpi span { display: block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .nr-kpi b { font-size: 22px; font-weight: 800; letter-spacing: -.4px; }
+  .nr-fila { border: 1px solid var(--border-soft); background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+  .nr-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .nr-nom { font-weight: 800; font-size: 15px; }
+  .nr-tot { font-weight: 800; font-size: 17px; color: var(--teal-dk); }
+  .nr-sub { font-size: 12px; color: var(--muted); margin: 3px 0 8px; }
+  .nr-barras { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 50px; }
+  .nr-b { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; height: 100%; min-width: 0; }
+  .nr-b i { width: 70%; background: var(--teal); border-radius: 3px 3px 0 0; min-height: 2px; display: block; }
+  .nr-b em { font-style: normal; font-size: 9.5px; color: var(--muted); }
+
+  .bq-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+  .bq-chips button { border: 1.5px solid var(--border); background: var(--card); color: var(--ink); font-weight: 700; font-size: 12.5px; padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+  .bq-chips button.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
+  .bq-chips .bq-limpia { border-style: dashed; color: var(--muted); font-weight: 600; }
+  .bq-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+
+  .rb-estado { font-size: 13px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+  .rb-estado b { color: var(--ink); }
+  .rb-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--border-soft); font-weight: 700; font-size: 13.5px; }
+  .rb-fila small { display: block; font-weight: 500; color: var(--muted); font-size: 11.5px; }
+  .rb-fila .gc-action-btn { padding: 6px 12px; font-size: 12px; margin-left: 6px; }
+
   /* ═══════════ PULIDO v150 — más moderno ═══════════ */
   #gc-app { font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: smooth; }
@@ -2289,6 +2324,30 @@
         <div class="gc-stat inv"><div class="gc-stat-icon">#</div><div><div class="gc-stat-label">Invoices guardados</div><div class="gc-stat-val" id="stat-inv">0</div></div></div>
       </div>
 
+      <!-- Gastos por categoría (semana / mes / año) -->
+      <div class="gc-chart-card gh-res" id="gp-cat-card" style="display:none;">
+        <div class="gh-res-head">
+          <div style="min-width:0;">
+            <p class="gc-card-title">A dónde se va el dinero</p>
+            <div class="gh-res-nav">
+              <button type="button" data-gpnav="-1" aria-label="Anterior">‹</button>
+              <span id="gp-rango"></span>
+              <button type="button" data-gpnav="1" aria-label="Siguiente">›</button>
+            </div>
+          </div>
+          <div class="gh-res-seg" role="tablist" id="gp-seg">
+            <button type="button" data-gp="sem" class="on">Semana</button>
+            <button type="button" data-gp="mes">Mes</button>
+            <button type="button" data-gp="anio">Año</button>
+          </div>
+        </div>
+        <div class="gp-total" id="gp-total"></div>
+        <div class="gc-donut-row">
+          <div class="gc-chart-svg-wrap" id="gp-donut" style="max-width:170px;flex-shrink:0;"></div>
+          <div class="gc-donut-legend" id="gp-leyenda" style="flex:1;min-width:200px;"></div>
+        </div>
+      </div>
+
       <!-- Récords -->
       <div class="gc-card" id="gh-records" style="display:none;">
         <div class="gh-rec-head"><p class="gc-card-title">Récords</p><span id="gh-rec-sub"></span></div>
@@ -2442,6 +2501,18 @@
     <!-- Buscador (arriba: es lo primero que se usa en esta pantalla) -->
     <div class="gc-card" style="margin-bottom:24px;">
       <p class="gc-card-title" style="margin-bottom:14px;">Buscar</p>
+    <div class="bq-chips" id="bq-chips">
+      <button type="button" data-bq="hoy">Hoy</button>
+      <button type="button" data-bq="semana">Esta semana</button>
+      <button type="button" data-bq="mes">Este mes</button>
+      <button type="button" data-bq="mespasado">Mes pasado</button>
+      <button type="button" data-bq="30">30 días</button>
+      <button type="button" data-bq="anio">Este año</button>
+      <span class="bq-sep"></span>
+      <button type="button" data-bqt="ingreso">Ingresos</button>
+      <button type="button" data-bqt="gasto">Gastos</button>
+      <button type="button" data-bq="todo" class="bq-limpia">Quitar filtros</button>
+    </div>
     <div class="gc-search-bar">
       <div class="gc-field" style="min-width:140px;"><label data-i18n="ano">Año</label><select id="b-anio"><option value="todos" data-i18n="todos_los_anos">Todos los años</option></select></div>
       <div class="gc-field" style="flex:1;"><label data-i18n="buscar_en_tiempo_real">Buscar en tiempo real</label><input type="text" id="b-texto" placeholder="Categoría, descripción o monto…"></div>
@@ -2476,10 +2547,6 @@
         </div>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;">
-        <button type="button" class="gc-action-btn b-rango" data-rango="mes" style="padding:7px 13px;font-size:12px;">Este mes</button>
-        <button type="button" class="gc-action-btn b-rango" data-rango="mes-pasado" style="padding:7px 13px;font-size:12px;">Mes pasado</button>
-        <button type="button" class="gc-action-btn b-rango" data-rango="30" style="padding:7px 13px;font-size:12px;">Últimos 30 días</button>
-        <button type="button" class="gc-action-btn b-rango" data-rango="ano" style="padding:7px 13px;font-size:12px;">Este año</button>
         <span style="flex:1;"></span>
         <button type="button" class="gc-action-btn" id="b-exportar" style="padding:7px 13px;font-size:12px;">⬇ Exportar resultados</button>
         <button type="button" class="gc-action-btn" id="b-limpiar-todo" style="padding:7px 13px;font-size:12px;">Limpiar todo</button>
@@ -2781,6 +2848,16 @@
         </div>
       </div>
 
+      <!-- Respaldo automático (admin) -->
+      <div class="gc-card" style="margin-top:16px;" id="rb-card">
+        <p class="gc-card-title">Respaldo automático</p>
+        <div id="rb-estado" class="rb-estado"></div>
+        <div id="rb-lista"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+          <button type="button" class="gc-save-btn" id="rb-ahora">Respaldar ahora</button>
+        </div>
+      </div>
+
       <!-- Reportes y exportación -->
       <div class="gc-card" style="margin-top:16px;">
         <p class="gc-card-title" data-i18n="reportes_y_exportacion">Reportes y exportación</p>
@@ -2803,6 +2880,7 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="gc-save-btn" data-i18n="descargar_excel_completo" id="btn-reporte-excel">Descargar Excel completo</button>
           <button class="gc-action-btn" data-i18n="descargar_reporte_en_pdf" id="btn-reporte-pdf">Descargar reporte en PDF</button>
+          <button class="gc-action-btn" id="btn-reporte-contador">Resumen para el contador</button>
         </div>
         <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:10px;">El Excel trae una hoja por cada área (Movimientos, Invoices, Nómina, Empleados). El PDF es un resumen para imprimir o guardar.</p>
       </div>
@@ -2881,6 +2959,7 @@
     <button class="nom-subtab active" data-i18n="registrar_pago" data-nsub="registro">Registrar pago</button>
     <button class="nom-subtab" data-i18n="recibo_semanal" data-nsub="semanal">Recibo semanal</button>
     <button class="nom-subtab" data-i18n="historial" data-nsub="historial">Historial</button>
+    <button class="nom-subtab" data-nsub="resumen">Por trabajador</button>
     <button class="nom-subtab" data-i18n="buscar_por_persona" data-nsub="buscar">Buscar por persona</button>
     <button class="nom-subtab" data-i18n="trabajadores" data-nsub="trabajadores">Trabajadores</button>
 
@@ -2951,6 +3030,18 @@
   </div>
 
   <!-- Buscar por persona -->
+  <!-- Resumen por trabajador -->
+  <div class="nom-subpanel" id="nom-sub-resumen">
+    <div class="gc-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <p class="gc-card-title" style="margin:0;">Cuánto ha ganado cada trabajador</p>
+        <select id="nr-anio" style="min-width:110px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background-color:var(--surface-2);color:var(--ink);font-size:14px;font-weight:600;"></select>
+      </div>
+      <div id="nr-kpis" class="nr-kpis"></div>
+      <div id="nr-lista"></div>
+    </div>
+  </div>
+
   <div class="nom-subpanel" id="nom-sub-buscar">
     <div class="gc-card">
       <p class="gc-card-title" data-i18n="cuanto_lleva_ganando_una_persona">Cuánto lleva ganando una persona</p>
@@ -3238,6 +3329,7 @@
           <p class="gc-card-title">1099 — pagado por persona</p>
         </div>
         <div class="pay-hd-acts">
+          <button type="button" class="gc-action-btn" id="r99-hojas">Hojas 1099</button>
           <button type="button" class="gc-action-btn" id="r99-imprimir">Imprimir</button>
           <button type="button" class="gc-action-btn" id="r99-csv">⬇ CSV</button>
         </div>
@@ -3729,6 +3821,8 @@
   <div class="gc-print-toolbar no-print">
     <button class="gc-save-btn" data-i18n="imprimir" id="btn-imprimir-modal">Imprimir</button>
     <button class="gc-action-btn" id="btn-enviar-desde-modal" style="background:#fff;">↗ Enviar</button>
+    <button class="gc-action-btn" id="btn-wa-modal" style="background:#fff;">WhatsApp</button>
+    <button class="gc-action-btn" id="btn-correo-modal" style="background:#fff;">Correo</button>
     <button class="gc-action-btn" data-i18n="descargar" id="btn-descargar-desde-modal" style="background:#fff;">⬇ Descargar</button>
     <button class="gc-action-btn" data-i18n="cerrar" id="btn-cerrar-modal" style="background:#fff;">Cerrar</button>
   </div>
@@ -3930,7 +4024,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v150 · 11 oct';
+  const APP_VERSION = 'v151 · 11 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -5057,7 +5151,81 @@
     });
 
     renderGraficaSemanal();
+    try { renderGastosPorCat(); } catch (e) {}
   }
+  // ---- Gastos por categoría en Principal: semana / mes / año, con comparación ----
+  let gpModo = 'mes', gpOff = 0;
+  try { const g = localStorage.getItem('gh-gp-modo'); if (g === 'sem' || g === 'mes' || g === 'anio') gpModo = g; } catch (e) {}
+  function gpPeriodo(off) {
+    const hoy = new Date(); hoy.setHours(12, 0, 0, 0);
+    if (gpModo === 'sem') {
+      const d = new Date(hoy); d.setDate(d.getDate() - 7 * off);
+      const info = weekInfo(ghFechaLocal(d));
+      return { id: info.key, label: info.label, match: (f) => weekInfo(f).key === info.key };
+    }
+    if (gpModo === 'mes') {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - off, 1);
+      const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      const nom = d.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+      return { id: k, label: nom.charAt(0).toUpperCase() + nom.slice(1), match: (f) => String(f).slice(0, 7) === k };
+    }
+    const y = String(hoy.getFullYear() - off);
+    return { id: y, label: 'Año ' + y, match: (f) => String(f).slice(0, 4) === y };
+  }
+  function gpGastos(per) {
+    const por = new Map(); let total = 0;
+    movimientos.forEach((m) => {
+      if (m.tipo !== 'gasto' || !per.match(m.fecha || '')) return;
+      const monto = Number(m.monto) || 0; if (monto <= 0) return;
+      const c = (m.cat || 'Sin categoría').trim() || 'Sin categoría';
+      por.set(c, (por.get(c) || 0) + monto); total += monto;
+    });
+    return { total, filas: [...por.entries()].map(([cat, t]) => ({ cat, total: t })).sort((a, b) => b.total - a.total) };
+  }
+  function renderGastosPorCat() {
+    const card = $('gp-cat-card'); if (!card) return;
+    const hayGastos = movimientos.some((m) => m.tipo === 'gasto');
+    card.style.display = hayGastos ? 'block' : 'none';
+    if (!hayGastos) return;
+    card.querySelectorAll('#gp-seg button').forEach((b) => b.classList.toggle('on', b.dataset.gp === gpModo));
+    const per = gpPeriodo(gpOff), ant = gpPeriodo(gpOff + 1);
+    const { total, filas } = gpGastos(per), antTot = gpGastos(ant).total;
+    $('gp-rango').textContent = per.label;
+    const nav = card.querySelectorAll('[data-gpnav]'); if (nav[1]) nav[1].disabled = gpOff <= 0;
+    let delta = '';
+    if (antTot > 0 && total > 0) {
+      const pct = Math.round((total - antTot) / antTot * 100);
+      delta = `<span class="gp-delta ${pct > 0 ? 'sube' : 'baja'}">${pct > 0 ? '▲' : '▼'} ${Math.abs(pct)}% vs ${gpModo === 'sem' ? 'semana' : gpModo === 'mes' ? 'mes' : 'año'} anterior</span>`;
+    } else if (antTot > 0 && total === 0) delta = `<span class="gp-delta baja">Antes: ${fmt(antTot)}</span>`;
+    $('gp-total').innerHTML = `<b>${fmt(total)}</b> gastados ${delta}`;
+    if (!filas.length) {
+      $('gp-donut').innerHTML = '';
+      $('gp-leyenda').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:6px 0;">Sin gastos en este período.</div>';
+      return;
+    }
+    const COL = ['#0E8C6E', '#D0621E', '#3D5BD9', '#946510', '#7A4FB5', '#2F9BC8', '#8A8F9C'];
+    const top = filas.slice(0, 6), resto = filas.slice(6).reduce((t, r) => t + r.total, 0);
+    const trozos = resto > 0 ? [...top, { cat: 'Otros', total: resto }] : top;
+    const R = 62, C = 2 * Math.PI * R; let acu = 0;
+    const arcos = trozos.map((t, i) => {
+      const fr = t.total / total, dash = fr * C, off = -acu * C; acu += fr;
+      return `<circle cx="80" cy="80" r="${R}" fill="none" stroke="${COL[i % COL.length]}" stroke-width="24" stroke-dasharray="${Math.max(0, dash - (trozos.length > 1 ? 2 : 0)).toFixed(1)} ${(C - dash + (trozos.length > 1 ? 2 : 0)).toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 80 80)"/>`;
+    }).join('');
+    $('gp-donut').innerHTML = `<svg viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="Gastos por categoría">${arcos}
+      <text x="80" y="76" text-anchor="middle" font-size="10" fill="var(--muted)" font-weight="700">TOTAL</text>
+      <text x="80" y="94" text-anchor="middle" font-size="14" fill="var(--ink)" font-weight="800">${escapeHtml(fmt(total).replace('.00', ''))}</text></svg>`;
+    $('gp-leyenda').innerHTML = trozos.map((t, i) => `<div class="gc-donut-leg-item">
+      <span class="sw" style="background:${COL[i % COL.length]};"></span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(t.cat)}</span>
+      <span class="val">${Math.round(t.total / total * 100)}% · ${fmt(t.total)}</span></div>`).join('');
+  }
+  document.querySelectorAll('#gp-seg button').forEach((b) => b.addEventListener('click', () => {
+    gpModo = b.dataset.gp; gpOff = 0;
+    try { localStorage.setItem('gh-gp-modo', gpModo); } catch (e) {}
+    renderGastosPorCat();
+  }));
+  document.querySelectorAll('[data-gpnav]').forEach((b) => b.addEventListener('click', () => {
+    gpOff = Math.max(0, gpOff - Number(b.dataset.gpnav)); renderGastosPorCat();
+  }));
   if ($('mov-ver-mas-btn')) {
     $('mov-ver-mas-btn').addEventListener('click', () => {
       movMostrarTodasSemanas = !movMostrarTodasSemanas;
@@ -6320,6 +6488,42 @@
     `).join('');
   }
 
+  // ---- Filtros rápidos (un toque) ----
+  function bqMarcar() {
+    const d = $('b-desde').value, h = $('b-hasta').value, t = $('b-tipo').value;
+    const r = bqRango();
+    document.querySelectorAll('#bq-chips [data-bq]').forEach((b) => {
+      const k = b.dataset.bq; const x = r[k];
+      b.classList.toggle('on', k === 'todo' ? false : !!(x && x[0] === d && x[1] === h));
+    });
+    document.querySelectorAll('#bq-chips [data-bqt]').forEach((b) => b.classList.toggle('on', t === b.dataset.bqt));
+  }
+  function bqRango() {
+    const hoy = new Date(); hoy.setHours(12, 0, 0, 0);
+    const f = ghFechaLocal;
+    const lun = new Date(hoy); lun.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+    const dom = new Date(lun); dom.setDate(lun.getDate() + 6);
+    const y = hoy.getFullYear(), m = hoy.getMonth();
+    return {
+      hoy: [f(hoy), f(hoy)], semana: [f(lun), f(dom)],
+      mes: [f(new Date(y, m, 1)), f(new Date(y, m + 1, 0))],
+      mespasado: [f(new Date(y, m - 1, 1)), f(new Date(y, m, 0))],
+      '30': [f(new Date(hoy.getTime() - 29 * 86400000)), f(hoy)],
+      anio: [f(new Date(y, 0, 1)), f(new Date(y, 11, 31))]
+    };
+  }
+  document.querySelectorAll('#bq-chips [data-bq]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.bq;
+    if (k === 'todo') { $('b-desde').value = ''; $('b-hasta').value = ''; $('b-tipo').value = 'todos'; }
+    else { const [d, h] = bqRango()[k]; $('b-desde').value = d; $('b-hasta').value = h; }
+    renderBusqueda(); bqMarcar();
+  }));
+  document.querySelectorAll('#bq-chips [data-bqt]').forEach((b) => b.addEventListener('click', () => {
+    $('b-tipo').value = $('b-tipo').value === b.dataset.bqt ? 'todos' : b.dataset.bqt;
+    renderBusqueda(); bqMarcar();
+  }));
+  ['b-desde', 'b-hasta', 'b-tipo'].forEach((id) => { if ($(id)) $(id).addEventListener('change', bqMarcar); });
+
   $('b-texto').addEventListener('input', debounce(renderBusqueda, 160));
   $('b-anio').addEventListener('change', renderBusqueda);
   if ($('b-desde')) $('b-desde').addEventListener('change', renderBusqueda);
@@ -6620,6 +6824,37 @@
     }
   });
 
+  // Resumen del invoice en texto, listo para pegar en WhatsApp o en un correo
+  function ghTextoInvoice(inv) {
+    const L = [];
+    L.push(`*${cfgFacturaNombre || 'Invoice'}*`);
+    L.push(`Invoice ${inv.label || ''}`);
+    L.push('');
+    L.push(`Ingresos: ${fmt(inv.ingresos)}`);
+    L.push(`Gastos (con taxas): ${fmt(inv.gastosTotales)}`);
+    L.push(`Neto a repartir: ${fmt(inv.neto)}`);
+    const pagos = invPagosNormalizados(inv);
+    if (pagos.length) {
+      L.push(''); L.push('Reparto:');
+      pagos.forEach((p) => L.push(`• ${p.nombre}: ${fmt(p.total)}`));
+    }
+    return L.join('\n');
+  }
+  function ghAbrirEnlace(url) {
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  $('btn-wa-modal').addEventListener('click', () => {
+    if (!invoiceEnVista) return;
+    ghAbrirEnlace('https://wa.me/?text=' + encodeURIComponent(ghTextoInvoice(invoiceEnVista)));
+  });
+  $('btn-correo-modal').addEventListener('click', () => {
+    if (!invoiceEnVista) return;
+    const asunto = `${cfgFacturaNombre || 'Invoice'} — Invoice ${invoiceEnVista.label || ''}`;
+    window.location.href = 'mailto:?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(ghTextoInvoice(invoiceEnVista).replace(/\*/g, ''));
+  });
+
   $('btn-cerrar-modal').addEventListener('click', () => {
     $('modal-print').style.display = 'none';
     invoiceEnVista = null;
@@ -6897,6 +7132,35 @@
     // Vía normal (navegador de escritorio o si compartir no está disponible)
     XLSX.writeFile(wb, nombreArchivo);
     toast('Excel descargado ✓', 'success');
+  });
+
+  // Resumen de una página para el contador: por trimestre, por categoría y nómina
+  $('btn-reporte-contador').addEventListener('click', async () => {
+    let { movs, nomina, desde, hasta } = await repObtenerDatos();
+    if (!desde && !hasta) { const y = new Date().getFullYear(); desde = y + '-01-01'; hasta = y + '-12-31'; movs = movimientos.filter((m) => (m.fecha || '') >= desde && (m.fecha || '') <= hasta); }
+    const suma = (a) => a.reduce((t, m) => t + (Number(m.monto) || 0), 0);
+    const ing = movs.filter((m) => m.tipo === 'ingreso'), gas = movs.filter((m) => m.tipo === 'gasto');
+    const filasNom = [];
+    nomina.forEach((n) => nomExpandirPagos([n]).forEach((f) => { if (f.fecha && (!desde || f.fecha >= desde) && (!hasta || f.fecha <= hasta)) filasNom.push({ t: (n.trabajador || 'Sin nombre').trim(), f: f.fecha, m: f.monto }); }));
+    const trimDe = (f) => Math.floor((Number(String(f).slice(5, 7)) - 1) / 3);
+    const q = [0, 1, 2, 3].map((i) => ({ ing: suma(ing.filter((m) => trimDe(m.fecha) === i)), gas: suma(gas.filter((m) => trimDe(m.fecha) === i)), nom: filasNom.filter((x) => trimDe(x.f) === i).reduce((t, x) => t + x.m, 0) }));
+    const porCat = (arr) => { const mp = new Map(); arr.forEach((m) => { const c = (m.cat || 'Sin categoría').trim() || 'Sin categoría'; mp.set(c, (mp.get(c) || 0) + (Number(m.monto) || 0)); }); return [...mp.entries()].sort((a, b) => b[1] - a[1]); };
+    const porTrab = new Map(); filasNom.forEach((x) => porTrab.set(x.t, (porTrab.get(x.t) || 0) + x.m));
+    const tI = suma(ing), tG = suma(gas), tN = filasNom.reduce((t, x) => t + x.m, 0);
+    const nfNeg = (v) => v < 0 ? '−' + nomFmt(-v) : nomFmt(v);
+    const tabla = (titulo, filas, total) => `<h2>${titulo}</h2><table><tbody>${filas.map(([c, v]) => `<tr><td>${escapeHtml(c)}</td><td class="num">${v ? nomFmt(v) : '—'}</td></tr>`).join('') || '<tr><td style="color:#777;">Sin datos.</td><td></td></tr>'}</tbody><tfoot><tr class="ps-total"><td>Total</td><td class="num">${nomFmt(total)}</td></tr></tfoot></table>`;
+    const html = `<h1>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</h1>
+      ${cfgFacturaDireccion ? `<div class="ps-addr">${escapeHtml(cfgFacturaDireccion)}</div>` : ''}
+      <div class="ps-badge">Resumen para el contador · ${escapeHtml(desde || '…')} a ${escapeHtml(hasta || '…')}</div>
+      <h2>Por trimestre</h2>
+      <table><thead><tr><th></th><th class="num">Ingresos</th><th class="num">Gastos</th><th class="num">Nómina</th><th class="num">Neto</th></tr></thead><tbody>
+        ${q.map((r, i) => `<tr><td>Q${i + 1}</td><td class="num">${nomFmt(r.ing)}</td><td class="num">${nomFmt(r.gas)}</td><td class="num">${nomFmt(r.nom)}</td><td class="num">${nfNeg(r.ing - r.gas)}</td></tr>`).join('')}
+      </tbody><tfoot><tr class="ps-total"><td>Total</td><td class="num">${nomFmt(tI)}</td><td class="num">${nomFmt(tG)}</td><td class="num">${nomFmt(tN)}</td><td class="num">${nfNeg(tI - tG)}</td></tr></tfoot></table>
+      ${tabla('Ingresos por categoría', porCat(ing), tI)}
+      ${tabla('Gastos por categoría', porCat(gas), tG)}
+      ${tabla('Nómina por trabajador', [...porTrab.entries()].sort((a, b) => b[1] - a[1]), tN)}
+      <div class="ps-addr" style="margin-top:14px;">Base de datos: ${escapeHtml(cfgFacturaNombre || '')}. Los gastos no incluyen las taxas; la nómina sale de los días registrados.</div>`;
+    ghImprimirEnVentana(html, 'Resumen contador');
   });
 
   $('btn-reporte-pdf').addEventListener('click', async () => {
@@ -7219,9 +7483,100 @@
     return esAdminGral;
   }
 
+  // ===================== RESPALDO AUTOMÁTICO (solo admin) =====================
+  // Cada 7 días (al abrir la app) se guarda una copia de los datos de la base
+  // de datos activa y otra del registro de Payroll, en la nube, sin las fotos.
+  // Se conservan las últimas 4 copias de cada una.
+  const RB_DIAS = 7, RB_SLOTS = 4;
+  const rbEsAdmin = () => (window.GH_ROL || 'admin') === 'admin';
+  const rbCuenta = () => (typeof window.GH_GET_CUENTA === 'function' && window.GH_GET_CUENTA()) || 'principal';
+  const rbMetaKey = (n) => '__gh-respaldo-meta::' + n;
+  const rbDatoKey = (n, slot) => '__gh-respaldo::' + n + '::' + slot;
+  async function rbLeerMeta(n) {
+    try { const r = await window.storage.get(rbMetaKey(n)); const v = JSON.parse(r.value); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  }
+  async function rbJuntarDatos(n) {
+    let keys;
+    if (n === 'payroll') keys = ['__gh-cheques', '__gh-cheques-cfg', '__gh-1099-info'];
+    else {
+      const l = await window.storage.list('');
+      keys = (l.keys || []).filter((k) => !k.startsWith('__') && !/fotos/i.test(k) && !k.startsWith('gh-cfg-cache'));
+    }
+    const pares = await Promise.all(keys.map((k) => window.storage.get(k).then((r) => [k, r.value]).catch(() => null)));
+    const datos = {}; pares.filter(Boolean).forEach(([k, v]) => { datos[k] = v; });
+    return datos;
+  }
+  async function rbHacer(n) {
+    const datos = await rbJuntarDatos(n);
+    const cuantos = Object.keys(datos).length;
+    if (!cuantos) return null;
+    const meta = await rbLeerMeta(n);
+    const ult = meta.length ? meta.slice().sort((a, b) => b.fecha.localeCompare(a.fecha))[0] : null;
+    const slot = ult ? (ult.slot + 1) % RB_SLOTS : 0;
+    const fecha = new Date().toISOString();
+    await window.storage.set(rbDatoKey(n, slot), JSON.stringify({ app: 'GH Manager', tipo: 'respaldo-automatico', nombre: n, fecha, datos }));
+    const nueva = meta.filter((m) => m.slot !== slot).concat([{ slot, fecha, n: cuantos }]);
+    await window.storage.set(rbMetaKey(n), JSON.stringify(nueva));
+    return { slot, fecha, n: cuantos };
+  }
+  async function rbAuto() {
+    if (!rbEsAdmin() || window.__rbCorrio) return;
+    window.__rbCorrio = true;
+    try {
+      for (const n of [rbCuenta(), 'payroll']) {
+        const meta = await rbLeerMeta(n);
+        const ult = meta.length ? meta.map((m) => m.fecha).sort().pop() : null;
+        if (!ult || (Date.now() - new Date(ult).getTime()) > RB_DIAS * 86400000) await rbHacer(n);
+      }
+    } catch (e) {}
+  }
+  const rbFechaTxt = (iso) => new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+  async function rbRender() {
+    const card = $('rb-card'); if (!card) return;
+    card.style.display = rbEsAdmin() ? '' : 'none';
+    if (!rbEsAdmin()) return;
+    const cuenta = rbCuenta();
+    const [mDb, mPay] = await Promise.all([rbLeerMeta(cuenta), rbLeerMeta('payroll')]);
+    const ord = (m) => m.slice().sort((a, b) => b.fecha.localeCompare(a.fecha));
+    const ultDb = ord(mDb)[0];
+    $('rb-estado').innerHTML = ultDb
+      ? `Último respaldo de esta base de datos: <b>${rbFechaTxt(ultDb.fecha)}</b> (${ultDb.n} grupos de datos). Se hace solo cada ${RB_DIAS} días.`
+      : 'Todavía no hay respaldo de esta base de datos. Se hace solo la próxima vez que abras la app, o dale "Respaldar ahora".';
+    const fila = (n, m, restaurar) => `<div class="rb-fila"><span>${rbFechaTxt(m.fecha)}<small>${n === 'payroll' ? 'Payroll (cheques, Zelle, 1099)' : 'Esta base de datos'} · ${m.n} grupos</small></span>
+      <span><button type="button" class="gc-action-btn rb-baja" data-n="${escapeHtml(n)}" data-s="${m.slot}">Descargar</button>${restaurar ? `<button type="button" class="gc-action-btn rb-rest" data-n="${escapeHtml(n)}" data-s="${m.slot}">Restaurar</button>` : ''}</span></div>`;
+    $('rb-lista').innerHTML = ord(mDb).map((m) => fila(cuenta, m, true)).join('') + ord(mPay).slice(0, 2).map((m) => fila('payroll', m, false)).join('');
+    $('rb-lista').querySelectorAll('.rb-baja').forEach((b) => b.addEventListener('click', async () => {
+      try {
+        const r = await window.storage.get(rbDatoKey(b.dataset.n, b.dataset.s));
+        const url = URL.createObjectURL(new Blob([r.value], { type: 'application/json' }));
+        const a = document.createElement('a'); a.href = url; a.download = `respaldo-${b.dataset.n}-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      } catch (e) { toast('No se pudo descargar ese respaldo', 'error'); }
+    }));
+    $('rb-lista').querySelectorAll('.rb-rest').forEach((b) => b.addEventListener('click', async () => {
+      try {
+        const r = await window.storage.get(rbDatoKey(b.dataset.n, b.dataset.s));
+        const dato = JSON.parse(r.value);
+        if (!await gcConfirm(`¿Restaurar el respaldo del ${rbFechaTxt(dato.fecha)}?\n\nLos datos actuales de esta base de datos se reemplazan por los de ese día. Antes se guarda una copia de los datos de ahora.`, { okText: 'Restaurar', danger: true })) return;
+        await rbHacer(rbCuenta());
+        for (const [k, v] of Object.entries(dato.datos || {})) await window.storage.set(k, v);
+        toast('Respaldo restaurado. Recargando…', 'success', 2500);
+        setTimeout(() => location.reload(), 1500);
+      } catch (e) { toast('No se pudo restaurar', 'error'); }
+    }));
+  }
+  if ($('rb-ahora')) $('rb-ahora').addEventListener('click', async () => {
+    const b = $('rb-ahora'); b.disabled = true; b.textContent = 'Respaldando…';
+    try { await rbHacer(rbCuenta()); await rbHacer('payroll'); toast('Respaldo guardado', 'success'); }
+    catch (e) { toast('No se pudo guardar el respaldo', 'error'); }
+    b.disabled = false; b.textContent = 'Respaldar ahora'; rbRender();
+  });
+  setTimeout(() => { try { rbAuto(); } catch (e) {} }, 9000);
+
   // ---- Opciones: nombres de socios + datos de factura (en la nube) ----
   function cargarFormAjustes() {
     ajAplicarRestriccionesRol();
+    try { rbRender(); } catch (e) {}
     if (typeof ajRefrescarPreviewLogo === 'function') ajRefrescarPreviewLogo();
 
     ajSociosEdit = cfgSocios.map((s) => ({ ...s }));
@@ -11613,6 +11968,7 @@
       if (tab.dataset.nsub === 'semanal') nomRenderSemanal();
       if (tab.dataset.nsub === 'historial') nomRenderHist();
       if (tab.dataset.nsub === 'buscar') nomRenderBuscar();
+      if (tab.dataset.nsub === 'resumen') nomRenderResumen();
       if (tab.dataset.nsub === 'trabajadores') nomRenderTrabajadores();
     });
   });
@@ -12229,6 +12585,42 @@
 
     cont.innerHTML = html;
   }
+  // ---- Resumen por trabajador: año, este mes, días y barras por mes ----
+  function nomRenderResumen() {
+    const sel = $('nr-anio'); if (!sel) return;
+    const hoy = nomToday(), anioHoy = hoy.slice(0, 4), mesHoy = hoy.slice(5, 7);
+    const filas = [];
+    nomDocs.forEach((n) => { nomExpandirPagos([n]).forEach((f) => { if (f.fecha) filas.push({ t: (n.trabajador || 'Sin nombre').trim(), f: f.fecha, m: f.monto, d: f.dias }); }); });
+    const anios = [...new Set(filas.map((x) => x.f.slice(0, 4)).concat([anioHoy]))].sort().reverse();
+    const prev = sel.value;
+    sel.innerHTML = anios.map((a) => `<option value="${a}">${a}</option>`).join('');
+    sel.value = anios.includes(prev) ? prev : anioHoy;
+    const anio = sel.value;
+    const por = new Map();
+    filas.filter((x) => x.f.startsWith(anio)).forEach((x) => {
+      const k = x.t.toLowerCase();
+      if (!por.has(k)) por.set(k, { nombre: x.t, total: 0, dias: 0, mes: 0, meses: new Array(12).fill(0) });
+      const g = por.get(k); g.total += x.m; g.dias += x.d;
+      const mi = Number(x.f.slice(5, 7)) - 1; if (mi >= 0 && mi < 12) g.meses[mi] += x.m;
+      if (anio === anioHoy && x.f.slice(5, 7) === mesHoy) g.mes += x.m;
+    });
+    const lista = [...por.values()].sort((a, b) => b.total - a.total);
+    const totalAnio = lista.reduce((t, g) => t + g.total, 0), totalMes = lista.reduce((t, g) => t + g.mes, 0);
+    $('nr-kpis').innerHTML = `
+      <div class="nr-kpi"><span>Pagado en ${anio}</span><b>${nomFmt(totalAnio)}</b></div>
+      <div class="nr-kpi"><span>${anio === anioHoy ? 'Este mes' : 'Trabajadores'}</span><b>${anio === anioHoy ? nomFmt(totalMes) : lista.length}</b></div>`;
+    const MC = ['E', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+    $('nr-lista').innerHTML = lista.length ? lista.map((g) => {
+      const max = Math.max(1, ...g.meses);
+      return `<div class="nr-fila">
+        <div class="nr-top"><span class="nr-nom">${escapeHtml(g.nombre)}</span><span class="nr-tot">${nomFmt(g.total)}</span></div>
+        <div class="nr-sub">${g.dias} día${g.dias === 1 ? '' : 's'} trabajados${anio === anioHoy ? ' · este mes ' + nomFmt(g.mes) : ''}${g.dias ? ' · promedio ' + nomFmt(g.total / g.dias) + '/día' : ''}</div>
+        <div class="nr-barras">${g.meses.map((v, i) => `<div class="nr-b" title="${MESES_CORTOS[i]}: ${nomFmt(v)}"><i style="height:${Math.round(v / max * 34)}px;${v ? '' : 'opacity:.2;'}"></i><em>${MC[i]}</em></div>`).join('')}</div>
+      </div>`;
+    }).join('') : '<div class="gc-empty">No hay pagos de nómina en ese año.</div>';
+  }
+  if ($('nr-anio')) $('nr-anio').addEventListener('change', nomRenderResumen);
+
   $('nom-buscar-persona').addEventListener('input', debounce(nomRenderBuscar, 160));
   $('nom-buscar-intervalo').addEventListener('change', nomRenderBuscar);
 
@@ -14045,7 +14437,7 @@
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="r99-i-comp" ${info.compania ? 'checked' : ''} style="width:18px;height:18px;"> Es compañía</label>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="r99-i-excl" ${info.excluir ? 'checked' : ''} style="width:18px;height:18px;"> No le toca 1099 (ej. yo mismo, corporación)</label>
         </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:10px;"><button type="button" class="gc-save-btn" id="r99-i-guardar">Guardar datos</button></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:10px;"><button type="button" class="gc-action-btn" id="r99-i-hoja">Imprimir hoja 1099</button><button type="button" class="gc-save-btn" id="r99-i-guardar">Guardar datos</button></div>
       </div>` : '<p style="font-size:12.5px;color:var(--ember);margin-top:10px;">Ponle nombre a estos pagos en Cheques o en Zelle y Cash.</p>'}
       <div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border-soft);">
         ${pagos.map((c) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--border-soft);font-size:13px;">
@@ -14061,7 +14453,36 @@
       try { await r99GuardarInfo(); toast('Datos guardados'); } catch (e) { toast('No se pudo guardar', 'error'); return; }
       r99Render(); payResumen();
     });
+    const hj = $('r99-i-hoja');
+    if (hj) hj.addEventListener('click', () => ghImprimirEnVentana(r99HojaHTML(f, anio), '1099 ' + f.nombre + ' ' + anio));
     if (!sinScroll) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  // Hoja de apoyo para el contador: quién paga, a quién, cuánto y cuándo.
+  // (No es el formulario oficial del IRS — trae los datos para llenarlo.)
+  function r99HojaHTML(f, anio) {
+    const info = f.info || {};
+    const pagos = f.pagos.slice().sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+    const met = (c) => c.metodo === 'zelle' ? 'Zelle' : (c.metodo === 'cash' ? 'Cash' : 'Cheque #' + (c.numero || ''));
+    const dir = [info.dir, info.ciudad].filter(Boolean).join(', ');
+    return `<h1>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</h1>
+      ${cfgFacturaDireccion ? `<div class="ps-addr">${escapeHtml(cfgFacturaDireccion)}</div>` : ''}
+      <div class="ps-badge">Pagos a contratista ${anio} — hoja de apoyo para el formulario 1099-NEC</div>
+      <h2>Quien recibió el pago</h2>
+      <table><tbody>
+        <tr><td style="width:34%;">Nombre</td><td><strong>${escapeHtml(f.nombre)}</strong>${info.compania ? ' (compañía)' : ''}</td></tr>
+        <tr><td>Número de taxes (SSN / ITIN / EIN)</td><td>${escapeHtml(info.tin || '— falta —')}</td></tr>
+        <tr><td>Dirección</td><td>${escapeHtml(dir || '— falta —')}</td></tr>
+      </tbody></table>
+      <h2>Total pagado en ${anio}</h2>
+      <table><tbody>
+        <tr><td>Cheques</td><td class="num">${nomFmt(f.cheque)}</td></tr>
+        <tr><td>Zelle</td><td class="num">${nomFmt(f.zelle)}</td></tr>
+        <tr><td>Cash</td><td class="num">${nomFmt(f.cash)}</td></tr>
+      </tbody><tfoot><tr class="ps-total"><td>Total (casilla 1 — compensación a no empleados)</td><td class="num">${nomFmt(f.total)}</td></tr></tfoot></table>
+      <h2>Detalle de pagos</h2>
+      <table><thead><tr><th>Fecha</th><th>Forma de pago</th><th>Nota</th><th class="num">Monto</th></tr></thead>
+        <tbody>${pagos.map((c) => `<tr><td>${escapeHtml(chqFechaUS(c.fecha))}</td><td>${escapeHtml(met(c))}</td><td>${escapeHtml(c.memo || '')}</td><td class="num">${nomFmt(c.monto)}</td></tr>`).join('')}</tbody></table>
+      <div class="ps-addr" style="margin-top:14px;">Documento interno de apoyo. No es el formulario oficial del IRS.</div>`;
   }
   function r99HTML() {
     const { anio, umbral, filas } = r99Datos();
@@ -14080,6 +14501,12 @@
     r99Render(); payResumen();
   });
   $('r99-imprimir').addEventListener('click', () => ghImprimirEnVentana(r99HTML(), '1099 ' + $('r99-anio').value));
+  $('r99-hojas').addEventListener('click', () => {
+    const { anio, filas } = r99Datos();
+    const llevan = filas.filter((f) => f.lleva);
+    if (!llevan.length) { toast('Nadie llega al límite del 1099 todavía', 'info'); return; }
+    ghImprimirEnVentana(llevan.map((f) => `<div class="gh-doc" style="page-break-after:always;">${r99HojaHTML(f, anio)}</div>`).join(''), `Hojas 1099 ${anio} (${llevan.length})`);
+  });
   $('r99-csv').addEventListener('click', () => {
     const { anio, filas } = r99Datos();
     const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
