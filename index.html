@@ -459,6 +459,48 @@
   /* ── CUSTOM CONFIRM MODAL ───────────────── */
   .gc-confirm-overlay { position: fixed; inset: 0; background: rgba(19,28,46,.55); backdrop-filter: blur(4px); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity .16s var(--ease); }
   .gc-confirm-overlay.show { opacity: 1; }
+  /* ===== Payroll ===== */
+  .pay-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .pay-kpi { border: 1px solid var(--border-soft); border-radius: 14px; padding: 12px 14px; background: var(--surface-2); min-width: 0; }
+  .pay-kpi.click { cursor: pointer; }
+  .pay-kpi.click:hover { border-color: var(--accent); }
+  .pay-kpi .l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .pay-kpi .v { font-size: 21px; font-weight: 800; color: var(--ink); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .pay-kpi .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .pay-kpi.alerta .v { color: var(--ember); }
+  .pay-meses { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; align-items: end; height: 96px; }
+  .pay-mes { display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; justify-content: flex-end; min-width: 0; }
+  .pay-mes .b { width: 70%; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent), var(--accent-dk)); min-height: 2px; }
+  .pay-mes .m { font-size: 10px; color: var(--muted); }
+  @media (max-width: 720px) {
+    #chq-tbl, #zc-tbl, #r99-tbl { display: block; width: 100%; }
+    #chq-tbl[style*="none"], #zc-tbl[style*="none"] { display: none !important; }
+    #chq-tbl thead, #zc-tbl thead, #r99-tbl thead { display: none; }
+    #chq-tbl tbody, #zc-tbl tbody, #r99-tbl tbody { display: flex; flex-direction: column; gap: 8px; }
+    #chq-tbl tbody tr, #zc-tbl tbody tr, #r99-tbl tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center;
+      background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 14px; padding: 10px 12px; content-visibility: visible; contain-intrinsic-size: auto; }
+    #chq-tbl tbody td, #zc-tbl tbody td, #r99-tbl tbody td { display: block; padding: 0 !important; border: 0 !important; background: none !important; min-width: 0; }
+    /* cheques y zelle: nombre + cantidad arriba, número/tipo + fecha, memo, botones */
+    #chq-tbl tbody td:nth-child(3), #zc-tbl tbody td:nth-child(3) { grid-column: 1; grid-row: 1; font-weight: 700; font-size: 15px; }
+    #chq-tbl tbody td:nth-child(4), #zc-tbl tbody td:nth-child(4) { grid-column: 2; grid-row: 1; font-size: 16px; text-align: right; }
+    #chq-tbl tbody td:nth-child(1), #zc-tbl tbody td:nth-child(1) { grid-column: 1; grid-row: 2; font-size: 12.5px; }
+    #chq-tbl tbody td:nth-child(1)::before { content: "Cheque #"; color: var(--muted); font-weight: 400; }
+    #chq-tbl tbody td:nth-child(2), #zc-tbl tbody td:nth-child(2) { grid-column: 2; grid-row: 2; font-size: 12.5px; color: var(--muted); text-align: right; }
+    #chq-tbl tbody td:nth-child(5), #zc-tbl tbody td:nth-child(5) { grid-column: 1 / -1; grid-row: 3; }
+    #chq-tbl tbody td:nth-child(6), #zc-tbl tbody td:nth-child(6) { grid-column: 1 / -1; grid-row: 4; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; white-space: normal !important; margin-top: 4px; }
+    /* 1099: nombre + total, luego el desglose */
+    #r99-tbl tbody td:nth-child(1) { grid-column: 1; grid-row: 1; font-size: 15px; }
+    #r99-tbl tbody td:nth-child(5) { grid-column: 2; grid-row: 1; font-size: 16px; text-align: right; }
+    #r99-tbl tbody td:nth-child(2), #r99-tbl tbody td:nth-child(3), #r99-tbl tbody td:nth-child(4) { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); text-align: left !important; display: flex; justify-content: space-between; }
+    #r99-tbl tbody td:nth-child(2)::before { content: "Cheques"; }
+    #r99-tbl tbody td:nth-child(3)::before { content: "Zelle"; }
+    #r99-tbl tbody td:nth-child(4)::before { content: "Cash"; }
+    #r99-tbl tbody td:nth-child(6), #r99-tbl tbody td:nth-child(7) { grid-row: 2; }
+    #r99-tbl tbody td:nth-child(6) { grid-column: 1; }
+    #r99-tbl tbody td:nth-child(7) { grid-column: 2; text-align: right; }
+    #r99-tbl tbody td[colspan] { grid-column: 1 / -1; }
+  }
+
   @media (max-width: 720px) {
     .inv-ed-fila { grid-template-columns: 1fr 1fr !important; }
     .inv-ed-fila > :nth-child(3), .inv-ed-fila > :nth-child(4) { grid-column: 1 / -1; }
@@ -2778,6 +2820,24 @@
 
 <!-- ===== PAYROLL: cheques, Zelle y cash, 1099 ===== -->
 <div class="gc-panel" id="panel-payroll">
+  <div class="gc-card pay-resumen" id="pay-resumen">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <p class="gc-card-title" style="margin:0;">Payroll <span id="pay-res-anio" style="color:var(--muted);font-weight:600;"></span></p>
+      <button type="button" class="gc-action-btn" id="pay-btn-unir" style="padding:7px 12px;font-size:12.5px;">⇄ Unir nombres</button>
+    </div>
+    <div class="pay-kpis" id="pay-kpis"></div>
+    <div id="pay-meses" style="margin-top:14px;"></div>
+    <div id="pay-unir" style="display:none;margin-top:14px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px;background:var(--surface-2);">
+      <p style="font-weight:700;font-size:14px;margin:0 0 4px;">Unir nombres</p>
+      <p class="gh-ayuda" style="font-size:12px;color:var(--muted);margin:0 0 10px;">Marca los nombres que son la misma persona y escribe cómo debe quedar. Se cambia en todos sus cheques, Zelle y cash.</p>
+      <input type="text" id="pay-unir-buscar" placeholder="Buscar nombre…" autocomplete="off" style="width:100%;font-size:14px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--card);color:var(--ink);margin-bottom:8px;">
+      <div id="pay-unir-lista" style="max-height:260px;overflow:auto;border:1px solid var(--border-soft);border-radius:8px;padding:4px 10px;background:var(--card);"></div>
+      <div class="gc-form-row" style="margin-top:10px;grid-template-columns:2fr 1fr;">
+        <div class="gc-field"><label>Debe quedar como</label><input type="text" id="pay-unir-nombre" list="dl-chq-a" autocomplete="off"></div>
+        <div class="gc-field"><label>&nbsp;</label><div style="display:flex;gap:8px;"><button type="button" class="gc-action-btn" id="pay-unir-cancelar">Cancelar</button><button type="button" class="gc-save-btn" id="pay-unir-ok">Unir</button></div></div>
+      </div>
+    </div>
+  </div>
   <div class="inv-subnav">
     <button class="pay-subtab active" data-psub="cheques">Cheques</button>
     <button class="pay-subtab" data-psub="zelle">Zelle y Cash</button>
@@ -2954,7 +3014,7 @@
           <button type="button" class="gc-action-btn" id="r99-csv">⬇ CSV</button>
         </div>
       </div>
-      <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin:0 0 12px;">Suma cheques, Zelle y cash del año (sin los anulados). A quien le pagaste el límite o más por su trabajo normalmente se le hace un 1099-NEC. Para pagos de 2026 el límite es $2,000 (antes era $600). Pregúntale a tu contador por los que son corporación.</p>
+      <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin:0 0 12px;">Suma cheques, Zelle y cash del año (sin los anulados). A quien le pagaste el límite o más por su trabajo normalmente se le hace un 1099-NEC. Para pagos de 2026 el límite es $2,000 (antes era $600). Pregúntale a tu contador por los que son corporación. Toca a una persona para ver sus pagos por mes, guardar sus datos del W-9 o marcar que no le toca 1099.</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;">
         <select id="r99-anio" style="min-width:120px;"></select>
         <label style="font-size:13px;display:flex;align-items:center;gap:6px;">Límite $ <input type="number" id="r99-umbral" step="1" min="0" style="width:110px;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;"></label>
@@ -2963,7 +3023,7 @@
       <div id="r99-resumen" style="margin-bottom:12px;"></div>
       <div style="overflow-x:auto;">
         <table class="inv-list-t" id="r99-tbl">
-          <thead><tr><th>Persona</th><th class="num">Cheques</th><th class="num">Zelle</th><th class="num">Cash</th><th class="num">Total</th><th>1099</th></tr></thead>
+          <thead><tr><th>Persona</th><th class="num">Cheques</th><th class="num">Zelle</th><th class="num">Cash</th><th class="num">Total</th><th>1099</th><th>W-9</th></tr></thead>
           <tbody id="r99-tbody"></tbody>
         </table>
       </div>
@@ -3647,7 +3707,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v144 · 10 oct';
+  const APP_VERSION = 'v145 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -13062,8 +13122,8 @@
     // Total por persona (sin anulados)
     const porPersona = new Map();
     lista.filter((c) => !c.anulado).forEach((c) => {
-      const k = (c.a || '').trim().toLowerCase();
-      if (!porPersona.has(k)) porPersona.set(k, { nombre: (c.a || '').trim() || 'Sin nombre', n: 0, total: 0 });
+      const k = (c.a || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      if (!porPersona.has(k)) porPersona.set(k, { nombre: (c.a || '').replace(/\s+/g, ' ').trim() || 'Sin nombre', n: 0, total: 0 });
       const g = porPersona.get(k); g.n++; g.total += Number(c.monto) || 0;
     });
     const grupos = [...porPersona.values()].sort((a, b) => b.total - a.total);
@@ -13445,6 +13505,8 @@
     if ((window.GH_ROL || 'admin') !== 'admin') { toast('Payroll es solo para el administrador', 'error'); return; }
     await nomAsegurarCargado();
     if (!chqCargado) await chqCargar();
+    await r99CargarInfo();
+    payResumen();
     if (sub === 'cheques') chqRender();
     if (sub === 'zelle') { try { chqLlenarSelectNomina(); } catch (e) {} zcRender(); }
     if (sub === 'r1099') { $('r99-anio').dataset.ok = ''; r99Render(); }
@@ -13542,80 +13604,230 @@
 
 
   // ===================== 1099 =====================
+  // Datos de cada persona para el 1099 (W-9): dirección, número de taxes,
+  // si es compañía y si NO le toca 1099. Clave "__": solo el admin la ve.
+  const R99_INFO_KEY = '__gh-1099-info';
+  let r99Info = {};
+  let r99InfoCargada = false;
+  async function r99CargarInfo() {
+    if (r99InfoCargada) return;
+    try { const r = await window.storage.get(R99_INFO_KEY); const v = JSON.parse(r.value); if (v && typeof v === 'object') r99Info = v; } catch (e) {}
+    r99InfoCargada = true;
+  }
+  async function r99GuardarInfo() { await window.storage.set(R99_INFO_KEY, JSON.stringify(r99Info)); }
+  const r99Clave = (n) => String(n || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
   function r99Datos() {
-    const anio = $('r99-anio').value;
+    const anio = $('r99-anio').value || String(new Date().getFullYear());
     const umbral = Number(chqCfg.umbral1099 != null ? chqCfg.umbral1099 : 2000) || 0;
     const porP = new Map();
-    chqLista.filter((c) => !c.anulado && (!anio || String(c.fecha || '').startsWith(anio))).forEach((c) => {
+    chqLista.filter((c) => !c.anulado && String(c.fecha || '').startsWith(anio)).forEach((c) => {
       const nombre = (c.a || '').trim() || 'Sin nombre';
-      const k = nombre.toLowerCase();
-      if (!porP.has(k)) porP.set(k, { nombre, cheque: 0, zelle: 0, cash: 0, pagos: [] });
+      const k = r99Clave(nombre);
+      if (!porP.has(k)) porP.set(k, { clave: k, nombre, cheque: 0, zelle: 0, cash: 0, pagos: [], meses: new Array(12).fill(0) });
       const g = porP.get(k);
       const m = c.metodo === 'zelle' ? 'zelle' : (c.metodo === 'cash' ? 'cash' : 'cheque');
-      g[m] += Number(c.monto) || 0; g.pagos.push(c);
+      const monto = Number(c.monto) || 0;
+      g[m] += monto; g.pagos.push(c);
+      const mes = Number(String(c.fecha || '').slice(5, 7)) - 1; if (mes >= 0 && mes < 12) g.meses[mes] += monto;
     });
-    const filas = [...porP.values()].map((g) => Object.assign(g, { total: g.cheque + g.zelle + g.cash, lleva: (g.cheque + g.zelle + g.cash) >= umbral }))
-      .sort((a, b) => b.total - a.total);
+    const filas = [...porP.values()].map((g) => {
+      const info = r99Info[g.clave] || {};
+      const total = g.cheque + g.zelle + g.cash;
+      const sinNombre = g.nombre === 'Sin nombre';
+      return Object.assign(g, { total, info, excluido: !!info.excluir, lleva: !sinNombre && !info.excluir && total >= umbral, w9: !!(info.tin && info.dir) });
+    }).sort((a, b) => b.total - a.total);
     return { anio, umbral, filas };
   }
+  function r99LlenarAnios() {
+    const prev = $('r99-anio').value;
+    const anios = [...new Set(chqLista.map((c) => String(c.fecha || '').slice(0, 4)).filter(Boolean).concat([String(new Date().getFullYear())]))].sort().reverse();
+    $('r99-anio').innerHTML = anios.map((a) => `<option value="${a}">${a}</option>`).join('');
+    $('r99-anio').value = anios.includes(prev) ? prev : anios[0];
+  }
   function r99Render() {
-    if (!$('r99-anio').options.length || !$('r99-anio').dataset.ok) {
-      const anios = [...new Set(chqLista.map((c) => String(c.fecha || '').slice(0, 4)).filter(Boolean).concat([String(new Date().getFullYear())]))].sort().reverse();
-      $('r99-anio').innerHTML = anios.map((a) => `<option value="${a}">${a}</option>`).join('');
-      $('r99-anio').dataset.ok = '1';
-    }
+    if (!$('r99-anio').dataset.ok) { r99LlenarAnios(); $('r99-anio').dataset.ok = '1'; }
     $('r99-umbral').value = chqCfg.umbral1099 != null ? chqCfg.umbral1099 : 2000;
     const { anio, umbral, filas } = r99Datos();
     const vis = $('r99-solo').checked ? filas.filter((f) => f.lleva) : filas;
-    const n = filas.filter((f) => f.lleva && f.nombre !== 'Sin nombre').length;
+    const llevan = filas.filter((f) => f.lleva);
+    const faltaW9 = llevan.filter((f) => !f.w9).length;
     const sinNombre = filas.find((f) => f.nombre === 'Sin nombre');
-    $('r99-resumen').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:16px;font-size:13.5px;">
-      <span><strong>${n}</strong> persona${n === 1 ? '' : 's'} con ${nomFmt(umbral)} o más en ${anio}</span>
+    $('r99-resumen').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;">
+      <span><strong>${llevan.length}</strong> llevan 1099 en ${anio} (${nomFmt(umbral)} o más)</span>
+      ${faltaW9 ? `<span style="color:var(--ember);">${faltaW9} sin datos de W-9</span>` : (llevan.length ? '<span style="color:var(--teal);">Todos con W-9 ✓</span>' : '')}
       <span>Total pagado: <strong>${nomFmt(filas.reduce((t, f) => t + f.total, 0))}</strong></span>
-      ${sinNombre ? `<span style="color:var(--ember);">${sinNombre.pagos.length} pago(s) sin nombre (${nomFmt(sinNombre.total)}) — pónselo para que cuente bien</span>` : ''}</div>`;
-    $('r99-tbody').innerHTML = vis.map((f, i) => `<tr class="r99-f" data-i="${filas.indexOf(f)}" style="cursor:pointer;">
-      <td style="font-weight:600;">${escapeHtml(f.nombre)}</td>
+      ${sinNombre ? `<span style="color:var(--ember);">${sinNombre.pagos.length} pago(s) sin nombre (${nomFmt(sinNombre.total)})</span>` : ''}</div>`;
+    $('r99-tbody').innerHTML = vis.map((f) => `<tr class="r99-f" data-k="${escapeHtml(f.clave)}" style="cursor:pointer;${f.excluido ? 'opacity:.6;' : ''}">
+      <td style="font-weight:600;">${escapeHtml(f.nombre)}${f.info.compania ? ' <span style="font-size:11px;color:var(--muted);">(compañía)</span>' : ''}</td>
       <td class="num">${f.cheque ? nomFmt(f.cheque) : '—'}</td>
       <td class="num">${f.zelle ? nomFmt(f.zelle) : '—'}</td>
       <td class="num">${f.cash ? nomFmt(f.cash) : '—'}</td>
       <td class="num" style="font-weight:700;">${nomFmt(f.total)}</td>
-      <td>${f.lleva ? '<span style="font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--accent-bg);color:var(--accent-dk);">Sí</span>' : '<span style="font-size:12px;color:var(--muted);">No</span>'}</td></tr>`).join('')
-      || '<tr><td colspan="6" style="color:var(--muted);padding:12px;">No hay pagos en ese año.</td></tr>';
-    $('r99-detalle').innerHTML = '';
-    $('r99-tbody').querySelectorAll('.r99-f').forEach((tr) => tr.addEventListener('click', () => {
-      const f = filas[Number(tr.dataset.i)];
-      const pagos = f.pagos.slice().sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
-      $('r99-detalle').innerHTML = `<div style="border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;">
-        <div style="font-weight:700;margin-bottom:6px;">${escapeHtml(f.nombre)} · ${anio} · ${nomFmt(f.total)}</div>
-        ${pagos.map((c) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--border-soft);font-size:13px;">
-          <span>${escapeHtml(chqFechaUS(c.fecha))} · ${c.metodo === 'zelle' ? 'Zelle' : (c.metodo === 'cash' ? 'Cash' : 'Cheque #' + escapeHtml(String(c.numero || '')))}</span><span>${nomFmt(c.monto)}</span></div>`).join('')}</div>`;
-      $('r99-detalle').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }));
+      <td>${f.excluido ? '<span style="font-size:11.5px;color:var(--muted);">No le toca</span>' : (f.lleva ? '<span style="font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--accent-bg);color:var(--accent-dk);">Sí</span>' : '<span style="font-size:12px;color:var(--muted);">No</span>')}</td>
+      <td>${f.lleva ? (f.w9 ? '<span style="color:var(--teal);font-weight:700;">✓</span>' : '<span style="color:var(--ember);font-size:12px;font-weight:600;">Falta</span>') : ''}</td></tr>`).join('')
+      || '<tr><td colspan="7" style="color:var(--muted);padding:12px;">No hay pagos en ese año.</td></tr>';
+    $('r99-tbody').querySelectorAll('.r99-f').forEach((tr) => tr.addEventListener('click', () => r99Detalle(tr.dataset.k)));
+    if ($('r99-detalle').dataset.k) r99Detalle($('r99-detalle').dataset.k, true);
+  }
+  function r99Detalle(clave, sinScroll) {
+    const { anio, filas } = r99Datos();
+    const f = filas.find((x) => x.clave === clave);
+    const box = $('r99-detalle');
+    if (!f) { box.innerHTML = ''; box.dataset.k = ''; return; }
+    box.dataset.k = clave;
+    const info = f.info || {};
+    const max = Math.max(1, ...f.meses);
+    const pagos = f.pagos.slice().sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+    const inp = 'width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;background:var(--card);color:var(--ink);';
+    box.innerHTML = `<div style="border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;">
+        <div style="font-weight:800;font-size:16px;">${escapeHtml(f.nombre)}</div>
+        <div style="font-weight:800;font-size:18px;">${nomFmt(f.total)} <span style="font-size:12px;color:var(--muted);font-weight:600;">${anio}</span></div>
+      </div>
+      <div class="pay-meses" style="margin:10px 0 4px;">${f.meses.map((v, i) => `<div class="pay-mes" title="${MESES_CORTOS[i]}: ${nomFmt(v)}"><div class="b" style="height:${Math.round(v / max * 72)}px;${v ? '' : 'opacity:.25;'}"></div><div class="m">${MESES_CORTOS[i]}</div></div>`).join('')}</div>
+      ${f.nombre !== 'Sin nombre' ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-soft);">
+        <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Datos para el 1099 (W-9)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+          <label style="font-size:12px;color:var(--muted);">Número de taxes (SSN, ITIN o EIN)<input type="text" id="r99-i-tin" value="${escapeHtml(info.tin || '')}" autocomplete="off" style="${inp}"></label>
+          <label style="font-size:12px;color:var(--muted);">Dirección<input type="text" id="r99-i-dir" value="${escapeHtml(info.dir || '')}" autocomplete="off" style="${inp}"></label>
+          <label style="font-size:12px;color:var(--muted);">Ciudad, estado y ZIP<input type="text" id="r99-i-ciudad" value="${escapeHtml(info.ciudad || '')}" autocomplete="off" style="${inp}"></label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:13.5px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="r99-i-comp" ${info.compania ? 'checked' : ''} style="width:18px;height:18px;"> Es compañía</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="r99-i-excl" ${info.excluir ? 'checked' : ''} style="width:18px;height:18px;"> No le toca 1099 (ej. yo mismo, corporación)</label>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;"><button type="button" class="gc-save-btn" id="r99-i-guardar">Guardar datos</button></div>
+      </div>` : '<p style="font-size:12.5px;color:var(--ember);margin-top:10px;">Ponle nombre a estos pagos en Cheques o en Zelle y Cash.</p>'}
+      <div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border-soft);">
+        ${pagos.map((c) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--border-soft);font-size:13px;">
+          <span>${escapeHtml(chqFechaUS(c.fecha))} · ${c.metodo === 'zelle' ? 'Zelle' : (c.metodo === 'cash' ? 'Cash' : 'Cheque #' + escapeHtml(String(c.numero || '')))}${c.base ? ` <span style="color:var(--muted);font-size:11.5px;">· ${escapeHtml(c.base)}</span>` : ''}</span><span>${nomFmt(c.monto)}</span></div>`).join('')}
+      </div></div>`;
+    const g = $('r99-i-guardar');
+    if (g) g.addEventListener('click', async () => {
+      r99Info[clave] = Object.assign({}, r99Info[clave] || {}, {
+        nombre: f.nombre,
+        tin: $('r99-i-tin').value.trim(), dir: $('r99-i-dir').value.trim(), ciudad: $('r99-i-ciudad').value.trim(),
+        compania: $('r99-i-comp').checked, excluir: $('r99-i-excl').checked
+      });
+      try { await r99GuardarInfo(); toast('Datos guardados'); } catch (e) { toast('No se pudo guardar', 'error'); return; }
+      r99Render(); payResumen();
+    });
+    if (!sinScroll) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   function r99HTML() {
     const { anio, umbral, filas } = r99Datos();
     const vis = $('r99-solo').checked ? filas.filter((f) => f.lleva) : filas;
     return `<h1>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</h1>
       <div class="ps-addr">Pagos por persona ${anio} (cheques, Zelle y cash) · límite 1099: ${nomFmt(umbral)}</div>
-      <table><thead><tr><th>Persona</th><th class="num">Cheques</th><th class="num">Zelle</th><th class="num">Cash</th><th class="num">Total</th><th>1099</th></tr></thead>
-      <tbody>${vis.map((f) => `<tr><td>${escapeHtml(f.nombre)}</td><td class="num">${nomFmt(f.cheque)}</td><td class="num">${nomFmt(f.zelle)}</td><td class="num">${nomFmt(f.cash)}</td><td class="num"><strong>${nomFmt(f.total)}</strong></td><td>${f.lleva ? 'Sí' : 'No'}</td></tr>`).join('')}</tbody>
-      <tfoot><tr class="ps-total"><td>Total</td><td class="num">${nomFmt(vis.reduce((t, f) => t + f.cheque, 0))}</td><td class="num">${nomFmt(vis.reduce((t, f) => t + f.zelle, 0))}</td><td class="num">${nomFmt(vis.reduce((t, f) => t + f.cash, 0))}</td><td class="num">${nomFmt(vis.reduce((t, f) => t + f.total, 0))}</td><td></td></tr></tfoot></table>`;
+      <table><thead><tr><th>Persona</th><th>Dirección</th><th class="num">Cheques</th><th class="num">Zelle</th><th class="num">Cash</th><th class="num">Total</th><th>1099</th></tr></thead>
+      <tbody>${vis.map((f) => `<tr><td>${escapeHtml(f.nombre)}${f.info.compania ? ' (compañía)' : ''}</td><td>${escapeHtml([f.info.dir, f.info.ciudad].filter(Boolean).join(', '))}</td><td class="num">${nomFmt(f.cheque)}</td><td class="num">${nomFmt(f.zelle)}</td><td class="num">${nomFmt(f.cash)}</td><td class="num"><strong>${nomFmt(f.total)}</strong></td><td>${f.excluido ? 'No le toca' : (f.lleva ? 'Sí' : 'No')}</td></tr>`).join('')}</tbody>
+      <tfoot><tr class="ps-total"><td>Total</td><td></td><td class="num">${nomFmt(vis.reduce((t, f) => t + f.cheque, 0))}</td><td class="num">${nomFmt(vis.reduce((t, f) => t + f.zelle, 0))}</td><td class="num">${nomFmt(vis.reduce((t, f) => t + f.cash, 0))}</td><td class="num">${nomFmt(vis.reduce((t, f) => t + f.total, 0))}</td><td></td></tr></tfoot></table>`;
   }
-  $('r99-anio').addEventListener('change', r99Render);
+  $('r99-anio').addEventListener('change', () => { $('r99-detalle').innerHTML = ''; $('r99-detalle').dataset.k = ''; r99Render(); });
   $('r99-solo').addEventListener('change', r99Render);
   $('r99-umbral').addEventListener('change', async () => {
     chqCfg.umbral1099 = Math.max(0, Number($('r99-umbral').value) || 0);
     try { await chqGuardarCfg(); } catch (e) {}
-    r99Render();
+    r99Render(); payResumen();
   });
   $('r99-imprimir').addEventListener('click', () => ghImprimirEnVentana(r99HTML(), '1099 ' + $('r99-anio').value));
   $('r99-csv').addEventListener('click', () => {
     const { anio, filas } = r99Datos();
-    const q = (v) => '"' + String(v).replace(/"/g, '""') + '"';
-    const csv = ['Persona,Cheques,Zelle,Cash,Total,1099'].concat(filas.map((f) => [q(f.nombre), f.cheque.toFixed(2), f.zelle.toFixed(2), f.cash.toFixed(2), f.total.toFixed(2), f.lleva ? 'Si' : 'No'].join(','))).join('\n');
+    const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = ['Persona,Compania,Numero de taxes,Direccion,Ciudad estado ZIP,Cheques,Zelle,Cash,Total,1099']
+      .concat(filas.map((f) => [q(f.nombre), f.info.compania ? 'Si' : 'No', q(f.info.tin), q(f.info.dir), q(f.info.ciudad),
+        f.cheque.toFixed(2), f.zelle.toFixed(2), f.cash.toFixed(2), f.total.toFixed(2), f.excluido ? 'No le toca' : (f.lleva ? 'Si' : 'No')].join(','))).join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     const a = document.createElement('a'); a.href = url; a.download = `pagos-1099-${anio}.csv`; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
+  });
+
+  // ===================== RESUMEN DE PAYROLL =====================
+  function payResumen() {
+    const anio = String(new Date().getFullYear());
+    const del = chqLista.filter((c) => !c.anulado && String(c.fecha || '').startsWith(anio));
+    const suma = (m) => del.filter((c) => (c.metodo || 'cheque') === m).reduce((t, c) => t + (Number(c.monto) || 0), 0);
+    const tCh = suma('cheque'), tZ = suma('zelle'), tCa = suma('cash');
+    const nCh = del.filter((c) => (c.metodo || 'cheque') === 'cheque').length;
+    const sinNombre = chqLista.filter((c) => !c.anulado && !(c.a || '').trim()).length;
+    let llevan = 0, faltaW9 = 0;
+    try {
+      const prev = $('r99-anio').value; if (!$('r99-anio').options.length) r99LlenarAnios();
+      $('r99-anio').value = anio;
+      const d = r99Datos(); llevan = d.filas.filter((f) => f.lleva).length; faltaW9 = d.filas.filter((f) => f.lleva && !f.w9).length;
+      if (prev) $('r99-anio').value = prev;
+    } catch (e) {}
+    $('pay-res-anio').textContent = anio;
+    $('pay-kpis').innerHTML = `
+      <div class="pay-kpi"><div class="l">Pagado en ${anio}</div><div class="v">${nomFmt(tCh + tZ + tCa)}</div><div class="s">Cheques ${nomFmt(tCh)} · Zelle ${nomFmt(tZ)}${tCa ? ' · Cash ' + nomFmt(tCa) : ''}</div></div>
+      <div class="pay-kpi click" data-ir="cheques"><div class="l">Cheques</div><div class="v">${nCh}</div><div class="s">Próximo: #${chqSiguienteNumero()}</div></div>
+      <div class="pay-kpi click ${sinNombre ? 'alerta' : ''}" data-ir="sin-nombre"><div class="l">Sin nombre</div><div class="v">${sinNombre}</div><div class="s">${sinNombre ? 'Toca para ponérselo' : 'Todo con nombre ✓'}</div></div>
+      <div class="pay-kpi click ${faltaW9 ? 'alerta' : ''}" data-ir="r1099"><div class="l">Llevan 1099</div><div class="v">${llevan}</div><div class="s">${faltaW9 ? faltaW9 + ' sin W-9' : (llevan ? 'Con W-9 ✓' : 'Ninguno todavía')}</div></div>`;
+    $('pay-kpis').querySelectorAll('.pay-kpi.click').forEach((k) => k.addEventListener('click', () => {
+      const ir = k.dataset.ir;
+      if (ir === 'sin-nombre') {
+        const hayCh = chqLista.some((c) => !c.anulado && !(c.a || '').trim() && (c.metodo || 'cheque') === 'cheque');
+        const sub = hayCh ? 'cheques' : 'zelle';
+        payMostrar(sub); payAbrir(sub).then(() => { if (sub === 'cheques') { $('chq-sin-nombre').checked = true; chqRenderLista(); $('chq-tbl').scrollIntoView({ behavior: 'smooth' }); } });
+      } else { payMostrar(ir); payAbrir(ir); }
+    }));
+    const meses = new Array(12).fill(0);
+    del.forEach((c) => { const m = Number(String(c.fecha || '').slice(5, 7)) - 1; if (m >= 0 && m < 12) meses[m] += Number(c.monto) || 0; });
+    const max = Math.max(1, ...meses);
+    $('pay-meses').innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Pagado por mes</div>
+      <div class="pay-meses">${meses.map((v, i) => `<div class="pay-mes" title="${MESES_CORTOS[i]}: ${nomFmt(v)}"><div class="b" style="height:${Math.round(v / max * 72)}px;${v ? '' : 'opacity:.25;'}"></div><div class="m">${MESES_CORTOS[i]}</div></div>`).join('')}</div>`;
+  }
+
+  // ===================== UNIR NOMBRES =====================
+  function payUnirRender() {
+    const q = $('pay-unir-buscar').value.trim().toLowerCase();
+    const marcados = new Set([...document.querySelectorAll('#pay-unir-lista .pu-cb:checked')].map((c) => c.value));
+    const porN = new Map();
+    chqLista.forEach((c) => {
+      const n = (c.a || '').replace(/\s+/g, ' ').trim(); if (!n) return;
+      const k = n.toLowerCase();
+      if (!porN.has(k)) porN.set(k, { k, nombres: new Map(), n: 0, total: 0 });
+      const g = porN.get(k); g.n++; if (!c.anulado) g.total += Number(c.monto) || 0;
+      g.nombres.set(n, (g.nombres.get(n) || 0) + 1);
+    });
+    const lista = [...porN.values()].map((g) => Object.assign(g, { nombre: [...g.nombres.entries()].sort((a, b) => b[1] - a[1])[0][0] }))
+      .filter((g) => !q || g.k.includes(q) || marcados.has(g.k)).sort((a, b) => a.nombre.localeCompare(b.nombre));
+    $('pay-unir-lista').innerHTML = lista.map((g) => `<label style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border-soft);cursor:pointer;font-size:14px;">
+      <input type="checkbox" class="pu-cb" value="${escapeHtml(g.k)}" data-n="${escapeHtml(g.nombre)}" ${marcados.has(g.k) ? 'checked' : ''} style="width:18px;height:18px;">
+      <span style="flex:1;min-width:0;">${escapeHtml(g.nombre)} <span style="font-size:12px;color:var(--muted);">· ${g.n} pago${g.n === 1 ? '' : 's'}</span></span><strong style="white-space:nowrap;">${nomFmt(g.total)}</strong></label>`).join('')
+      || '<div style="color:var(--muted);padding:8px 0;">No hay nombres.</div>';
+    $('pay-unir-lista').querySelectorAll('.pu-cb').forEach((cb) => cb.addEventListener('change', () => {
+      const sel = [...document.querySelectorAll('#pay-unir-lista .pu-cb:checked')];
+      if (sel.length && !$('pay-unir-nombre').value.trim()) $('pay-unir-nombre').value = sel[0].dataset.n;
+    }));
+  }
+  $('pay-btn-unir').addEventListener('click', () => {
+    const box = $('pay-unir');
+    if (box.style.display === 'block') { box.style.display = 'none'; return; }
+    box.style.display = 'block'; $('pay-unir-buscar').value = ''; $('pay-unir-nombre').value = ''; payUnirRender(); $('pay-unir-buscar').focus();
+  });
+  $('pay-unir-buscar').addEventListener('input', payUnirRender);
+  $('pay-unir-cancelar').addEventListener('click', () => { $('pay-unir').style.display = 'none'; });
+  $('pay-unir-ok').addEventListener('click', async () => {
+    const sel = [...document.querySelectorAll('#pay-unir-lista .pu-cb:checked')].map((c) => c.value);
+    const nuevo = $('pay-unir-nombre').value.replace(/\s+/g, ' ').trim();
+    if (sel.length < 1) { toast('Marca los nombres que quieres unir', 'error'); return; }
+    if (!nuevo) { toast('Escribe cómo debe quedar el nombre', 'error'); $('pay-unir-nombre').focus(); return; }
+    const claves = new Set(sel);
+    const afectados = chqLista.filter((c) => claves.has((c.a || '').replace(/\s+/g, ' ').trim().toLowerCase()));
+    if (!await gcConfirm(`¿Cambiar ${afectados.length} pago(s) de ${sel.length} nombre(s) a "${nuevo}"?`, { okText: 'Unir' })) return;
+    afectados.forEach((c) => { c.a = nuevo; });
+    // Los datos del W-9 se pasan al nombre nuevo si este no tiene
+    await r99CargarInfo();
+    const kNuevo = r99Clave(nuevo);
+    sel.forEach((k) => { if (k !== kNuevo && r99Info[k]) { if (!r99Info[kNuevo]) r99Info[kNuevo] = Object.assign({}, r99Info[k], { nombre: nuevo }); delete r99Info[k]; } });
+    try { await chqGuardarLista(); await r99GuardarInfo(); toast(`Listo: ${afectados.length} pago(s) ahora dicen "${nuevo}"`, 'success', 3500); } catch (e) { toast('No se pudo guardar', 'error'); return; }
+    $('pay-unir').style.display = 'none';
+    payResumen();
+    const act = document.querySelector('.pay-subtab.active'); if (act) payAbrir(act.dataset.psub);
   });
 
   // ===================== /ZELLE Y CASH · 1099 =====================
