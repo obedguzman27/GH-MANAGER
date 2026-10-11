@@ -3647,7 +3647,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v143 · 10 oct';
+  const APP_VERSION = 'v144 · 10 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -6903,6 +6903,12 @@
     const cardSocios = $('aj-card-socios'); if (cardSocios) cardSocios.style.display = esAdminGral ? 'block' : 'none';
     const tabDoc = $('aj-subtab-documentacion'); if (tabDoc) tabDoc.style.display = esAdminGral ? '' : 'none';
     const tabAvanzado = $('aj-subtab-avanzado'); if (tabAvanzado) tabAvanzado.style.display = esAdminGral ? '' : 'none';
+    // Payroll (cheques, Zelle/cash, 1099) solo para el admin
+    const tabPay = document.querySelector('.gc-tab[data-tab="payroll"]');
+    if (tabPay) {
+      tabPay.style.display = esAdminGral ? '' : 'none';
+      if (!esAdminGral && tabPay.classList.contains('active')) { const t = document.querySelector('.gc-tab[data-tab="movimientos"]'); if (t) t.click(); }
+    }
     // Datos de factura: visibles para todos, pero solo el admin puede editarlos
     ['aj-factura-nombre', 'aj-direccion-empresa'].forEach((id) => {
       const el = $(id); if (el) el.disabled = !esAdminGral;
@@ -12725,8 +12731,13 @@
   // Imprime en cheques láser de hoja carta con el cheque arriba (8½" x 3½")
   // y dos talones abajo. Las posiciones están en pulgadas desde la esquina
   // de arriba a la izquierda de la hoja; el ajuste en mm mueve todo junto.
-  const CHQ_KEY = 'gh-cheques';
-  const CHQ_CFG_KEY = 'gh-cheques-cfg';
+  // Registro de cheques/Zelle/cash: UNO SOLO para todas las bases de datos.
+  // Las claves que empiezan con "__" no llevan el prefijo de la base y en la
+  // nube solo el admin las puede leer o escribir.
+  const CHQ_KEY = '__gh-cheques';
+  const CHQ_CFG_KEY = '__gh-cheques-cfg';
+  const CHQ_KEY_VIEJO = 'gh-cheques';         // antes: un registro por base
+  const CHQ_CFG_KEY_VIEJO = 'gh-cheques-cfg';
   const CHQ_POS = {
     fecha:  { x: 5.95, y: 1.30 },
     monto:  { x: 7.30, y: 1.30 },
@@ -12768,13 +12779,31 @@
   }
 
   async function chqCargar() {
-    try { const r = await window.storage.get(CHQ_KEY); chqLista = JSON.parse(r.value) || []; } catch (e) { chqLista = []; }
+    let existe = true;
+    try { const r = await window.storage.get(CHQ_KEY); chqLista = JSON.parse(r.value) || []; } catch (e) { chqLista = []; existe = false; }
     try {
       const r = await window.storage.get(CHQ_CFG_KEY);
       const c = JSON.parse(r.value);
       if (c && typeof c === 'object') chqCfg = Object.assign(chqCfg, c);
     } catch (e) {}
+    // Primera vez con el registro compartido: se traen los cheques que había en esta base
+    if (!existe) {
+      try {
+        const r = await window.storage.get(CHQ_KEY_VIEJO);
+        const viejos = JSON.parse(r.value);
+        if (Array.isArray(viejos) && viejos.length) {
+          const base = chqBaseActual();
+          chqLista = viejos.map((c) => Object.assign({ base }, c));
+          try { const rc = await window.storage.get(CHQ_CFG_KEY_VIEJO); const c = JSON.parse(rc.value); if (c && typeof c === 'object') chqCfg = Object.assign(chqCfg, c); } catch (e) {}
+          try { await chqGuardarLista(); await chqGuardarCfg(); } catch (e) {}
+        }
+      } catch (e) {}
+    }
     chqCargado = true;
+  }
+  // Nombre de la base de datos en la que se está trabajando (se guarda en cada pago)
+  function chqBaseActual() {
+    try { return chqNombreBase((typeof window.GH_GET_CUENTA === 'function' && window.GH_GET_CUENTA()) || 'principal'); } catch (e) { return ''; }
   }
   async function chqGuardarLista() { await window.storage.set(CHQ_KEY, JSON.stringify(chqLista)); }
   async function chqGuardarCfg() { await window.storage.set(CHQ_CFG_KEY, JSON.stringify(chqCfg)); }
@@ -13027,7 +13056,7 @@
       if ($('chq-sin-nombre').checked && (c.a || '').trim()) return false;
       if (!q) return true;
       return String(c.numero || '').includes(q) || (c.a || '').toLowerCase().includes(q) || (c.memo || '').toLowerCase().includes(q) ||
-        (c.conf || '').toLowerCase().includes(q) || (esZelle(c) && 'zelle'.includes(q));
+        (c.conf || '').toLowerCase().includes(q) || (c.base || '').toLowerCase().includes(q) || (esZelle(c) && 'zelle'.includes(q));
     }).sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '') || (Number(b.numero) || 0) - (Number(a.numero) || 0));
 
     // Total por persona (sin anulados)
@@ -13060,7 +13089,7 @@
         <td>${escapeHtml(chqFechaUS(c.fecha))}</td>
         <td>${(c.a || '').trim() ? escapeHtml(c.a) : '<span style="color:var(--ember);">Sin nombre</span>'}${c.anulado ? ' <span style="font-size:11px;">(anulado)</span>' : ''}${c.importado ? ' <span style="font-size:11px;color:var(--muted);">(del banco)</span>' : (c.manual ? ' <span style="font-size:11px;color:var(--muted);">(a mano)</span>' : '')}</td>
         <td class="num" style="font-weight:700;">${nomFmt(c.monto)}</td>
-        <td style="font-size:12.5px;color:var(--muted);">${escapeHtml(c.memo || '')}${c.conf ? ` <span style="font-size:11px;">· ${escapeHtml(c.conf)}</span>` : ''}</td>
+        <td style="font-size:12.5px;color:var(--muted);">${escapeHtml(c.memo || '')}${c.conf ? ` <span style="font-size:11px;">· ${escapeHtml(c.conf)}</span>` : ''}${c.base ? `<div style="font-size:11px;">${escapeHtml(c.base)}</div>` : ''}</td>
         <td style="white-space:nowrap;">
           ${esZelle(c) ? '' : `<button class="gc-action-btn chq-reimp" data-id="${escapeHtml(c.id)}" style="padding:4px 10px;font-size:11.5px;">Reimprimir</button>`}
           <button class="gc-action-btn chq-editar" data-id="${escapeHtml(c.id)}" title="Editar" style="padding:4px 10px;font-size:11.5px;margin-left:3px;">✎</button>
@@ -13127,7 +13156,7 @@
       const c = chqLista.find((x) => x.id === chqEditandoId);
       if (c) Object.assign(c, datos);
     } else {
-      chqLista.push(Object.assign({ id: Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7), manual: true, creadoEn: new Date().toISOString() }, datos));
+      chqLista.push(Object.assign({ id: Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7), manual: true, creadoEn: new Date().toISOString(), base: chqBaseActual() }, datos));
     }
     const quien = esZ ? 'Zelle' : `Cheque #${numero}`;
     try { await chqGuardarLista(); toast(chqEditandoId ? `${quien} actualizado` : `${quien} agregado`); } catch (e) { toast('No se pudo guardar', 'error'); return; }
@@ -13342,7 +13371,7 @@
       }
       chqLista.push({ id: Date.now().toString() + '-' + i + '-' + Math.random().toString(36).slice(2, 6), metodo: z ? 'zelle' : 'cheque',
         numero: z ? null : Number(r.numero) || null, conf: r.conf || '', fecha: r.fecha, a: r.a || '', monto, memo: r.memo || '',
-        manual: true, importado: true, creadoEn: new Date().toISOString() });
+        manual: true, importado: true, creadoEn: new Date().toISOString(), base: chqBaseActual() });
       nuevos++;
     });
     try { await chqGuardarLista(); } catch (err) { toast('No se pudo guardar', 'error'); return; }
@@ -13379,6 +13408,7 @@
     }
     c.id = Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7);
     c.creadoEn = new Date().toISOString();
+    c.base = chqBaseActual();
     chqLista.push(c);
     chqCfg.siguiente = c.numero + 1;
     try { await chqGuardarLista(); await chqGuardarCfg(); }
@@ -13412,6 +13442,7 @@
     document.querySelectorAll('.pay-subpanel').forEach((p) => p.classList.toggle('active', p.id === 'pay-sub-' + sub));
   }
   async function payAbrir(sub) {
+    if ((window.GH_ROL || 'admin') !== 'admin') { toast('Payroll es solo para el administrador', 'error'); return; }
     await nomAsegurarCargado();
     if (!chqCargado) await chqCargar();
     if (sub === 'cheques') chqRender();
@@ -13465,7 +13496,7 @@
       <td>${escapeHtml(chqFechaUS(c.fecha))}</td>
       <td>${(c.a || '').trim() ? escapeHtml(c.a) : '<span style="color:var(--ember);">Sin nombre</span>'}</td>
       <td class="num" style="font-weight:700;">${nomFmt(c.monto)}</td>
-      <td style="font-size:12.5px;color:var(--muted);">${escapeHtml(c.memo || '')}${c.conf ? ` <span style="font-size:11px;">· ${escapeHtml(c.conf)}</span>` : ''}</td>
+      <td style="font-size:12.5px;color:var(--muted);">${escapeHtml(c.memo || '')}${c.conf ? ` <span style="font-size:11px;">· ${escapeHtml(c.conf)}</span>` : ''}${c.base ? `<div style="font-size:11px;">${escapeHtml(c.base)}</div>` : ''}</td>
       <td style="white-space:nowrap;"><button class="gc-action-btn zc-ed" data-id="${escapeHtml(c.id)}" style="padding:4px 10px;font-size:11.5px;">✎</button>
         <button class="gc-del zc-del" data-id="${escapeHtml(c.id)}" title="Borrar" style="margin-left:3px;">✕</button></td></tr>`).join('');
     $('zc-tbody').querySelectorAll('.zc-ed').forEach((b) => b.addEventListener('click', () => zcAbrir(chqLista.find((x) => x.id === b.dataset.id))));
@@ -13495,7 +13526,7 @@
     if (!(monto > 0)) { toast('Escribe la cantidad', 'error'); $('zc-monto').focus(); return; }
     const datos = { metodo: $('zc-tipo-f').value, fecha: $('zc-fecha').value || nomToday(), a, monto, memo: $('zc-memo').value.trim(), numero: null };
     if (zcEditandoId) { const c = chqLista.find((x) => x.id === zcEditandoId); if (c) Object.assign(c, datos); }
-    else chqLista.push(Object.assign({ id: Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7), manual: true, creadoEn: new Date().toISOString() }, datos));
+    else chqLista.push(Object.assign({ id: Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7), manual: true, creadoEn: new Date().toISOString(), base: chqBaseActual() }, datos));
     try { await chqGuardarLista(); toast(zcEditandoId ? 'Pago actualizado' : 'Pago agregado'); } catch (e) { toast('No se pudo guardar', 'error'); return; }
     const era = zcEditandoId; zcEditandoId = null;
     if (era) $('zc-form').style.display = 'none';
