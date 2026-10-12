@@ -467,6 +467,17 @@
     if (error) throw error;
   };
 
+  window.GH_ELIMINAR_USUARIO = async (userId) => {
+    await sesionLista;
+    const { error } = await client.rpc('admin_eliminar_usuario', { p_id: userId });
+    if (error) throw new Error(/function|schema cache|does not exist/i.test(error.message || '') ? 'Falta correr el SQL nuevo en Supabase (te lo di en el chat).' : error.message);
+  };
+  window.GH_PONER_CLAVE = async (userId, clave) => {
+    await sesionLista;
+    const { error } = await client.rpc('admin_poner_clave', { p_id: userId, p_clave: clave });
+    if (error) throw new Error(/function|schema cache|does not exist/i.test(error.message || '') ? 'Falta correr el SQL nuevo en Supabase (te lo di en el chat).' : error.message);
+  };
+
   window.storage = {
     get: async (key) => {
       await sesionLista;

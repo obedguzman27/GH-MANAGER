@@ -2208,6 +2208,60 @@
   .gc-card-title, .gc-company { letter-spacing: -.2px; }
   /* Selección de texto con el color de la app */
   ::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+
+  /* ===== v152: Documentación y Usuarios minimalista ===== */
+  #aj-sub-documentacion .inv-subnav { background: transparent; border: 0; box-shadow: none; padding: 0; border-bottom: 1px solid var(--border-soft); border-radius: 0; gap: 4px; }
+  .doc-subtab { flex: 0 0 auto; background: transparent; border: 0 !important; border-bottom: 2px solid transparent !important; border-radius: 0; padding: 10px 14px; color: var(--muted); box-shadow: none !important; }
+  .doc-subtab:hover { background: transparent; color: var(--ink); }
+  .doc-subtab.active { background: transparent !important; color: var(--ink) !important; border-bottom-color: var(--accent) !important; }
+  .emp-toolbar { margin: 18px 0 16px; }
+  .emp-toolbar-title { font-size: 15px !important; font-weight: 700; letter-spacing: -.01em; }
+  .emp-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .emp-card { position: relative; display: flex; flex-direction: column; padding: 16px; border-radius: 14px; box-shadow: none; border: 1px solid var(--border-soft); background: var(--card); }
+  .emp-card:hover { box-shadow: 0 6px 20px rgba(19,28,46,.07); border-color: var(--border); transform: translateY(-1px); }
+  .emp-card-avatar { width: 38px; height: 38px; font-size: 14px; margin-bottom: 14px; background: var(--accent-bg, #EEF1F7); color: var(--accent-dk, var(--ink)); }
+  .emp-card-name { font-family: var(--font-ui, 'Inter', sans-serif); font-size: 14.5px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 2px; }
+  .emp-card-role { font-size: 12px; margin-bottom: 0; }
+  .emp-card-status { position: absolute; top: 16px; right: 16px; font-size: 10.5px; padding: 2px 9px; background: transparent; border: 1px solid var(--border-soft); color: var(--muted); }
+  .emp-card-status.activo { color: #2E7D46; border-color: #CFE8D6; background: #F2FAF4; }
+  .emp-card-status.inactivo { color: #B4531F; border-color: #F1D9CA; background: #FDF6F1; }
+  .emp-card-docs { font-size: 12px; color: var(--muted); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-soft); }
+  .papeles-filtros { gap: 6px; margin-bottom: 16px; }
+  .papeles-filtros .gc-action-btn { border-radius: 999px; padding: 6px 14px; font-size: 12px; background: transparent; }
+  .doc-list { gap: 6px; }
+  .doc-item { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 11px 14px; transition: border-color .15s, box-shadow .15s; }
+  .doc-item:hover { border-color: var(--border); box-shadow: 0 4px 14px rgba(19,28,46,.05); }
+  .doc-name { font-size: 13.5px; font-weight: 600; }
+  .emp-modal { border-radius: 20px; max-width: 600px; }
+  .emp-modal-header { background: var(--card); border-bottom: 1px solid var(--border-soft); padding: 16px 22px; }
+  .emp-modal-title { color: var(--ink); font-family: var(--font-ui, 'Inter', sans-serif); font-weight: 800; font-size: 16px; letter-spacing: -.01em; }
+  .emp-modal-close { color: var(--muted); width: 30px; height: 30px; border-radius: 50%; font-size: 15px; }
+  .emp-modal-close:hover { background: #F0F2F7; color: var(--ink); }
+  .emp-modal-tabs { padding: 0 14px; }
+  .emp-modal-tab { flex: 0 0 auto; padding: 11px 12px; }
+  .emp-field input, .emp-field select, .emp-field textarea { border-radius: 10px; background: #FAFBFD; border-color: var(--border-soft); }
+  .emp-field label { letter-spacing: .4px; font-weight: 600; }
+
+  .us-card { border: 1px solid var(--border-soft); border-radius: 16px; padding: 16px; margin-bottom: 10px; background: var(--card); }
+  .us-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .us-av { width: 38px; height: 38px; border-radius: 50%; background: var(--accent-bg, #EEF1F7); color: var(--accent-dk, var(--ink)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+  .us-nom { font-weight: 700; font-size: 14.5px; letter-spacing: -.01em; word-break: break-word; }
+  .us-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .us-badge { margin-left: auto; font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .us-badge.on { background: #F2FAF4; color: #2E7D46; border: 1px solid #CFE8D6; }
+  .us-badge.off { background: #FDF6F1; color: #B4531F; border: 1px solid #F1D9CA; }
+  .us-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .us-visor { background: #F7F8FB; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; }
+  .us-visor-t { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin-bottom: 2px; }
+  .us-acc { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .us-acc .us-sp { flex: 1; }
+  .us-ghost { background: transparent; border: 1px solid var(--border); color: var(--ink); border-radius: 10px; padding: 8px 13px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .us-ghost:hover { background: #F5F7FC; }
+  .us-del { background: transparent; border: 0; color: #C23B2B; font-size: 12.5px; font-weight: 600; padding: 8px 6px; cursor: pointer; font-family: inherit; }
+  .us-del:hover { text-decoration: underline; }
+  .us-clave { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #F2FAF4; border: 1px solid #CFE8D6; font-size: 13px; }
+  .us-clave code { font-size: 16px; font-weight: 800; letter-spacing: .5px; user-select: all; }
+  @media (max-width: 600px) { .us-grid { grid-template-columns: 1fr; } .us-acc .us-sp { display: none; } }
 </style>
 
 <div id="gc-app">
@@ -2901,7 +2955,7 @@
       <!-- Administrar usuarios -->
       <div class="gc-card" style="margin-top:16px;" id="aj-card-admin">
         <p class="gc-card-title" data-i18n="usuarios_y_a_que_base_de_datos_entran">Usuarios y a qué base de datos entran</p>
-        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige a qué base de datos entra cada usuario, apruébalos y define su rol. <strong>Los usuarios en la misma base de datos ven la misma información.</strong></p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Aprueba usuarios, define su rol y a qué base de datos entran. Los que comparten base de datos ven lo mismo.</p>
         <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
           <button class="gc-action-btn" data-i18n="actualizar_lista" id="aj-btn-refrescar-usuarios">Actualizar lista</button>
         </div>
@@ -4024,7 +4078,7 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
-  const APP_VERSION = 'v151 · 11 oct';
+  const APP_VERSION = 'v152 · 11 oct';
   (function mostrarVersion() {
     const b = document.getElementById('app-version-badge');
     if (b) b.textContent = APP_VERSION;
@@ -7991,13 +8045,17 @@
           ${escapeHtml(c.nombre)}
         </label>`).join('');
       const card = document.createElement('div');
-      card.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;';
+      card.className = 'us-card';
+      const esYo = u.id === window.GH_USER_ID;
+      const inicial = escapeHtml(((u.nombre || '?').trim()[0] || '?').toUpperCase());
+      const rolTxt = { admin: 'Admin', empleado: 'Empleado', visor: 'Visor' }[u.rol] || u.rol;
       card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-          <div style="font-weight:700;">${escapeHtml(u.nombre || '(sin nombre)')}</div>
-          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:3px 8px;border-radius:20px;background:${u.activo ? '#E3F5E8' : '#FBEEE6'};color:${u.activo ? '#2E7D46' : '#C6551E'};">${u.activo ? 'activo' : 'pendiente'}</span>
+        <div class="us-head">
+          <div class="us-av">${inicial}</div>
+          <div><div class="us-nom">${escapeHtml(u.nombre || '(sin nombre)')}${esYo ? ' · tú' : ''}</div><div class="us-sub">${escapeHtml(rolTxt)}</div></div>
+          <span class="us-badge ${u.activo ? 'on' : 'off'}">${u.activo ? 'Activo' : 'Pendiente'}</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="us-grid">
           <div class="gc-field"><label data-i18n="base_de_datos_que_ve">Base de datos que ve</label>
             <select class="admin-cuenta-sel" data-id="${u.id}">${optsHtml}</select>
           </div>
@@ -8009,15 +8067,19 @@
             </select>
           </div>
         </div>
-        <div class="admin-visor-cuentas-wrap" data-id="${u.id}" style="display:${u.rol === 'visor' ? 'block' : 'none'};background:#F5F7FC;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
-          <p style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:2px;">Bases de datos que puede ver (visor)</p>
-          <p style="font-size:11.5px;color:var(--muted);margin-bottom:4px;">Marca las que quieras. Sin ninguna marcada, usa solo la de arriba (como antes).</p>
+        <div class="admin-visor-cuentas-wrap us-visor" data-id="${u.id}" style="display:${u.rol === 'visor' ? 'block' : 'none'};">
+          <p class="us-visor-t">Bases de datos que puede ver</p>
+          <p style="font-size:11.5px;color:var(--muted);margin-bottom:4px;">Marca las que quieras. Sin ninguna marcada, usa solo la de arriba.</p>
           ${checksHtml}
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-          <button class="gc-action-btn admin-toggle-activo" data-id="${u.id}" data-activo="${u.activo ? '1' : '0'}">${u.activo ? 'Desactivar' : 'Aprobar / activar'}</button>
+        <div class="us-acc">
           <button class="gc-save-btn admin-guardar" data-i18n="guardar_cambios" data-id="${u.id}">Guardar cambios</button>
-        </div>`;
+          <button class="us-ghost admin-toggle-activo" data-id="${u.id}" data-activo="${u.activo ? '1' : '0'}">${u.activo ? 'Desactivar' : 'Aprobar / activar'}</button>
+          ${esYo ? '' : `<button class="us-ghost admin-clave" data-id="${u.id}" data-nombre="${escapeHtml(u.nombre || '')}">Nueva contraseña</button>
+          <span class="us-sp"></span>
+          <button class="us-del admin-eliminar" data-id="${u.id}" data-nombre="${escapeHtml(u.nombre || '')}">Eliminar</button>`}
+        </div>
+        <div class="us-clave-out"></div>`;
       cont.appendChild(card);
     });
 
@@ -8056,6 +8118,34 @@
           toast(nuevo ? 'Usuario activado ✓' : 'Usuario desactivado', 'success');
           ajCargarUsuarios();
         } catch (e) { toast('No se pudo cambiar: ' + (e.message || e), 'error', 4000); }
+      });
+    });
+    // Nueva contraseña (no se pueden ver las actuales: están cifradas)
+    cont.querySelectorAll('.admin-clave').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (typeof window.GH_PONER_CLAVE !== 'function') return;
+        if (!await gcConfirm(`¿Poner una contraseña nueva a "${btn.dataset.nombre || 'este usuario'}"? La anterior dejará de funcionar.`, { okText: 'Generar' })) return;
+        const abc = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ', num = '23456789';
+        const rnd = (set, n) => Array.from(crypto.getRandomValues(new Uint32Array(n))).map((x) => set[x % set.length]).join('');
+        const clave = rnd(abc, 6) + rnd(num, 3) + rnd(abc, 1);
+        try {
+          await window.GH_PONER_CLAVE(btn.dataset.id, clave);
+          const out = btn.closest('.us-card').querySelector('.us-clave-out');
+          out.innerHTML = `<div class="us-clave">Contraseña nueva: <code>${escapeHtml(clave)}</code><div style="font-size:11.5px;color:var(--muted);margin-top:4px;">Cópiala y mándasela ahora. Después ya no se puede volver a ver.</div></div>`;
+          try { await navigator.clipboard.writeText(clave); toast('Contraseña copiada ✓', 'success'); } catch (e) { toast('Contraseña cambiada ✓', 'success'); }
+        } catch (e) { toast('No se pudo: ' + (e.message || e), 'error', 5000); }
+      });
+    });
+    // Eliminar usuario
+    cont.querySelectorAll('.admin-eliminar').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (typeof window.GH_ELIMINAR_USUARIO !== 'function') return;
+        if (!await gcConfirm(`¿Eliminar a "${btn.dataset.nombre || 'este usuario'}" para siempre? Ya no podrá entrar. Los datos de la base de datos no se borran.`, { okText: 'Eliminar', danger: true })) return;
+        try {
+          await window.GH_ELIMINAR_USUARIO(btn.dataset.id);
+          toast('Usuario eliminado', 'success');
+          ajCargarUsuarios();
+        } catch (e) { toast('No se pudo eliminar: ' + (e.message || e), 'error', 5000); }
       });
     });
   }
@@ -8899,7 +8989,7 @@
         <p class="emp-card-name">${escapeHtml(empNombreCompleto(emp))}</p>
         <p class="emp-card-role">${[escapeHtml(emp.rol || ''), emp.sueldo ? ('$' + emp.sueldo.toFixed(2) + '/día') : ''].filter(Boolean).join(' · ')}</p>
         <span class="emp-card-status ${emp.estado || 'activo'}">${(emp.estado || 'activo').charAt(0).toUpperCase() + (emp.estado || 'activo').slice(1)}</span>
-        <p class="emp-card-docs">${escapeHtml(emp.tel || '—')}</p>
+        <p class="emp-card-docs">${escapeHtml(emp.tel || 'Sin teléfono')}</p>
       `;
       card.addEventListener('click', () => abrirModalEmpleado(emp.id));
       grid.appendChild(card);
