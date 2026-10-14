@@ -285,5 +285,27 @@ def visor_sin_senal_y_permiso(p, c):
     pg2.click('#visor-btn-guardar-clave'); pg2.wait_for_timeout(800)
     assert not pg2.is_visible('#visor-cambiar-clave-form'), pg2.inner_text('#visor-clave-msg')
 
+@prueba
+def visor_orden_por_frecuencia(p, c):
+    import datetime
+    d = db()
+    hoy = datetime.date.today()
+    chk = json.loads(d['datos_app']['c:prueba::gh-checkin']['valor'])
+    veces = {'Mario Diaz': 9, 'Pedro Lopez': 6, 'Juan Martinez': 3, 'Carlos Ruiz': 1}   # Luis: 0
+    for k in range(1, 12):
+        f = (hoy - datetime.timedelta(days=k)).isoformat()
+        chk[f] = {'v': {n: 1 for n, x in veces.items() if x >= k}}
+    d['datos_app']['c:prueba::gh-checkin']['valor'] = json.dumps(chk)
+    poner_db(d)
+    pg = c.otro(p, usuario='u-visor').pagina(); pg.wait_for_selector('.chk-fila')
+    orden = pg.eval_on_selector_all('.chk-fila', 'els => els.map(e => e.dataset.n)')
+    assert orden == ['Mario Diaz', 'Pedro Lopez', 'Juan Martinez', 'Carlos Ruiz', 'Luis Hernandez'], orden
+    # marcar a Luis hoy NO lo sube (la lista no brinca)
+    pg.click('.chk-fila[data-n="Luis Hernandez"]'); pg.wait_for_timeout(900)
+    assert pg.eval_on_selector_all('.chk-fila', 'els => els.map(e => e.dataset.n)')[-1] == 'Luis Hernandez'
+    pg.click('.vz-vista [data-vista="semana"]'); pg.wait_for_timeout(300)
+    filas = pg.eval_on_selector_all('.vz-tr:not(.vz-th):not(.vz-tf) .vz-tn', 'els => els.map(e => e.title)')
+    assert filas[0] == 'Mario Diaz', filas
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

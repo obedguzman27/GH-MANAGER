@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v202 · prueba';
+  window.GH_APP_VERSION = 'v203 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -11240,6 +11240,21 @@
       (extraDias || [fecha]).forEach((f) => delDia.push(...Object.keys(marcadosDe(f))));
       return [...new Set([...lista, ...nuevos, ...delDia].map(norm).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
     };
+    // Orden: arriba los que más vienen a trabajar, abajo los que menos.
+    // Se cuentan los días que vinieron en las últimas 8 semanas, SIN contar
+    // los días que se están marcando (así la lista no brinca al tocar a alguien).
+    // Si empatan, por nombre.
+    const porFrecuencia = (nombres, excluir) => {
+      const fuera = new Set(excluir || []);
+      const desde = chkSumarDias(hoy, -56);
+      const cuenta = {};
+      Object.keys(d.checkin).forEach((f) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(f) || f < desde || fuera.has(f)) return;
+        const v = (d.checkin[f] || {}).v || {};
+        Object.keys(v).forEach((n) => { if (v[n] === 1) { const k = norm(n); cuenta[k] = (cuenta[k] || 0) + 1; } });
+      });
+      return nombres.slice().sort((a, b) => ((cuenta[b] || 0) - (cuenta[a] || 0)) || a.localeCompare(b, 'es'));
+    };
     // último día anterior (hasta 7 atrás) que tenga check-in, para "Igual que…"
     const diaAnteriorConDatos = () => {
       for (let k = 1; k <= 7; k++) { const f = chkSumarDias(fecha, -k); if (f < minimo) break; if (Object.keys(marcadosDe(f)).length) return f; }
@@ -11320,7 +11335,7 @@
     }
 
     function renderDia() {
-      const nombres = trabajadores();
+      const nombres = porFrecuencia(trabajadores(), [fecha]);
       const reg = d.checkin[fecha] || { v: {} };
       const v = reg.v || {};
       const si = nombres.filter((n) => v[n] === 1).length;
@@ -11367,7 +11382,7 @@
     function renderSemana() {
       const lunes = lunesDe(fecha);
       const fechas = [0, 1, 2, 3, 4, 5, 6].map((k) => chkSumarDias(lunes, k));
-      const nombres = trabajadores(fechas);
+      const nombres = porFrecuencia(trabajadores(fechas), fechas);
       const letras = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
       const marcas = fechas.map((f) => marcadosDe(f));
       const totDia = marcas.map((m) => nombres.filter((n) => m[n] === 1).length);
