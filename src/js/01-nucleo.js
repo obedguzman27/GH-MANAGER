@@ -671,6 +671,8 @@
     const select = $('m-cat');
     select.innerHTML = '';
     const lista = tipoActual === 'ingreso' ? catIngresos : catGastos;
+    // Sin categorías (o todavía cargando): que no quede elegido "+ Nueva categoría…"
+    if (!lista.length) { const o = document.createElement('option'); o.value = ''; o.textContent = 'Elige una categoría…'; select.appendChild(o); }
     lista.forEach((c) => {
       const opt = document.createElement('option');
       opt.value = c; opt.textContent = c;

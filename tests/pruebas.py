@@ -70,6 +70,7 @@ def lectura_fallida_no_borra_todo(p, c):
     a.evaluate('() => { window.FAKE.offline = false; }')
     # guarda un movimiento nuevo con la app (memoria vacía)
     a.click('.gc-tab[data-tab="movimientos"]')
+    a.wait_for_function("() => [...document.querySelectorAll('#m-cat option')].some(o => o.value && o.value !== '__nueva__')", timeout=15000)
     a.evaluate("""() => { document.querySelector('.gc-type-btn[data-type="gasto"]').click(); }""")
     a.fill('#m-monto', '42')
     a.fill('#m-desc', 'Prueba sin señal')
@@ -77,7 +78,7 @@ def lectura_fallida_no_borra_todo(p, c):
     a.wait_for_timeout(1200)
     movs = valor(None, 'c:prueba::movimientos')
     descs = [m.get('desc') for m in movs]
-    assert 'Prueba sin señal' in descs, descs
+    assert 'Prueba sin señal' in descs, (descs, a.inner_text('#status-mov'), a.input_value('#m-cat'), a.evaluate('() => [window.GH_SYNC.info(), [...document.querySelectorAll(".gc-toast-item")].map(x => x.textContent)]'))
     assert len(movs) == 4, descs   # los 3 de antes siguen ahí
 
 @prueba
@@ -252,6 +253,37 @@ def unir_listas_casos(p, c):
     assert r['nombre'] == [{'nombre':'Trim','precio':300},{'nombre':'Gas','precio':75}], r
     assert r['obj'] == {'a':2,'b':3}, r
     assert sorted(r['strs']) == ['w','x','z'], r
+
+@prueba
+def visor_sin_senal_y_permiso(p, c):
+    # 1) abre con señal (guarda copia), marca a alguien
+    v = c.otro(p, usuario='u-visor')
+    pg = v.pagina(); pg.wait_for_selector('.chk-fila')
+    pg.click('.chk-fila[data-n="Mario Diaz"]'); pg.wait_for_timeout(900)
+    pg.close()
+    # 2) abre SIN señal: ve la lista y la marca de antes (copia del teléfono)
+    pg2 = v.ctx.new_page(); pg2.add_init_script('window.__offlineInicial = true;')
+    pg2.goto(URL); pg2.wait_for_selector('.chk-fila', timeout=15000); pg2.wait_for_timeout(500)
+    assert pg2.query_selector('.chk-fila[data-n="Mario Diaz"].es-si'), 'sin señal no muestra lo guardado'
+    assert 'Sin señal' in pg2.inner_text('.vz-hero')
+    # marca otro sin señal → queda pendiente; vuelve la señal → se sube
+    pg2.click('.chk-fila[data-n="Carlos Ruiz"]'); pg2.wait_for_timeout(600)
+    pg2.evaluate("() => { window.FAKE.offline = false; window.dispatchEvent(new Event('online')); }"); pg2.wait_for_timeout(1500)
+    chk = valor(None, 'c:prueba::gh-checkin')
+    dia = [k for k in chk if k[:2] == '20'][0]
+    assert 'Carlos Ruiz' in chk[dia]['v'] and 'Mario Diaz' in chk[dia]['v'], chk
+    # 3) sin permiso: no se queda "pendiente" para siempre
+    pg2.evaluate("() => { window.FAKE.fallarEscrituras = true; }")
+    pg2.click('.chk-fila[data-n="Juan Martinez"]'); pg2.wait_for_timeout(900)
+    assert 'permiso' in pg2.inner_text('.vz-estado'), pg2.inner_text('.vz-estado')
+    assert not pg2.evaluate("() => Object.keys(localStorage).some(k => k.startsWith('gh-chk-pend') && localStorage.getItem(k) !== '[]')")
+    # 4) cambiar contraseña no truena (antes: toast no existía)
+    pg2.evaluate("() => { window.FAKE.fallarEscrituras = false; }")
+    pg2.click('.visor-tab[data-visor-cuenta="__ajustes"]'); pg2.click('#visor-btn-cambiar-clave')
+    pg2.fill('#visor-clave-actual', 'prueba123'); pg2.fill('#visor-clave-nueva', 'nueva123'); pg2.fill('#visor-clave-nueva2', 'nueva123')
+    pg2.evaluate("() => { localStorage.setItem('fake-session', JSON.stringify({ user: { id: 'u-visor', email: 'visor@guzmanhvac.app' } })); }")
+    pg2.click('#visor-btn-guardar-clave'); pg2.wait_for_timeout(800)
+    assert not pg2.is_visible('#visor-cambiar-clave-form'), pg2.inner_text('#visor-clave-msg')
 
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

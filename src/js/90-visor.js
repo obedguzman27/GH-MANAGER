@@ -42,6 +42,12 @@
   // no son accesibles desde aquí.)
   // ============================================================
   const CHK_KEY = 'gh-checkin';
+  const toast = (m, t, d) => { if (window.GH_TOAST) window.GH_TOAST(m, t, d); };
+  // Copia del check-in en el teléfono, para abrir sin señal
+  const CHK_COPIA = (codigo) => 'gh-chk-copia-' + (window.GH_USER_ID || '') + '-' + codigo;
+  function chkCopiaGuardar(codigo, obj) { try { localStorage.setItem(CHK_COPIA(codigo), JSON.stringify(obj)); } catch (e) {} }
+  function chkCopiaLeer(codigo) { try { const v = JSON.parse(localStorage.getItem(CHK_COPIA(codigo)) || 'null'); return v && typeof v === 'object' && !Array.isArray(v) ? v : null; } catch (e) { return null; } }
+  const esSinPermiso = (e) => !!e && (e.code === '42501' || /row-level security|permission denied|permiso/i.test(e.message || ''));
   function escapeHtmlVisor(str) {
     const d = document.createElement('div');
     d.textContent = str == null ? '' : String(str);
@@ -108,12 +114,14 @@
     // 3. Cargar SOLO el check-in de cada base de datos permitida (trae los
     //    nombres de los trabajadores, sin sueldos ni nada más)
     const datosPorCuenta = {};
-    for (const codigo of cuentas) {
-      let checkin = {};
-      try { const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY); checkin = r ? JSON.parse(r) : {}; } catch (e) {}
+    await Promise.all(cuentas.map(async (codigo) => {
+      let checkin = null, sinSenal = false;
+      try { const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY); checkin = r ? JSON.parse(r) : {}; }
+      catch (e) { sinSenal = true; checkin = chkCopiaLeer(codigo); }
       if (!checkin || typeof checkin !== 'object' || Array.isArray(checkin)) checkin = {};
-      datosPorCuenta[codigo] = { nombre: nombreDe(codigo), checkin };
-    }
+      if (!sinSenal) chkCopiaGuardar(codigo, checkin);
+      datosPorCuenta[codigo] = { nombre: nombreDe(codigo), checkin, sinSenal, leidoEn: sinSenal ? null : new Date().toISOString() };
+    }));
 
     construirInterfazVisor(cuentas, datosPorCuenta);
   }
@@ -139,14 +147,15 @@
       const btn = document.createElement('button');
       btn.className = 'gc-tab visor-tab' + (i === 0 ? ' active' : '');
       btn.dataset.visorCuenta = codigo;
-      btn.textContent = datosPorCuenta[codigo].nombre;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>';
+      btn.appendChild(document.createTextNode(datosPorCuenta[codigo].nombre));
       btn.addEventListener('click', () => activarPanelVisor(codigo));
       nav.appendChild(btn);
     });
     const btnAjustes = document.createElement('button');
     btnAjustes.className = 'gc-tab visor-tab';
     btnAjustes.dataset.visorCuenta = '__ajustes';
-    btnAjustes.textContent = 'Ajustes';
+    btnAjustes.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mi cuenta';
     btnAjustes.addEventListener('click', () => activarPanelVisor('__ajustes'));
     nav.appendChild(btnAjustes);
 
@@ -295,7 +304,8 @@
     if (!cont) return;
     const hoy = ghFechaLocal(new Date());
     const minimo = chkSumarDias(hoy, -CHK_MAX_ATRAS);
-    const PEND_KEY = 'gh-chk-pend-' + codigo;   // cambios sin señal (se guardan al volver)
+    const PEND_KEY = 'gh-chk-pend-' + (window.GH_USER_ID || '') + '-' + codigo;   // cambios sin señal (se guardan al volver)
+    try { const viejo = localStorage.getItem('gh-chk-pend-' + codigo); if (viejo && !localStorage.getItem(PEND_KEY)) { localStorage.setItem(PEND_KEY, viejo); } localStorage.removeItem('gh-chk-pend-' + codigo); } catch (e) {}
     let fecha = hoy;
     let vista = 'dia';                // 'dia' | 'semana'
     let filtro = '', chip = 'todos';  // búsqueda y filtro Vinieron / No vinieron
@@ -352,7 +362,10 @@
         return `<button type="button" class="vz-dia${f === fecha && vista === 'dia' ? ' on' : ''}${f === hoy ? ' hoy' : ''}" data-f="${f}" ${off ? 'disabled' : ''} aria-label="${CHK_DIAS[new Date(f + 'T00:00:00').getDay()]} ${Number(f.slice(8))}">
           <span class="l">${l}</span><span class="n">${Number(f.slice(8))}</span><span class="c">${n ? n : ''}</span></button>`;
       }).join('');
-      const sinSenal = pendientes.length ? `<div class="vz-offline">Sin señal · ${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} por guardar</div>` : '';
+      const sinSenal = pendientes.length
+        ? `<div class="vz-offline">Sin señal · ${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} por guardar</div>`
+        : d.sinSenal ? `<div class="vz-offline">Sin señal · viendo lo último guardado</div>`
+        : d.leidoEn ? `<button type="button" class="vz-act" title="Traer lo que marcaron desde otro teléfono">Actualizado ${chkHora(d.leidoEn)} <span aria-hidden="true">⟳</span></button>` : '';
       return `
         <section class="vz-hero">
           <div class="vz-hero-top">
@@ -422,7 +435,7 @@
           <div class="vz-chips" role="tablist">
             <button type="button" data-chip="todos" class="${chip === 'todos' ? 'on' : ''}">Todos <b>${total}</b></button>
             <button type="button" data-chip="si" class="si ${chip === 'si' ? 'on' : ''}">Vinieron <b>${si}</b></button>
-            <button type="button" data-chip="no" class="no ${chip === 'no' ? 'on' : ''}">No vinieron <b>${total - si}</b></button>
+            <button type="button" data-chip="no" class="no ${chip === 'no' ? 'on' : ''}">${si ? 'No vinieron' : 'Sin marcar'} <b>${total - si}</b></button>
           </div>
           <div class="vz-barra" aria-hidden="true"><i style="width:${(pct * 100).toFixed(1)}%"></i></div>
           ${total > 6 ? `<label class="vz-buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" class="vz-q" placeholder="Buscar trabajador" value="${escapeHtmlVisor(filtro)}" autocomplete="off" enterkeyhint="search"></label>` : ''}
@@ -430,7 +443,7 @@
             ${nombres.map((n) => `
               <button type="button" class="chk-fila vz-fila${v[n] === 1 ? ' es-si' : ''}" data-n="${escapeHtmlVisor(n)}" aria-pressed="${v[n] === 1}">
                 <span class="vz-av" style="--c:${vzColor(n)}">${escapeHtmlVisor(vzIniciales(n))}</span>
-                <span class="chk-nom vz-nom">${escapeHtmlVisor(n)}<small>${v[n] === 1 ? 'Vino' : 'No vino'}</small></span>
+                <span class="chk-nom vz-nom">${escapeHtmlVisor(n)}<small>${v[n] === 1 ? 'Vino' : si ? 'No vino' : 'Sin marcar'}</small></span>
                 <span class="vz-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
               </button>`).join('')}
             <div class="vz-sinres" style="display:none;">Nadie aquí.</div>
@@ -456,7 +469,7 @@
         <div class="vz-dia-head">
           <div style="min-width:0;">
             <div class="vz-fecha">Semana del ${prim.getDate()}${prim.getMonth() !== ultimo.getMonth() ? ' de ' + CHK_MESES[prim.getMonth()] : ''} al ${ultimo.getDate()} de ${CHK_MESES[ultimo.getMonth()]}</div>
-            ${htmlEstado(`${totSemana} día${totSemana === 1 ? '' : 's'} trabajados en total · toca para corregir`)}
+            ${htmlEstado(`${totSemana} día${totSemana === 1 ? "" : "s"} trabajado${totSemana === 1 ? "" : "s"} en total · toca para corregir`)}
           </div>
         </div>
         <div class="vz-card vz-sem-card">
@@ -475,7 +488,8 @@
           </div>`
           : `<div class="vz-vacio"><div class="vz-vacio-ic">👷</div><b>Todavía no hay trabajadores</b><span>Agrega al primero aquí abajo.</span></div>`}
           ${htmlAgregar(nombres.length)}
-        </div>`;
+        </div>
+        ${totSemana ? `<button type="button" class="vz-compartir vz-compartir-sem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Compartir la semana</button>` : ''}`;
     }
 
     function render() {
@@ -554,7 +568,8 @@
         const dia = vista === 'semana' ? hoy : fecha;
         guardar({ dia, marcar: { [nombre]: 1 }, nuevo: nombre }, `${escapeHtmlVisor(nombre)} agregado ✓`);
       });
-      on('.vz-compartir', 'click', () => compartir());
+      on('.vz-compartir', 'click', (b) => (b.classList.contains('vz-compartir-sem') ? compartirSemana() : compartir()));
+      on('.vz-act', 'click', async (b) => { b.disabled = true; b.textContent = 'Actualizando…'; await refrescar(true); render(); });
     }
 
     async function compartir() {
@@ -568,6 +583,22 @@
       try {
         if (navigator.share) { await navigator.share({ text: texto }); return; }
       } catch (e) { if (e && e.name === 'AbortError') return; }
+      try { await navigator.clipboard.writeText(texto); estado = 'Copiado — pégalo en WhatsApp'; estadoTipo = 'ok'; }
+      catch (e) { estado = 'No se pudo compartir en este teléfono'; estadoTipo = 'error'; }
+      render();
+    }
+
+    async function compartirSemana() {
+      const lunes = lunesDe(fecha);
+      const fechas = [0, 1, 2, 3, 4, 5, 6].map((k) => chkSumarDias(lunes, k));
+      const nombres = trabajadores(fechas);
+      const ini = new Date(fechas[0] + 'T00:00:00'), fin = new Date(fechas[6] + 'T00:00:00');
+      const lineas = nombres.map((n) => {
+        const dias = fechas.filter((f) => marcadosDe(f)[n] === 1);
+        return dias.length ? `• ${n}: ${dias.length} día${dias.length === 1 ? '' : 's'} (${dias.map(diaCorto).join(', ')})` : '';
+      }).filter(Boolean);
+      const texto = `Check-in ${d.nombre} · semana del ${ini.getDate()}${ini.getMonth() !== fin.getMonth() ? ' de ' + CHK_MESES[ini.getMonth()] : ''} al ${fin.getDate()} de ${CHK_MESES[fin.getMonth()]}\n\n${lineas.join('\n') || '—'}`;
+      try { if (navigator.share) { await navigator.share({ text: texto }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
       try { await navigator.clipboard.writeText(texto); estado = 'Copiado — pégalo en WhatsApp'; estadoTipo = 'ok'; }
       catch (e) { estado = 'No se pudo compartir en este teléfono'; estadoTipo = 'error'; }
       render();
@@ -623,6 +654,7 @@
         try {
           // primero lo que se quedó pendiente sin señal, luego este cambio
           d.checkin = await subir([...pendientes, cambio]);
+          chkCopiaGuardar(codigo, d.checkin); d.sinSenal = false; d.leidoEn = new Date().toISOString();
           enCola = enCola.filter((c) => c !== cambio);
           reaplicarCola();   // lo que tocó mientras se guardaba sigue viéndose
           pendientes = []; guardarPend();
@@ -631,8 +663,15 @@
           if (cambio.nuevo) { agregarAbierto = false; const i = cont.querySelector('.chk-add-in'); if (i) i.value = ''; }
         } catch (e) {
           enCola = enCola.filter((c) => c !== cambio);
-          pendientes.push(cambio); guardarPend();
-          estado = 'Sin señal — se guarda solo cuando vuelva'; estadoTipo = 'aviso';
+          if (esSinPermiso(e)) {
+            // No es falta de señal: el admin quitó el permiso. No se queda
+            // esperando para siempre; se deshace en pantalla y se avisa.
+            try { const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY); d.checkin = r ? JSON.parse(r) : d.checkin; } catch (e2) {}
+            estado = 'No tienes permiso para marcar aquí. Pídele al administrador que te dé acceso.'; estadoTipo = 'error';
+          } else {
+            pendientes.push(cambio); guardarPend();
+            estado = 'Sin señal — se guarda solo cuando vuelva'; estadoTipo = 'aviso';
+          }
           if (cambio.nuevo) agregarAbierto = false;
         }
         agregando = false;
@@ -648,31 +687,37 @@
       cola = cola.then(async () => {
         try {
           d.checkin = await subir(pendientes);
+          chkCopiaGuardar(codigo, d.checkin); d.sinSenal = false; d.leidoEn = new Date().toISOString();
           reaplicarCola();
           pendientes = []; guardarPend();
           estado = 'Ya se guardó lo que tenías pendiente ✓'; estadoTipo = 'ok';
-        } catch (e) {}
+        } catch (e) {
+          if (esSinPermiso(e)) { pendientes = []; guardarPend(); estado = 'No tienes permiso para marcar aquí. Pídele al administrador que te dé acceso.'; estadoTipo = 'error'; }
+        }
         guardando--;
         render();
       });
     }
 
     // Trae lo que otros marcaron desde otro teléfono (al volver a la app y cada minuto)
-    async function refrescar() {
-      if (guardando || pendientes.length || document.hidden) return;
+    async function refrescar(forzado) {
+      if (guardando || pendientes.length || (document.hidden && !forzado)) return;
       try {
         const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY);
         const nuevo = r ? JSON.parse(r) : {};
         if (!nuevo || typeof nuevo !== 'object' || Array.isArray(nuevo)) return;
-        if (JSON.stringify(nuevo) === JSON.stringify(d.checkin)) return;
+        const eraSinSenal = d.sinSenal;
+        d.sinSenal = false; d.leidoEn = new Date().toISOString(); chkCopiaGuardar(codigo, nuevo);
+        const act = cont.querySelector('.vz-act'); if (act && !forzado) act.firstChild.textContent = 'Actualizado ' + chkHora(d.leidoEn) + ' ';
+        if (JSON.stringify(nuevo) === JSON.stringify(d.checkin)) { if (eraSinSenal || forzado) render(); return; }
         if (guardando) return;
         d.checkin = nuevo;
         const activo = document.activeElement;
         if (activo && cont.contains(activo) && /INPUT/.test(activo.tagName)) return; // no estorbar si está escribiendo
         render();
-      } catch (e) {}
+      } catch (e) { if (forzado) { d.sinSenal = true; estado = 'Sin señal — no se pudo actualizar'; estadoTipo = 'aviso'; } }
     }
-    window.addEventListener('online', reintentar);
+    window.addEventListener('online', () => { reintentar(); refrescar(); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { reintentar(); refrescar(); } });
     setInterval(() => { if (pendientes.length) reintentar(); else refrescar(); }, 60000);
 
