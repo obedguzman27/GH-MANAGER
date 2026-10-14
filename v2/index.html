@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <!-- Seguridad: la app solo puede cargar código de ella misma y hablar
+       con su propia base de datos. Si alguien lograra meter un script de otro
+       sitio, el navegador no lo deja correr ni mandar datos afuera. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cubhmlclqovvmsdskooc.supabase.co wss://cubhmlclqovvmsdskooc.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com; frame-src 'self' blob: data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>GH Manager (prueba)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Carlito:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+  <!-- PWA: instalación en iPhone (Compartir → Agregar a pantalla de inicio) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#17181C">
+  <!-- Tema claro/oscuro: se aplica antes de pintar (sin destello). Vive solo en este aparato. -->
+  <script>
+  window.GH_TEMA = (function () {
+    var K = 'gh-tema';
+    var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    function pref() { try { return localStorage.getItem(K) || 'auto'; } catch (e) { return 'auto'; } }
+    function aplicar() {
+      var p = pref();
+      var oscuro = p === 'oscuro' || (p === 'auto' && !!(mq && mq.matches));
+      var r = document.documentElement;
+      if (oscuro) r.setAttribute('data-tema', 'oscuro'); else r.removeAttribute('data-tema');
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', oscuro ? '#141519' : '#17181C');
+      var bs = document.querySelectorAll('[data-tema-opt]');
+      for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tema-opt') === p);
+    }
+    function set(p) { try { localStorage.setItem(K, p); } catch (e) {} aplicar(); }
+    if (mq) { try { mq.addEventListener('change', aplicar); } catch (e) { if (mq.addListener) mq.addListener(aplicar); } }
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-tema-opt]') : null;
+      if (b) set(b.getAttribute('data-tema-opt'));
+    });
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('#gh-tema-btn') : null;
+      if (b) set(document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'claro' : 'oscuro');
+    });
+    document.addEventListener('DOMContentLoaded', aplicar);
+    aplicar();
+    return { aplicar: aplicar, set: set, pref: pref };
+  })();
+  </script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GH Prueba">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+  <link rel="icon" href="icon-192.png?v=2">
+  <link rel="stylesheet" href="app.css?v=gh-manager-v200-prueba">
+</head>
+<body>
+
+<!-- Oculto desde el primer pintado — evita cualquier destello de la app
+     (Inicio con datos reales) mientras se confirma sesión/rol. Se revela
+     por JS al final del archivo (revelarAppNormal quita este bloque),
+     una vez que se sabe qué debe ver cada quien: normal, o la interfaz
+     restringida de visor ya armada (no antes). -->
+<style id="gh-oculto-inicial">
+  nav.gc-nav, .gc-body { display: none !important; }
+</style>
+
+
+<div id="gc-app">
+
+  <!-- HEADER -->
+  <header class="gc-header">
+    <div class="gc-brand">
+      <svg class="gc-logo-badge" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" rx="116" fill="#FFFFFF"/><path d="M212.8 206.1 A65.1 65.1 0 1 0 235.9 260.5" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><path d="M176.8 256.0 H367.7" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><path d="M305.6 190.9 V321.1 M367.7 190.9 V321.1" fill="none" stroke="#121316" stroke-width="25.2" stroke-linecap="round"/><circle cx="406.2" cy="314.5" r="11.1" fill="#E8803A"/></svg>
+      <img id="gc-logo-custom" alt="Logo" style="display:none;width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;">
+      <div class="gc-brand-text">
+        <span class="gc-company">GH Manager</span>
+        <span id="app-version-badge" style="font-size:10px;color:rgba(255,255,255,0.55);font-weight:600;letter-spacing:.3px;"></span>
+      </div>
+    </div>
+    <div class="gc-header-right">
+      <span class="gc-date-badge" id="gc-fecha-actual"></span>
+      <button type="button" class="gh-tema-btn" id="gh-tema-btn" title="Cambiar a modo oscuro / claro" aria-label="Cambiar a modo oscuro o claro">
+        <svg class="sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="luna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- NAV TABS -->
+  <nav class="gc-nav">
+    <button class="gc-tab active" data-tab="movimientos" data-i18n="tab_principal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>Principal</button>
+    <button class="gc-tab" data-tab="facturas" data-i18n="facturas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h12v19l-3-2-3 2-3-2-3 2z"/><path d="M9 7.5h6M9 11.5h6"/></svg>Facturas</button>
+    <button class="gc-tab" data-tab="nomina" data-i18n="nomina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Nómina</button>
+    <button class="gc-tab" data-tab="payroll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 14.5h5M15 10.5h3M6 10.5h2"/></svg>Payroll</button>
+    <button class="gc-tab" data-tab="buscar" data-i18n="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Buscar</button>
+    <button class="gc-tab" data-tab="respaldo" data-i18n="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Ajustes</button>
+  </nav>
+
+  <div class="gc-body">
+
+  <!-- ===== MOVIMIENTOS (hub con carpetas) ===== -->
+  <div class="gc-panel active" id="panel-movimientos">
+    <div class="inv-subnav">
+      <button class="mov-subtab active" data-i18n="sub_registro" data-msub="movs">Registro</button>
+      <button class="mov-subtab" data-i18n="invoices_guardados" data-msub="invoices">Invoices guardados</button>
+      <button class="mov-subtab" data-i18n="categorias" data-msub="categorias">Categorías</button>
+    </div>
+
+    <!-- Carpeta: Movimientos -->
+    <div class="mov-subpanel active" id="mov-sub-movs">
+
+      <!-- Resumen del día: lo primero que ves al abrir la app -->
+      <div class="gh-hero">
+        <div class="gh-hero-top">
+          <div>
+            <div class="gh-hero-saludo" id="gh-hero-saludo">Buen día</div>
+            <div class="gh-hero-fecha" id="gh-hero-fecha"></div>
+            <label class="gh-bd" id="gh-bd" style="display:none;" title="Cambiar de base de datos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+              <span class="gh-bd-pre">Base</span>
+              <span class="gh-bd-lbl" id="gh-bd-nombre">—</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              <select id="gh-bd-select" aria-label="Cambiar de base de datos"></select>
+            </label>
+          </div>
+          <button type="button" class="gh-hero-refresh" id="gh-hero-refresh" title="Actualizar">⟳</button>
+        </div>
+        <div class="gh-hero-tiles">
+          <button type="button" class="gh-tile" id="gh-tile-cobrar">
+            <span class="gh-tile-lbl">Por cobrar</span>
+            <span class="gh-tile-val" id="gh-val-cobrar">—</span>
+            <span class="gh-tile-sub" id="gh-sub-cobrar">facturas pendientes</span>
+          </button>
+          <button type="button" class="gh-tile" id="gh-tile-nomina">
+            <span class="gh-tile-lbl">Nómina</span>
+            <span class="gh-tile-val" id="gh-val-nomina">—</span>
+            <span class="gh-tile-sub" id="gh-sub-nomina">semana pasada</span>
+          </button>
+          <button type="button" class="gh-tile" id="gh-tile-hoy" style="display:none;">
+            <span class="gh-tile-lbl">Hoy</span>
+            <span class="gh-tile-val" id="gh-val-hoy">—</span>
+            <span class="gh-tile-sub" id="gh-sub-hoy">trabajos agendados</span>
+          </button>
+          <button type="button" class="gh-tile" id="gh-tile-semana">
+            <span class="gh-tile-lbl">Neto semana</span>
+            <span class="gh-tile-val" id="gh-val-semana">—</span>
+            <span class="gh-tile-sub">ingresos − gastos</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Resumen con gráfica: semanas o meses (movimientos + invoices guardados) -->
+      <div class="gc-chart-card gh-res" id="gc-chart-semanal-cont">
+        <div class="gh-res-head">
+          <div style="min-width:0;">
+            <p class="gc-card-title">Resumen</p>
+            <div class="gh-res-nav">
+              <button type="button" data-nav="-1" aria-label="Anterior">‹</button>
+              <span id="gh-res-rango"></span>
+              <button type="button" data-nav="1" aria-label="Siguiente">›</button>
+            </div>
+          </div>
+          <div class="gh-res-seg" role="tablist">
+            <button type="button" data-res="sem" class="on">Semanas</button>
+            <button type="button" data-res="mes">Meses del año</button>
+          </div>
+        </div>
+        <div class="gh-res-kpis" id="gh-res-kpis"></div>
+        <div class="gc-chart-svg-wrap" id="gc-chart-semanal"></div>
+        <div class="gh-res-det" id="gh-res-det"></div>
+        <div class="gh-res-leg"><span><i style="background:var(--teal);"></i>Ingresos</span><span><i style="background:var(--ember);"></i>Gastos (con taxas)</span><span><i style="background:var(--ink);border-radius:50%;"></i>Neto</span></div>
+      </div>
+
+      <!-- Stats row - semana actual -->
+      <div class="gc-stats">
+        <div class="gc-stat ing"><div class="gc-stat-icon">↑</div><div><div class="gc-stat-label">Ingresos semana</div><div class="gc-stat-val" id="stat-ing">$0.00</div><div class="gc-stat-delta" id="stat-ing-delta"></div></div></div>
+        <div class="gc-stat gas"><div class="gc-stat-icon">↓</div><div><div class="gc-stat-label">Gastos semana</div><div class="gc-stat-val" id="stat-gas">$0.00</div><div class="gc-stat-delta" id="stat-gas-delta"></div></div></div>
+        <div class="gc-stat net"><div class="gc-stat-icon">≈</div><div><div class="gc-stat-label">Neto semana</div><div class="gc-stat-val" id="stat-net">$0.00</div></div></div>
+        <div class="gc-stat inv"><div class="gc-stat-icon">#</div><div><div class="gc-stat-label">Invoices guardados</div><div class="gc-stat-val" id="stat-inv">0</div></div></div>
+      </div>
+
+      <!-- Gastos por categoría (semana / mes / año) -->
+      <div class="gc-chart-card gh-res" id="gp-cat-card" style="display:none;">
+        <div class="gh-res-head">
+          <div style="min-width:0;">
+            <p class="gc-card-title">A dónde se va el dinero</p>
+            <div class="gh-res-nav">
+              <button type="button" data-gpnav="-1" aria-label="Anterior">‹</button>
+              <span id="gp-rango"></span>
+              <button type="button" data-gpnav="1" aria-label="Siguiente">›</button>
+            </div>
+          </div>
+          <div class="gh-res-seg" role="tablist" id="gp-seg">
+            <button type="button" data-gp="sem" class="on">Semana</button>
+            <button type="button" data-gp="mes">Mes</button>
+            <button type="button" data-gp="anio">Año</button>
+          </div>
+        </div>
+        <div class="gp-total" id="gp-total"></div>
+        <div class="gc-donut-row">
+          <div class="gc-chart-svg-wrap" id="gp-donut" style="max-width:170px;flex-shrink:0;"></div>
+          <div class="gc-donut-legend" id="gp-leyenda" style="flex:1;min-width:200px;"></div>
+        </div>
+      </div>
+
+      <!-- Récords -->
+      <div class="gc-card" id="gh-records" style="display:none;">
+        <div class="gh-rec-head"><p class="gc-card-title">Récords</p><span id="gh-rec-sub"></span></div>
+        <div class="gh-rec-grid" id="gh-rec-grid"></div>
+      </div>
+
+      <!-- Form -->
+      <div class="gc-card">
+        <p class="gc-card-title" data-i18n="agregar_movimiento">Agregar movimiento</p>
+        <div class="gc-type-toggle">
+          <button class="gc-type-btn active" data-i18n="ingreso" data-type="ingreso">↑ Ingreso</button>
+          <button class="gc-type-btn" data-i18n="gasto" data-type="gasto">↓ Gasto</button>
+          <button class="gc-type-btn" data-i18n="ajuste" data-type="ajuste">± Ajuste</button>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin:-4px 0 12px;">
+          <button type="button" class="gc-action-btn" id="mov-nom-abrir">+ Agregar nómina de la semana</button>
+        </div>
+        <div id="mov-nom-panel" style="display:none;margin-bottom:16px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:14px;background:var(--surface-2);">
+          <p style="font-weight:700;font-size:14px;margin:0 0 4px;">Agregar nómina</p>
+          <p class="gh-ayuda" style="font-size:12px;color:var(--muted);margin:0 0 12px;">La nómina se cobra <strong>una sola vez</strong> como gasto. Lo que va a un socio (ej. CRA HVAC) además se le suma como <strong>ajuste</strong>, y ese socio gana su % encima (sale de las taxas). Los trabajadores normales no llevan %. A quién se le paga cada trabajador se escoge en Nómina → Trabajadores.</p>
+          <div class="gc-form-row" style="grid-template-columns:2fr 1fr;">
+            <div class="gc-field"><label>Semana de nómina</label><select id="mov-nom-semana"></select></div>
+            <div class="gc-field"><label>Fecha del movimiento</label><input type="date" id="mov-nom-fecha"></div>
+          </div>
+          <div id="mov-nom-resumen"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:12px;">
+            <button type="button" class="gc-action-btn" id="mov-nom-cerrar">Cerrar</button>
+            <button type="button" class="gc-save-btn" id="mov-nom-agregar">Agregar nómina a movimientos</button>
+          </div>
+        </div>
+        <div id="ajuste-direccion-row" style="display:none;margin-bottom:14px;">
+          <div class="gc-form-row wide" style="margin-bottom:0;">
+            <div class="gc-field"><label>Socio que recibe el ajuste</label>
+              <select id="ajuste-socio-select" style="width:100%;">
+                <option value="">-- Selecciona un socio --</option>
+              </select>
+            </div>
+          </div>
+          <div class="gc-field" style="margin-top:14px;"><label>Tipo de ajuste</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button type="button" class="gc-type-btn ajuste-dir-btn active" data-i18n="sumar" data-dir="sumar">+ Sumar</button>
+              <button type="button" class="gc-type-btn ajuste-dir-btn" data-i18n="restar" data-dir="restar">− Restar</button>
+            </div>
+            <p style="font-size:11.5px;color:var(--muted);margin-top:8px;" id="ajuste-info-text">Al sumar/restar dinero a un socio, también genera tax si ese socio tiene tax activado (igual que con su mitad normal, sale de las taxas). Ej: el socio pagó a un trabajador, compró algo, o le debe algo al otro.</p>
+          </div>
+        </div>
+        <div id="ingreso-semana-row" style="display:none;margin-bottom:14px;">
+          <div class="gc-field"><label data-i18n="que_semana_es_este_ingreso">¿Qué semana es este ingreso?</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button type="button" id="ingreso-semana-prev" class="gc-action-btn" style="padding:8px 14px;">‹</button>
+              <span id="ingreso-semana-label" style="flex:1;text-align:center;font-weight:600;font-size:13.5px;color:var(--ink);"></span>
+              <button type="button" id="ingreso-semana-next" class="gc-action-btn" style="padding:8px 14px;">›</button>
+            </div>
+          </div>
+        </div>
+        <div id="gasto-deducible-row" style="display:none;margin-bottom:14px;">
+          <label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink);cursor:pointer;background:#F5F7FC;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;">
+            <input type="checkbox" id="m-deducible" style="width:17px;height:17px;accent-color:var(--accent);cursor:pointer;">
+            Deducible de impuestos
+          </label>
+        </div>
+        <div class="gc-form-row">
+          <div class="gc-field"><label data-i18n="fecha">Fecha</label><input type="date" id="m-fecha"></div>
+          <div class="gc-field" id="cat-field-wrap"><label data-i18n="categoria">Categoría</label><select id="m-cat"></select></div>
+          <div class="gc-field"><label data-i18n="monto">Monto ($)</label><input type="text" id="m-monto" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>
+        </div>
+        <div id="mov-cat-nueva-row" style="display:none;margin-bottom:14px;">
+          <div class="gc-field"><label data-i18n="nombre_de_la_nueva_categoria">Nombre de la nueva categoría</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="mov-cat-nueva-input" autocomplete="off" style="flex:1;">
+              <button type="button" class="gc-action-btn" data-i18n="cancelar" id="mov-cat-nueva-cancelar">Cancelar</button>
+              <button type="button" class="gc-save-btn" data-i18n="agregar_2" id="mov-cat-nueva-guardar" style="padding:9px 16px;">Agregar</button>
+            </div>
+          </div>
+        </div>
+        <div class="gc-form-row wide">
+          <div class="gc-field"><label data-i18n="descripcion">Descripción</label><input type="text" id="m-desc" list="dl-desc-sugeridas" autocomplete="off"><datalist id="dl-desc-sugeridas"></datalist></div>
+        </div>
+        <div class="gc-btn-row" style="justify-content:flex-end;">
+          <span class="gc-status" id="status-mov"></span>
+          <span class="gc-kbd-hint" title="Presiona Enter para guardar">↵ Enter</span>
+          <button class="gc-action-btn" data-i18n="limpiar" id="btn-limpiar-mov" type="button">Limpiar</button>
+          <button class="gc-save-btn" data-i18n="guardar_movimiento" id="btn-guardar-mov">Guardar movimiento</button>
+        </div>
+      </div>
+
+      <!-- Ledger -->
+      <div class="gc-sheet-head">
+        <p class="gc-sheet-title">Hoja de movimientos — por semana</p>
+        <div class="gc-sheet-actions">
+          <button class="gc-save-btn" data-i18n="guardar_invoice" id="btn-guardar-invoice-top" style="padding:8px 16px;">Guardar invoice</button>
+          <button class="gc-action-btn" data-i18n="imprimir" id="btn-imprimir">Imprimir</button>
+          <button class="gc-action-btn" data-i18n="csv" id="btn-export">⬇ CSV</button>
+        </div>
+      </div>
+      <div id="ledger-cont">
+        <table class="gc-ledger" id="gc-ledger">
+          <thead><tr>
+            <th data-i18n="fecha">Fecha</th><th data-i18n="tipo">Tipo</th><th data-i18n="categoria">Categoría</th><th data-i18n="descripcion">Descripción</th><th class="num" data-i18n="h_monto">Monto</th><th></th>
+          </tr></thead>
+          <tbody id="tbody-mov"></tbody>
+        </table>
+        <div id="mov-sel-host"></div>
+        <div class="gc-empty" id="empty-mov" style="display:none;">Aún no hay movimientos.</div>
+        <div id="mov-ver-mas-row" style="display:none;text-align:center;padding:14px;">
+          <button type="button" class="gc-action-btn" id="mov-ver-mas-btn"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carpeta: Invoices guardados (antes "Registro") -->
+    <div class="mov-subpanel" id="mov-sub-invoices">
+      <div class="gc-note gh-ayuda"><strong>Registro de invoices guardados.</strong> Aquí solo aparecen las semanas que ya guardaste como invoice desde Movimientos. Cada uno muestra cómo se repartió esa semana. Usa "Ver" para el detalle o "Editar" para reabrirlo.</div>
+      <div class="gc-card" style="margin-top:8px;">
+        <p class="gc-card-title" data-i18n="invoices_guardados">Invoices guardados</p>
+        <div id="reg-sel-host"></div>
+        <div class="gc-empty" id="empty-invoices-guardados" style="display:none;">No hay invoices guardados. Ve a Movimientos y guarda una semana.</div>
+        <div style="overflow-x:auto;">
+          <table class="gc-inv-table" id="tabla-invoices-guardados" style="display:none;">
+            <thead><tr id="tabla-invoices-thead-row">
+              <th data-i18n="h_semana">Semana</th><th data-i18n="h_guardado">Guardado</th><th class="num" data-i18n="h_gastos">Gastos</th><th></th>
+            </tr></thead>
+            <tbody id="tbody-invoices-guardados"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="reparto-semanas" style="display:none;"></div>
+      <div class="gc-empty" id="empty-reparto" style="display:none;"></div>
+    </div>
+
+    <!-- Carpeta: Categorías (antes en Ajustes) -->
+    <div class="mov-subpanel" id="mov-sub-categorias">
+      <div class="gc-two-col gl-dos">
+        <div class="gc-card gl-card">
+          <p class="gc-card-title"><span class="gl-ico g">↓</span>Categorías de gastos</p>
+          <div class="gl-add"><input type="text" id="cat-gasto-nueva" placeholder="Nueva categoría de gasto" autocomplete="off"><button type="button" class="gc-save-btn" id="btn-agregar-gasto">+ Agregar</button></div>
+          <div id="lista-gastos"></div>
+        </div>
+        <div class="gc-card gl-card">
+          <p class="gc-card-title"><span class="gl-ico i">↑</span>Categorías de ingresos</p>
+          <div class="gl-add"><input type="text" id="cat-ingreso-nueva" placeholder="Nueva categoría de ingreso" autocomplete="off"><button type="button" class="gc-save-btn" id="btn-agregar-ingreso">+ Agregar</button></div>
+          <div id="lista-ingresos"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BUSCAR / ANUAL ===== -->
+  <div class="gc-panel" id="panel-buscar">
+
+    <!-- Buscador (arriba: es lo primero que se usa en esta pantalla) -->
+    <div class="gc-card" style="margin-bottom:24px;">
+      <p class="gc-card-title" style="margin-bottom:14px;">Buscar</p>
+    <div class="bq-chips" id="bq-chips">
+      <button type="button" data-bq="hoy">Hoy</button>
+      <button type="button" data-bq="semana">Esta semana</button>
+      <button type="button" data-bq="mes">Este mes</button>
+      <button type="button" data-bq="mespasado">Mes pasado</button>
+      <button type="button" data-bq="30">30 días</button>
+      <button type="button" data-bq="anio">Este año</button>
+      <span class="bq-sep"></span>
+      <button type="button" data-bqt="ingreso">Ingresos</button>
+      <button type="button" data-bqt="gasto">Gastos</button>
+      <button type="button" data-bq="todo" class="bq-limpia">Quitar filtros</button>
+    </div>
+    <div class="gc-search-bar">
+      <div class="gc-field" style="min-width:140px;"><label data-i18n="ano">Año</label><select id="b-anio"><option value="todos" data-i18n="todos_los_anos">Todos los años</option></select></div>
+      <div class="gc-field" style="flex:1;"><label data-i18n="buscar_en_tiempo_real">Buscar en tiempo real</label><input type="text" id="b-texto" placeholder="Categoría, descripción o monto…"></div>
+    </div>
+    <div class="gc-search-bar" style="margin-top:10px;">
+      <div class="gc-field" style="min-width:130px;"><label data-i18n="desde_opcional">Desde (opcional)</label><input type="date" id="b-desde"></div>
+      <div class="gc-field" style="min-width:130px;"><label data-i18n="hasta_opcional">Hasta (opcional)</label><input type="date" id="b-hasta"></div>
+      <div class="gc-field" style="min-width:130px;"><label data-i18n="tipo">Tipo</label>
+        <select id="b-tipo">
+          <option value="todos" data-i18n="todos">Todos</option>
+          <option value="ingreso" data-i18n="solo_ingresos">Solo ingresos</option>
+          <option value="gasto" data-i18n="solo_gastos">Solo gastos</option>
+          <option value="ajuste" data-i18n="solo_ajustes">Solo ajustes</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="button" class="gc-action-btn" data-i18n="limpiar_fechas" id="b-limpiar-fechas">Limpiar fechas</button>
+      </div>
+    </div>
+    <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin:6px 2px 0;">Si eliges fechas, mandan sobre el filtro de "Año".</p>
+      <div class="gc-search-bar" style="margin-top:10px;">
+        <div class="gc-field" style="min-width:120px;"><label>Monto desde</label><input type="text" id="b-min" inputmode="decimal" placeholder="0"></div>
+        <div class="gc-field" style="min-width:120px;"><label>Monto hasta</label><input type="text" id="b-max" inputmode="decimal" placeholder="sin límite"></div>
+        <div class="gc-field" style="min-width:150px;"><label>Ordenar por</label>
+          <select id="b-orden">
+            <option value="fecha-desc">Fecha (más nueva)</option>
+            <option value="fecha-asc">Fecha (más vieja)</option>
+            <option value="monto-desc">Monto (mayor)</option>
+            <option value="monto-asc">Monto (menor)</option>
+            <option value="cat">Categoría (A-Z)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;">
+        <span style="flex:1;"></span>
+        <button type="button" class="gc-action-btn" id="b-exportar" style="padding:7px 13px;font-size:12px;">⬇ Exportar resultados</button>
+        <button type="button" class="gc-action-btn" id="b-limpiar-todo" style="padding:7px 13px;font-size:12px;">Limpiar todo</button>
+      </div>
+      <div id="b-resumen-resultados" style="display:none;margin-top:14px;padding:12px 15px;background:#F5F7FC;border-radius:var(--r-sm);font-size:12.5px;color:var(--ink);"></div>
+    </div>
+
+    <!-- Resultados en el resto de la app (clientes, facturas, trabajos, planos…) -->
+    <div class="gc-card" id="b-global-card" style="margin-bottom:24px;display:none;">
+      <p class="gc-card-title" style="margin-bottom:6px;">También encontrado en la app</p>
+      <p class="gh-ayuda" style="font-size:12px;color:var(--muted);margin-bottom:14px;">Coincidencias fuera de Movimientos: facturas, clientes, colonias y nómina.</p>
+      <div id="b-global-lista"></div>
+    </div>
+
+    <!-- Gráfica: en qué se va el dinero (gastos por categoría) -->
+    <div class="gc-chart-card" id="gc-chart-cat-cont" style="display:none;">
+      <div class="gc-chart-head">
+        <p class="gc-card-title" data-i18n="en_que_se_va_el_dinero_gastos_por_catego" style="margin-bottom:0;">En qué se va el dinero — gastos por categoría</p>
+      </div>
+      <div class="gc-donut-row">
+        <div class="gc-chart-svg-wrap" id="gc-donut-svg" style="max-width:180px;flex-shrink:0;"></div>
+        <div class="gc-donut-legend" id="gc-donut-legend"></div>
+      </div>
+    </div>
+
+    <div class="gc-two-col" id="b-resultados">
+      <div>
+        <div class="gc-sheet-head"><p class="gc-sheet-title">Resumen por categoría</p></div>
+        <table class="gc-ledger">
+          <thead><tr><th data-i18n="categoria">Categoría</th><th data-i18n="tipo">Tipo</th><th data-i18n="h_movs">Movs.</th><th class="num" data-i18n="h_total">Total</th></tr></thead>
+          <tbody id="tbody-resumen-cat"></tbody>
+        </table>
+        <div class="gc-empty" id="empty-resumen-cat" style="display:none;">Sin resultados.</div>
+      </div>
+      <div>
+        <div class="gc-sheet-head"><p class="gc-sheet-title">Detalle</p></div>
+        <table class="gc-ledger">
+          <thead><tr><th data-i18n="fecha">Fecha</th><th data-i18n="tipo">Tipo</th><th data-i18n="categoria">Categoría</th><th data-i18n="descripcion">Descripción</th><th class="num" data-i18n="h_monto">Monto</th></tr></thead>
+          <tbody id="tbody-buscar"></tbody>
+          <tfoot><tr><td colspan="4" style="text-align:right;font-weight:600;padding:10px;">Total</td><td class="num gc-num" id="total-buscar" style="font-weight:700;padding:10px;font-family:'IBM Plex Mono',monospace;">$0.00</td></tr></tfoot>
+        </table>
+        <div class="gc-empty" id="empty-buscar" style="display:none;">Sin movimientos que coincidan.</div>
+      </div>
+    </div>
+
+    <!-- Total pagado por socio -->
+    <div class="gc-card" style="margin-bottom:24px;" id="card-total-socios">
+      <p class="gc-card-title" data-i18n="total_pagado_por_socio">Total pagado por socio</p>
+      <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">Suma de todos los invoices guardados del año seleccionado arriba ↓ (usa el mismo filtro de año que la tabla de abajo).</p>
+      <div id="total-socios-lista" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;"></div>
+      <div class="gc-empty" id="empty-total-socios" style="display:none;">No hay invoices guardados aún.</div>
+    </div>
+
+    <!-- Resumen anual de Taxas y reparto -->
+    <div class="gc-card" style="margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <p class="gc-card-title" data-i18n="resumen_anual_taxas_y_pago_por_socio" style="margin:0;">Resumen anual — Taxas y pago por socio</p>
+        <select id="taxas-anio-filtro" style="font-family:'Inter',sans-serif;font-size:13px;padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);">
+          <option value="todos" data-i18n="todos_los_anos">Todos los años</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="gc-ledger" id="tabla-taxas-resumen">
+          <thead><tr>
+            <th data-i18n="h_semana_invoice">Semana / Invoice</th>
+            <th class="num" data-i18n="h_ingresos">Ingresos</th>
+            <th class="num" data-i18n="h_gastos">Gastos</th>
+            <th class="num" data-i18n="h_neto">Neto</th>
+            <th class="num" data-i18n="h_taxas_10">Taxas (10%)</th>
+            <th class="num" data-i18n="h_tax_total">Tax total</th>
+            <th class="num" style="background:#FBF0D4;color:var(--gold);" data-i18n="h_taxas_restantes">Taxas Restantes</th>
+          </tr></thead>
+          <tbody id="tbody-taxas-resumen"></tbody>
+          <tfoot id="tfoot-taxas-resumen"></tfoot>
+        </table>
+        <div class="gc-empty" id="empty-taxas-resumen" style="display:none;">No hay invoices guardados aún.</div>
+      </div>
+    </div>
+
+
+
+
+  </div>
+
+  <!-- (Categorías, Empleados y Papeles ahora viven dentro de Ajustes) -->
+
+  <!-- ===== AJUSTES ===== -->
+  <div class="gc-panel" id="panel-respaldo">
+    <div class="inv-subnav">
+      <button class="aj-subtab active" data-i18n="general" data-asub="general">General</button>
+      <button class="aj-subtab" data-i18n="documentacion" data-asub="documentacion" id="aj-subtab-documentacion">Documentación</button>
+      <button class="aj-subtab" data-i18n="avanzado" data-asub="avanzado" id="aj-subtab-avanzado">Avanzado</button>
+    </div>
+
+    <!-- General: respaldo + opciones -->
+    <div class="aj-subpanel active" id="aj-sub-general">
+      <div class="gc-note gh-ayuda">Tus datos se guardan y sincronizan <strong>en la nube</strong> automáticamente con tu usuario. Aquí puedes descargar un respaldo extra (.json) en cualquier momento.</div>
+      <div class="gc-resp-grid">
+        <div class="gc-card">
+          <p class="gc-card-title" data-i18n="descargar_respaldo">Descargar respaldo</p>
+          <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Descarga un archivo .json con TODA tu información: movimientos, categorías, invoices, empleados, papeles, facturas y nómina (pagos, trabajadores y recibos semanales).</p>
+          <button class="gc-save-btn" data-i18n="descargar_respaldo_completo" id="btn-descargar-respaldo">Descargar respaldo completo</button>
+          <p id="ultimo-respaldo-info" style="font-size:11.5px;color:var(--muted);margin-top:10px;"></p>
+        </div>
+        <div class="gc-card">
+          <p class="gc-card-title" data-i18n="restaurar_respaldo">Restaurar respaldo</p>
+          <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Selecciona un archivo .json descargado antes. Esto reemplaza los datos actuales.</p>
+          <input type="file" id="input-restaurar-respaldo" accept="application/json">
+          <p id="status-restaurar" style="font-size:11.5px;color:var(--muted);margin-top:10px;"></p>
+        </div>
+      </div>
+
+      <!-- Mi cuenta -->
+      <div class="gc-card" style="margin-top:16px;" id="aj-card-cuenta">
+        <p class="gc-card-title" data-i18n="mi_cuenta">Mi cuenta</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Conectado como <strong id="aj-cuenta-nombre">—</strong> <span id="aj-cuenta-rol" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);"></span></p>
+
+        <div id="aj-cambiar-clave-wrap" style="display:none;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border-soft);">
+          <button type="button" class="gc-action-btn" id="btn-abrir-cambiar-clave" style="margin-bottom:0;">Cambiar contraseña</button>
+          <div id="aj-cambiar-clave-form" style="display:none;margin-top:14px;max-width:340px;">
+            <div class="gc-field" style="margin-bottom:10px;"><label>Contraseña actual</label>
+              <input type="password" id="aj-clave-actual" autocomplete="current-password"></div>
+            <div class="gc-field" style="margin-bottom:6px;"><label>Contraseña nueva</label>
+              <input type="password" id="aj-clave-nueva" autocomplete="new-password"></div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Al menos 6 caracteres, con letras y números.</p>
+            <div class="gc-field" style="margin-bottom:12px;"><label>Repite la contraseña nueva</label>
+              <input type="password" id="aj-clave-nueva2" autocomplete="new-password"></div>
+            <div id="aj-clave-msg" style="font-size:12.5px;min-height:16px;margin-bottom:10px;"></div>
+            <div style="display:flex;gap:10px;">
+              <button type="button" class="gc-save-btn" id="btn-guardar-clave" style="padding:9px 18px;font-size:13px;">Guardar</button>
+              <button type="button" class="gc-action-btn" id="btn-cancelar-clave" style="padding:9px 18px;font-size:13px;">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="gc-action-btn" data-i18n="cerrar_sesion" id="btn-cerrar-sesion" style="display:none;">Cerrar sesión</button>
+      </div>
+
+      <!-- Bases de datos con nombre (solo admin) -->
+      <!-- Info de la app -->
+      <div class="gc-card" style="margin-top:16px;">
+        <p class="gc-card-title" data-i18n="acerca_de">Acerca de</p>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7;">
+          <strong>GH Manager</strong> — Sistema de cuentas, facturas y nómina.<br>
+          Tus datos se sincronizan en la nube y están disponibles en todos tus dispositivos con tu usuario. Aun así, puedes descargar un respaldo cuando quieras.
+          <br><span style="font-size:11px;color:var(--muted);">Versión <span id="app-version-acerca"></span></span>
+        </p>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-soft);">
+          <button type="button" class="gc-action-btn" data-i18n="buscar_actualizacion_ahora" id="btn-forzar-actualizacion">Buscar actualización ahora</button>
+          <p id="forzar-act-status" style="font-size:12px;color:var(--muted);margin-top:8px;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avanzado (solo admin) -->
+    <div class="aj-subpanel" id="aj-sub-avanzado">
+      <div class="gc-note gh-ayuda">Esta sección solo la ve el <strong>admin</strong> — configuración sensible del negocio, no del día a día.</div>
+
+      <!-- Name of Company -->
+      <div class="gc-card" style="margin-top:16px;">
+        <p class="gc-card-title">Name of Company</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Estos datos salen en <strong>todas</strong> las facturas, los invoices de Registro y los recibos de nómina. Se guardan en la nube.</p>
+        <p id="aj-factura-solo-admin-nota" style="display:none;font-size:12px;color:var(--muted);background:#F5F7FC;border-radius:8px;padding:8px 12px;margin-bottom:12px;">Solo el admin puede cambiar estos datos.</p>
+        <div class="gc-field" style="margin-bottom:12px;" id="aj-factura-nombre-wrap"><label>Nombre de la empresa</label>
+          <input type="text" id="aj-factura-nombre" placeholder="Nombre de tu compañía" autocomplete="off">
+        </div>
+        <div class="gc-field"><label>Dirección de la empresa</label>
+          <input type="text" id="aj-direccion-empresa" placeholder="Calle, ciudad, estado, ZIP" autocomplete="off">
+        </div>
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border-soft);">
+          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:block;margin-bottom:8px;">Logo para las facturas</label>
+          <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">Este logo sale en las facturas y recibos que ve el cliente. Es <strong>aparte</strong> del logo de la app (GH Manager), que no cambia. Si no subes ninguno, la factura sale solo con el nombre.</p>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <img id="aj-logo-preview" alt="" style="display:none;width:46px;height:46px;border-radius:12px;object-fit:cover;border:1px solid var(--border);">
+            <input type="file" id="aj-logo-input" accept="image/*" style="max-width:220px;">
+            <button type="button" class="gc-action-btn" data-i18n="quitar_logo" id="aj-logo-quitar" style="display:none;">Quitar logo</button>
+          </div>
+          <p id="aj-logo-status" style="font-size:11.5px;color:var(--muted);margin-top:8px;"></p>
+          <label class="aj-check" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:10px;">
+            <input type="checkbox" id="aj-logo-app" style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;">
+            <span style="font-size:13.5px;color:var(--ink);">Usar mi logo también arriba en la app</span>
+          </label>
+        </div>
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--border-soft);">
+          <label style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:block;margin-bottom:10px;">Colores de las facturas y recibos</label>
+          <div class="fc-sws" id="fc-sws"></div>
+          <div class="fc-custom" id="fc-custom">
+            <label>Principal <input type="color" id="fc-p" value="#0E1830"></label>
+            <label>Detalle <input type="color" id="fc-a" value="#C2611B"></label>
+          </div>
+          <div class="fc-prev gh-papel" id="fc-prev" aria-hidden="true">
+            <div class="fc-prev-top"><b id="fc-prev-nom">GUZMAN HVAC</b><span>INVOICE</span></div>
+            <div class="fc-prev-bar"></div>
+            <div class="fc-prev-th"></div>
+            <div class="fc-prev-row"></div><div class="fc-prev-row"></div>
+            <div class="fc-prev-tot">TOTAL <span>$1,250.00</span></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+          <button class="gc-save-btn" id="aj-btn-guardar-factura">Guardar datos de la empresa</button>
+        </div>
+      </div>
+
+      <!-- Completion Sheets -->
+      <div class="gc-card" style="margin-top:16px;">
+        <p class="gc-card-title">Completion Sheets</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Muestra la carpeta <strong>Completion Sheets</strong> (Rough-In, Trim-Out y Pull Sheet de American Heating &amp; Cooling) dentro de Facturas. Se guarda para la base de datos que estás viendo.</p>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="aj-cs-toggle" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
+          <span style="font-size:13.5px;color:var(--ink);">Activar Completion Sheets</span>
+        </label>
+      </div>
+
+      <!-- Idioma -->
+      <div class="gc-card" style="margin-top:16px;">
+        <p class="gc-card-title">Idioma / Language</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Cambia el idioma de los menús, títulos y botones de la app en este teléfono. / Changes the app's menus, titles and buttons on this phone.</p>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="gc-action-btn gh-lang-btn" data-lang="es" style="flex:1;">Español</button>
+          <button type="button" class="gc-action-btn gh-lang-btn" data-lang="en" style="flex:1;">English</button>
+        </div>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:12px;">Por ahora esto traduce menús, títulos y botones — los mensajes de confirmación y textos de ayuda más específicos siguen en español. / For now this translates menus, titles and buttons — confirmation messages and finer help text are still in Spanish.</p>
+      </div>
+
+      <!-- Apariencia -->
+      <div class="gc-card" style="margin-top:16px;">
+        <p class="gc-card-title" data-i18n="apariencia">Apariencia</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Elige el color de acento de la app (botones y pestañas activas). Se guarda para la base de datos que estás viendo — cada base de datos puede tener su propio color, para distinguirlas de un vistazo.</p>
+        <div id="aj-accent-picker" style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button type="button" class="aj-accent-sw" data-accent="cobre" title="Cobre" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C46E20,#A2560F);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="teal" title="Teal" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#0E8F82,#0B6F65);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="indigo" title="Índigo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4F6FA8,#3A5486);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="verde" title="Verde" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4E9350,#397239);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="azul" title="Azul" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#2F7BD9,#1F5FB0);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="rojo" title="Rojo" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#C8402F,#A02E20);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="morado" title="Morado" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#7A4FB5,#5E3990);"></button>
+          <button type="button" class="aj-accent-sw" data-accent="grafito" title="Grafito" style="width:38px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;background:linear-gradient(135deg,#4A4D55,#22242A);"></button>
+        </div>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin:20px 0 10px;">Tema de la app en este aparato. "Automático" sigue el modo claro/oscuro de tu teléfono.</p>
+        <div class="gh-tema-seg">
+          <button type="button" data-tema-opt="auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>Automático</button>
+          <button type="button" data-tema-opt="claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Claro</button>
+          <button type="button" data-tema-opt="oscuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Oscuro</button>
+        </div>
+      </div>
+
+      <!-- Seguridad: bloqueo con Face ID / PIN (solo en este teléfono) -->
+      <div class="gc-card" style="margin-top:16px;" id="aj-card-seguridad">
+        <p class="gc-card-title" data-i18n="seguridad">Seguridad</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Pide Face ID (o un PIN) para abrir la app en este teléfono. No cambia tu usuario ni contraseña — es una capa extra que solo vive en este dispositivo.</p>
+        <label style="display:flex;align-items:center;gap:10px;margin-bottom:4px;cursor:pointer;">
+          <input type="checkbox" id="aj-applock-toggle" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
+          <span style="font-size:13.5px;color:var(--ink);">Pedir Face ID / PIN al abrir la app</span>
+        </label>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">Para poder prenderlo, primero activa Face ID o guarda un PIN aquí abajo.</p>
+        <div id="aj-applock-config" style="padding-top:14px;border-top:1px solid var(--border-soft);">
+          <button type="button" class="gc-action-btn" data-i18n="activar_face_id_en_este_telefono" id="aj-applock-btn-faceid">Activar Face ID en este teléfono</button>
+          <p id="aj-applock-faceid-estado" style="font-size:12px;color:var(--muted);margin-top:8px;margin-bottom:16px;"></p>
+          <div class="gc-field" style="max-width:220px;margin-bottom:10px;">
+            <label data-i18n="pin_de_respaldo_4_a_8_numeros">PIN de respaldo (4 a 8 números)</label>
+            <input type="password" id="aj-applock-pin-nuevo" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="••••" autocomplete="off">
+          </div>
+          <button type="button" class="gc-save-btn" data-i18n="guardar_pin" id="aj-applock-btn-guardar-pin" style="padding:9px 18px;font-size:13px;">Guardar PIN</button>
+          <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:12px;">Face ID y el PIN solo quedan guardados en este teléfono — actívalos por separado en cada dispositivo donde uses la app. Si algún día quedas fuera, borra los datos del sitio en Safari (Ajustes → Safari → Avanzado → Datos de sitios web) para quitar el bloqueo.</p>
+        </div>
+      </div>
+
+      <!-- Cuentas (información separada) -->
+      <div class="gc-card" style="margin-top:16px;" id="aj-card-cuentas">
+        <p class="gc-card-title" data-i18n="base_de_datos_que_estas_viendo">Base de datos que estás viendo</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Cada base de datos guarda su <strong>propia</strong> información (movimientos, invoices, nómina, trabajadores, categorías). Estás viendo la marcada abajo.</p>
+        <div class="gc-field" style="margin-bottom:12px;"><label data-i18n="base_de_datos_actual">Base de datos actual</label>
+          <input type="text" id="aj-cuenta-actual" readonly style="font-weight:600;background:#EEF2FF;">
+        </div>
+        <div id="aj-switch-wrap" style="display:none;">
+          <div class="gc-field"><label data-i18n="cambiar_a_otra_base_de_datos">Cambiar a otra base de datos</label>
+            <select id="aj-cuenta-select"></select>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+            <button class="gc-save-btn" data-i18n="ver_esta_base_de_datos" id="aj-btn-cambiar-cuenta">Ver esta base de datos</button>
+          </div>
+          <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin-top:10px;">Al cambiar, la app se recargará para mostrar esa base de datos.</p>
+        </div>
+      </div>
+
+      <!-- Socios (reparto) -->
+      <div class="gc-card" style="margin-top:8px;" id="aj-card-socios">
+        <p class="gc-card-title" data-i18n="socios_reparto">Socios (reparto)</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;"><strong>Los socios son opcionales.</strong> Si no agregas ninguno, la empresa se lleva todo lo de la semana. Cada socio que agregues se lleva su parte igual (la semana se divide entre la empresa y los socios) más su porcentaje de tax. Los ajustes manuales (Movimientos → Ajuste) siempre son de la empresa.</p>
+        <div class="gc-field" style="max-width:260px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border-soft);">
+          <label>Tax de la semana (% de los ingresos)</label>
+          <input type="text" id="aj-tasa-taxas" inputmode="decimal" placeholder="10" style="max-width:110px;">
+          <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin-top:6px;">Se aparta de cada semana antes de repartir entre los socios. Por defecto 10%.</p>
+        </div>
+        <div id="aj-socios-lista"></div>
+        <button type="button" class="gc-action-btn" data-i18n="agregar_socio" id="aj-btn-add-socio" style="margin-top:4px;">+ Agregar socio</button>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+          <button class="gc-save-btn" data-i18n="guardar_socios" id="aj-btn-guardar-socios">Guardar socios</button>
+        </div>
+      </div>
+
+      <!-- Respaldo automático (admin) -->
+      <div class="gc-card" style="margin-top:16px;" id="rb-card">
+        <p class="gc-card-title">Respaldo automático</p>
+        <div id="rb-estado" class="rb-estado"></div>
+        <div id="rb-lista"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+          <button type="button" class="gc-save-btn" id="rb-ahora">Respaldar ahora</button>
+        </div>
+      </div>
+
+      <!-- Reportes y exportación -->
+      <div class="gc-card" style="margin-top:16px;">
+        <p class="gc-card-title" data-i18n="reportes_y_exportacion">Reportes y exportación</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">A diferencia del respaldo (que es un archivo técnico para restaurar), esto genera reportes para leer, imprimir o abrir en Excel.</p>
+        <div class="gc-field" style="margin-bottom:14px;"><label data-i18n="rango_de_fechas_opcional_vacio_todo">Rango de fechas (opcional — vacío = todo)</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <input type="date" id="rep-desde" aria-label="Desde">
+            <input type="date" id="rep-hasta" aria-label="Hasta">
+          </div>
+        </div>
+        <div class="gc-field" style="margin-bottom:14px;"><label data-i18n="trimestre_rapido_para_el_contador">Trimestre rápido (para el contador)</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input type="number" id="rep-trim-anio" style="width:88px;font-family:'Inter',sans-serif;font-size:13px;padding:9px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);" placeholder="Año">
+            <button type="button" class="gc-action-btn" data-trim="1" style="padding:8px 15px;font-size:12.5px;">Q1</button>
+            <button type="button" class="gc-action-btn" data-trim="2" style="padding:8px 15px;font-size:12.5px;">Q2</button>
+            <button type="button" class="gc-action-btn" data-trim="3" style="padding:8px 15px;font-size:12.5px;">Q3</button>
+            <button type="button" class="gc-action-btn" data-trim="4" style="padding:8px 15px;font-size:12.5px;">Q4</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="gc-save-btn" data-i18n="descargar_excel_completo" id="btn-reporte-excel">Descargar Excel completo</button>
+          <button class="gc-action-btn" data-i18n="descargar_reporte_en_pdf" id="btn-reporte-pdf">Descargar reporte en PDF</button>
+          <button class="gc-action-btn" id="btn-reporte-contador">Resumen para el contador</button>
+        </div>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-top:10px;">El Excel trae una hoja por cada área (Movimientos, Invoices, Nómina, Empleados). El PDF es un resumen para imprimir o guardar.</p>
+      </div>
+
+      <!-- Bases de datos -->
+      <div class="gc-card" style="margin-top:16px;" id="aj-card-bd">
+        <p class="gc-card-title" data-i18n="bases_de_datos">Bases de datos</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Crea las bases de datos con el nombre que quieras (ej. <em>Guzman HVAC Airton</em>, <em>Guzman HVAC Estrada</em>). Luego, abajo, asignas cada usuario a una de ellas.</p>
+        <div id="aj-bd-lista" style="margin-bottom:14px;"></div>
+        <div class="gc-field"><label data-i18n="nombre_de_la_nueva_base_de_datos">Nombre de la nueva base de datos</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="aj-bd-nueva" autocomplete="off" style="flex:1;">
+            <button type="button" class="gc-action-btn" data-i18n="crear" id="aj-btn-add-bd">+ Crear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Administrar usuarios -->
+      <div class="gc-card" style="margin-top:16px;" id="aj-card-admin">
+        <p class="gc-card-title" data-i18n="usuarios_y_a_que_base_de_datos_entran">Usuarios y a qué base de datos entran</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Aprueba usuarios, define su rol y a qué base de datos entran. Los que comparten base de datos ven lo mismo.</p>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+          <button class="gc-action-btn" data-i18n="actualizar_lista" id="aj-btn-refrescar-usuarios">Actualizar lista</button>
+        </div>
+        <div id="aj-usuarios-lista"></div>
+        <p id="aj-usuarios-msg" style="font-size:12px;color:var(--muted);margin-top:10px;"></p>
+      </div>
+    </div>
+
+    <!-- Empleados -->
+    <div class="aj-subpanel" id="aj-sub-documentacion">
+      <div class="inv-subnav" style="margin-bottom:16px;">
+        <button class="doc-subtab active" data-dsub="empleados">Empleados</button>
+        <button class="doc-subtab" data-dsub="papeles">Papeles importantes</button>
+      </div>
+
+      <div class="doc-subpanel active" id="doc-sub-empleados">
+      <div class="emp-toolbar">
+        <span class="emp-toolbar-title">Directorio de trabajadores</span>
+        <button class="gc-save-btn" data-i18n="agregar_empleado" id="btn-nuevo-empleado">+ Agregar empleado</button>
+      </div>
+      <div class="emp-grid" id="emp-grid"></div>
+      </div>
+
+      <div class="doc-subpanel" id="doc-sub-papeles">
+      <div class="emp-toolbar">
+        <span class="emp-toolbar-title">Papeles Importantes</span>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <select id="papeles-cat-nueva" style="font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
+            <option value="IRS - Taxes" data-i18n="irs_taxes">IRS - Taxes</option>
+            <option value="Banco" data-i18n="banco">Banco</option>
+            <option value="Seguro" data-i18n="seguro">Seguro</option>
+            <option value="Licencias" data-i18n="licencias">Licencias</option>
+            <option value="Vehiculos" data-i18n="vehiculos">Vehículos</option>
+            <option value="Contratos" data-i18n="contratos">Contratos</option>
+            <option value="Propiedad" data-i18n="propiedad">Propiedad</option>
+            <option value="Gobierno" data-i18n="gobierno">Gobierno</option>
+            <option value="Otro" data-i18n="otro">Otro</option>
+          </select>
+          <button class="gc-save-btn" data-i18n="subir_pdf" id="btn-subir-papel">+ Subir PDF</button>
+        </div>
+      </div>
+      <div id="papeles-filtros" class="papeles-filtros"></div>
+      <div id="papeles-lista"></div>
+      <div class="doc-web-note" id="papeles-web-note" style="display:none;">La subida de PDFs solo está disponible en la <strong>app de escritorio</strong>.</div>
+      </div>
+    </div>
+
+    <!-- (Categorías ahora vive dentro de Movimientos) -->
+  </div>
+
+
+<!-- ===== NÓMINA ===== -->
+<div class="gc-panel" id="panel-nomina">
+  <div class="inv-subnav">
+    <button class="nom-subtab active" data-i18n="registrar_pago" data-nsub="registro">Registrar pago</button>
+    <button class="nom-subtab" data-i18n="recibo_semanal" data-nsub="semanal">Recibo semanal</button>
+    <button class="nom-subtab" data-i18n="historial" data-nsub="historial">Historial</button>
+    <button class="nom-subtab" data-nsub="resumen">Por trabajador</button>
+    <button class="nom-subtab" data-i18n="buscar_por_persona" data-nsub="buscar">Buscar por persona</button>
+    <button class="nom-subtab" data-i18n="trabajadores" data-nsub="trabajadores">Trabajadores</button>
+
+  </div>
+
+  <!-- Registrar pago -->
+  <div class="nom-subpanel active" id="nom-sub-registro">
+    <div class="gc-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <button type="button" id="nom-grid-sem-prev" class="gc-action-btn" style="padding:8px 16px;font-size:16px;">‹</button>
+        <p class="gc-card-title" id="nom-grid-sem-titulo" style="margin:0;text-align:center;"></p>
+        <button type="button" id="nom-grid-sem-next" class="gc-action-btn" style="padding:8px 16px;font-size:16px;">›</button>
+      </div>
+      <p class="gh-ayuda" style="font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:16px;">Toca los días que trabajó cada quien esta semana. El monto se calcula solo (días × sueldo), editable.</p>
+
+      <!-- Agregar trabajador (escribe/busca; si es nuevo, lo crea) -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <input type="text" id="nom-grid-buscar" list="dl-trab-todos" placeholder="Agregar otro trabajador a esta semana…" autocomplete="off"
+          style="flex:1;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
+        <datalist id="dl-trab-todos"></datalist>
+        <button type="button" class="gc-action-btn" data-i18n="agregar" id="nom-grid-btn-add">+ Agregar</button>
+      </div>
+
+      <div class="nom-chk-aviso" id="nom-chk-aviso"></div>
+      <div id="nom-grid-lista"></div>
+      <div class="gc-empty" id="nom-grid-empty" style="display:none;">No hay trabajadores todavía. Agrégalos arriba.</div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+        <button class="gc-save-btn" data-i18n="guardar_cambios_de_la_semana" id="nom-grid-guardar">Guardar cambios de la semana</button>
+      </div>
+      <p id="nom-status" style="font-size:12px;color:var(--muted);text-align:right;margin-top:8px;height:14px;"></p>
+    </div>
+  </div>
+
+  <!-- Recibo semanal -->
+  <div class="nom-subpanel" id="nom-sub-semanal">
+    <div class="gc-note gh-ayuda"><strong>Recibo semanal.</strong> Cada semana muestra a los trabajadores con los días que trabajaron y su total. Puedes ver el recibo completo o imprimirlo.</div>
+    <div id="nom-semanas-cont"></div>
+    <div class="gc-empty" id="nom-semanas-empty" style="display:none;">No hay pagos registrados aún. Registra pagos para verlos agrupados por semana.</div>
+
+    <!-- Pagos guardados (movido desde Registrar pago) -->
+    <div class="gc-card" style="margin-top:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <p class="gc-card-title" data-i18n="pagos_guardados" style="margin:0;">Pagos guardados</p>
+        <input type="text" id="nom-reg-buscar" placeholder="Buscar…" style="font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);max-width:220px;">
+      </div>
+      <div class="gc-empty" id="nom-reg-empty" style="display:none;">Aún no has guardado pagos.</div>
+      <div id="nom-reg-ledger"></div>
+    </div>
+  </div>
+
+  <!-- Historial -->
+  <div class="nom-subpanel" id="nom-sub-historial">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="historial_de_pagos">Historial de pagos</p>
+      <div style="margin-bottom:16px;">
+        <input type="text" id="nom-hist-buscar" placeholder="Buscar por trabajador o nota…"
+          style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
+      </div>
+      <div class="gc-empty" id="nom-hist-empty" style="display:none;">No hay pagos registrados aún.</div>
+      <div style="overflow-x:auto;">
+        <table class="inv-list-t" id="nom-hist-tbl" style="display:none;">
+          <thead><tr><th data-i18n="trabajador">Trabajador</th><th class="num" data-i18n="h_dias">Días</th><th data-i18n="h_fechas_trabajadas">Fechas trabajadas</th><th class="num" data-i18n="h_monto">Monto</th><th data-i18n="h_nota">Nota</th><th></th></tr></thead>
+          <tbody id="nom-hist-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buscar por persona -->
+  <!-- Resumen por trabajador -->
+  <div class="nom-subpanel" id="nom-sub-resumen">
+    <div class="gc-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <p class="gc-card-title" style="margin:0;">Cuánto ha ganado cada trabajador</p>
+        <select id="nr-anio" style="min-width:110px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background-color:var(--surface-2);color:var(--ink);font-size:14px;font-weight:600;"></select>
+      </div>
+      <div id="nr-kpis" class="nr-kpis"></div>
+      <div id="nr-lista"></div>
+    </div>
+  </div>
+
+  <div class="nom-subpanel" id="nom-sub-buscar">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="cuanto_lleva_ganando_una_persona">Cuánto lleva ganando una persona</p>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px;">
+        <div class="gc-field"><label data-i18n="trabajador">Trabajador</label>
+          <input type="text" id="nom-buscar-persona" list="dl-trabajadores-2" placeholder="Escribe o selecciona un trabajador" autocomplete="off">
+          <datalist id="dl-trabajadores-2"></datalist>
+        </div>
+        <div class="gc-field"><label data-i18n="intervalo">Intervalo</label>
+          <select id="nom-buscar-intervalo">
+            <option value="semana" data-i18n="por_semana">Por semana</option>
+            <option value="mes" data-i18n="por_mes">Por mes</option>
+            <option value="año" data-i18n="por_ano">Por año</option>
+            <option value="todo" data-i18n="todo_el_tiempo" selected>Todo el tiempo</option>
+          </select>
+        </div>
+      </div>
+      <div id="nom-buscar-resultado"></div>
+    </div>
+  </div>
+
+  <!-- Trabajadores -->
+  <div class="nom-subpanel" id="nom-sub-trabajadores">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="trabajadores_y_sus_sueldos">Trabajadores y sus sueldos</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estos son los mismos trabajadores de <strong>Empleados</strong> (en Ajustes) — aquí defines su sueldo por día. Al registrar un pago, el monto se calcula solo (días × sueldo). Puedes aumentar o rebajar el sueldo cuando quieras.</p>
+      <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:10px;margin-bottom:18px;align-items:end;">
+        <div class="gc-field"><label data-i18n="nombre_del_trabajador">Nombre del trabajador</label>
+          <input type="text" id="trab-nom-nuevo" placeholder="Nombre…" autocomplete="off">
+        </div>
+        <div class="gc-field"><label data-i18n="sueldo_por_dia">Sueldo por día ($)</label>
+          <input type="text" id="trab-nom-sueldo" inputmode="decimal" placeholder="0.00" autocomplete="off">
+        </div>
+        <button class="gc-save-btn" data-i18n="agregar" id="trab-nom-btn-add" style="height:40px;">+ Agregar</button>
+      </div>
+      <div class="gc-empty" id="trab-nom-empty" style="display:none;">No hay trabajadores. Agrega el primero arriba.</div>
+      <div style="overflow-x:auto;">
+        <table class="inv-list-t" id="trab-nom-tbl" style="display:none;">
+          <thead><tr><th data-i18n="trabajador">Trabajador</th><th class="num" data-i18n="h_sueldo_por_dia">Sueldo por día</th><th data-i18n="h_ajustar_sueldo">Ajustar sueldo</th><th></th><th>Se le paga a</th></tr></thead>
+          <tbody id="trab-nom-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /panel-nomina -->
+
+<!-- ===== PAYROLL: cheques, Zelle y cash, 1099 ===== -->
+<div class="gc-panel" id="panel-payroll">
+  <div class="gc-card pay-resumen" id="pay-resumen">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <p class="gc-card-title" style="margin:0;">Payroll <span id="pay-res-anio" style="color:var(--muted);font-weight:600;"></span></p>
+      <button type="button" class="gc-action-btn" id="pay-btn-unir" style="padding:7px 12px;font-size:12.5px;">⇄ Unir nombres</button>
+    </div>
+    <div class="pay-kpis" id="pay-kpis"></div>
+    <div id="pay-meses" style="margin-top:14px;"></div>
+    <div id="pay-unir" style="display:none;margin-top:14px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px;background:var(--surface-2);">
+      <p style="font-weight:700;font-size:14px;margin:0 0 4px;">Unir nombres</p>
+      <input type="text" id="pay-unir-buscar" placeholder="Buscar nombre…" autocomplete="off" style="width:100%;font-size:14px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--card);color:var(--ink);margin-bottom:8px;">
+      <div id="pay-unir-lista" style="max-height:260px;overflow:auto;border:1px solid var(--border-soft);border-radius:8px;padding:4px 10px;background:var(--card);"></div>
+      <div class="gc-form-row" style="margin-top:10px;grid-template-columns:2fr 1fr;">
+        <div class="gc-field"><label>Debe quedar como</label><input type="text" id="pay-unir-nombre" list="dl-chq-a" autocomplete="off"></div>
+        <div class="gc-field"><label>&nbsp;</label><div style="display:flex;gap:8px;"><button type="button" class="gc-action-btn" id="pay-unir-cancelar">Cancelar</button><button type="button" class="gc-save-btn" id="pay-unir-ok">Unir</button></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="inv-subnav">
+    <button class="pay-subtab active" data-psub="cheques">Cheques</button>
+    <button class="pay-subtab" data-psub="guardados">Cheques guardados</button>
+    <button class="pay-subtab" data-psub="zelle">Zelle y Cash</button>
+    <button class="pay-subtab" data-psub="r1099">1099</button>
+  </div>
+  <!-- Cheques: hacer e imprimir (cheques láser de 8½" x 3½", cheque arriba + 2 talones) -->
+  <div class="pay-subpanel active" id="pay-sub-cheques">
+    <div class="gc-card">
+      <div class="pay-card-hd">
+        <div>
+          <p class="gc-card-title">Hacer cheque</p>
+        </div>
+      </div>
+
+      <div class="pay-step">
+        <span class="pay-step-n">1</span>
+        <div class="pay-step-b">
+          <p class="pay-step-t">¿A quién le haces el cheque?</p>
+          <div class="gc-field" style="margin-bottom:10px;" id="chq-base-wrap"><label>Nómina de qué base de datos</label>
+            <select id="chq-base"><option value="todas">Todas las bases de datos</option></select>
+          </div>
+          <div class="gc-field"><label>Semana</label>
+            <select id="chq-semana"><option value="">— Escribir a mano —</option></select>
+            <button type="button" class="gc-action-btn" id="chq-btn-toda-semana" style="display:none;">Marcar todos</button>
+          </div>
+          <div id="chq-pagos-lista" class="pay-quien" style="display:none;"></div>
+          <div id="chq-gan-wrap" style="display:none;margin-top:12px;">
+            <p class="pay-mini-t">Ganancia de socio (después de gastos, sin los ajustes)</p>
+            <div id="chq-gan-lista" class="pay-quien" style="margin-top:6px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-step">
+        <span class="pay-step-n">2</span>
+        <div class="pay-step-b">
+          <p class="pay-step-t">Datos del cheque</p>
+          <div class="gc-field" style="margin-bottom:12px;"><label>Páguese a</label>
+            <input type="text" id="chq-a" list="dl-chq-a" placeholder="Nombre de quien recibe" autocomplete="off">
+            <datalist id="dl-chq-a"></datalist>
+          </div>
+          <div class="pay-grid2">
+            <div class="gc-field"><label>Cantidad ($)</label>
+              <input type="number" id="chq-monto" step="0.01" min="0" inputmode="decimal" placeholder="0.00">
+            </div>
+            <div class="gc-field"><label>Fecha</label>
+              <input type="date" id="chq-fecha">
+            </div>
+            <div class="gc-field"><label>Memo</label>
+              <input type="text" id="chq-memo" value="WORK" placeholder="WORK" autocomplete="off">
+            </div>
+            <div class="gc-field"><label>Número de cheque</label>
+              <input type="number" id="chq-numero" step="1" min="1" inputmode="numeric">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-step">
+        <span class="pay-step-n">3</span>
+        <div class="pay-step-b">
+          <p class="pay-step-t">Revisa e imprime</p>
+          <div class="pay-chk" aria-label="Vista previa del cheque">
+            <div class="pay-chk-top">
+              <div class="pay-chk-co" id="chq-pv-co">GUZMAN HVAC</div>
+              <div style="text-align:right;">
+                <div class="pay-chk-no">No. <span id="chq-pv-num">—</span></div>
+                <div class="pay-chk-fe"><span class="lbl">Date</span> <span id="chq-pv-fecha">—</span></div>
+              </div>
+            </div>
+            <div class="pay-chk-row">
+              <span class="lbl" style="flex:0 0 auto;">Pay to the<br>order of</span>
+              <span class="ln" id="chq-pv-a"></span>
+              <span class="pay-chk-amt">$ <span id="chq-pv-monto">0.00</span></span>
+            </div>
+            <div class="pay-chk-row">
+              <span class="ln words" id="chq-letras">—</span>
+              <span class="lbl" style="flex:0 0 auto;">Dollars</span>
+            </div>
+            <div class="pay-chk-row">
+              <span class="lbl" style="flex:0 0 auto;">Memo</span>
+              <span class="ln" id="chq-pv-memo" style="flex:0 1 45%;"></span>
+              <span class="pay-chk-sig"></span>
+            </div>
+          </div>
+          <div class="pay-btns">
+            <button type="button" class="gc-action-btn" id="chq-btn-prueba">Imprimir prueba</button>
+            <button type="button" class="gc-save-btn" id="chq-btn-imprimir">Imprimir cheque</button>
+          </div>
+        </div>
+      </div>
+
+      <details class="pay-plegable">
+        <summary>Ajuste de impresión</summary>
+        <div style="padding-top:12px;">
+          <div class="pay-grid3">
+            <div class="gc-field"><label>Mover → derecha (mm)</label><input type="number" id="chq-off-x" step="0.5" value="0"></div>
+            <div class="gc-field"><label>Mover ↓ abajo (mm)</label><input type="number" id="chq-off-y" step="0.5" value="0"></div>
+            <div class="gc-field"><label>Talones</label>
+              <select id="chq-talones"><option value="si">Imprimir los 2 talones</option><option value="no">Solo el cheque</option></select>
+            </div>
+          </div>
+          <div class="pay-btns"><button type="button" class="gc-action-btn" id="chq-btn-guardar-ajuste">Guardar ajuste</button></div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Cheques guardados: el registro, aparte para no revolver la página de imprimir -->
+  <div class="pay-subpanel" id="pay-sub-guardados">
+    <div class="gc-card">
+      <div class="pay-card-hd">
+        <div>
+          <p class="gc-card-title">Cheques guardados</p>
+          <p class="pay-sub" id="chq-sub"></p>
+        </div>
+        <div class="pay-hd-acts">
+          <button type="button" class="gc-action-btn" id="chq-btn-manual">+ Agregar a mano</button>
+          <details class="pay-menu">
+            <summary class="gc-action-btn" aria-label="Más opciones">⋯</summary>
+            <div class="pay-menu-pop">
+              <button type="button" id="chq-btn-importar">⬆ Importar archivo del banco</button>
+              <button type="button" id="chq-btn-borrar-todo" class="peligro">🗑 Borrar todos los cheques</button>
+            </div>
+          </details>
+          <input type="file" id="chq-file" accept=".json,application/json" hidden>
+        </div>
+      </div>
+      <div id="chq-manual" class="pay-form" style="display:none;">
+        <p class="pay-form-t" id="chq-manual-titulo">Agregar cheque a mano (no se imprime)</p>
+        <div class="gc-field" hidden><label>Tipo</label><select id="chq-m-tipo"><option value="cheque">Cheque</option><option value="zelle">Zelle</option></select></div>
+        <div class="pay-grid2">
+          <div class="gc-field"><label id="chq-m-num-lbl">Número</label><input type="text" id="chq-m-num" inputmode="text" autocomplete="off"></div>
+          <div class="gc-field"><label>Fecha</label><input type="date" id="chq-m-fecha"></div>
+          <div class="gc-field"><label>Páguese a</label><input type="text" id="chq-m-a" list="dl-chq-a" autocomplete="off"></div>
+          <div class="gc-field"><label>Cantidad ($)</label><input type="number" id="chq-m-monto" step="0.01" min="0" inputmode="decimal"></div>
+          <div class="gc-field"><label>Memo</label><input type="text" id="chq-m-memo" autocomplete="off"></div>
+        </div>
+        <div class="pay-btns">
+          <button type="button" class="gc-action-btn" id="chq-m-cancelar">Cancelar</button>
+          <button type="button" class="gc-save-btn" id="chq-m-guardar">Guardar</button>
+        </div>
+      </div>
+      <div class="pay-tools">
+        <label class="pay-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" id="chq-buscar" placeholder="Buscar…" autocomplete="off">
+        </label>
+        <select id="chq-anio"></select>
+      </div>
+      <div class="pay-chips">
+        <button type="button" class="pay-chip on" data-chq-ver="vigentes">Activos</button>
+        <button type="button" class="pay-chip" data-chq-ver="anulados">Anulados</button>
+        <button type="button" class="pay-chip" data-chq-ver="todos">Todos</button>
+        <label class="pay-chip"><input type="checkbox" id="chq-sin-nombre"> Sin nombre</label>
+      </div>
+      <select id="chq-tipo" hidden><option value="cheque" selected>Solo cheques</option></select>
+      <select id="chq-ver" hidden>
+        <option value="vigentes">Sin los anulados</option>
+        <option value="todos">Todos</option>
+        <option value="anulados">Solo anulados</option>
+      </select>
+      <div id="chq-resumen"></div>
+      <div class="gc-empty" id="chq-empty">Todavía no hay cheques.</div>
+      <div class="pay-lista" id="chq-tbl" style="display:none;"><div id="chq-tbody"></div></div>
+    </div>
+  </div>
+
+  <!-- Zelle y Cash: pagos que no son cheque -->
+  <div class="pay-subpanel" id="pay-sub-zelle">
+    <div class="gc-card">
+      <div class="pay-card-hd">
+        <div>
+          <p class="gc-card-title">Zelle y Cash</p>
+        </div>
+        <div class="pay-hd-acts">
+          <button type="button" class="gc-action-btn" id="zc-btn-nuevo">+ Agregar pago</button>
+        </div>
+      </div>
+      <div id="zc-form" class="pay-form" style="display:none;">
+        <p class="pay-form-t" id="zc-form-titulo">Agregar pago</p>
+        <div class="pay-grid2">
+          <div class="gc-field"><label>Tipo</label><select id="zc-tipo-f"><option value="zelle">Zelle</option><option value="cash">Cash (efectivo)</option></select></div>
+          <div class="gc-field"><label>Fecha</label><input type="date" id="zc-fecha"></div>
+          <div class="gc-field"><label>A quién</label><input type="text" id="zc-a" list="dl-chq-a" autocomplete="off"></div>
+          <div class="gc-field"><label>Cantidad ($)</label><input type="number" id="zc-monto" step="0.01" min="0" inputmode="decimal"></div>
+          <div class="gc-field"><label>Memo / confirmación</label><input type="text" id="zc-memo" autocomplete="off"></div>
+        </div>
+        <div class="pay-btns">
+          <button type="button" class="gc-action-btn" id="zc-cancelar">Cancelar</button>
+          <button type="button" class="gc-save-btn" id="zc-guardar">Guardar</button>
+        </div>
+      </div>
+      <div class="pay-tools">
+        <label class="pay-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" id="zc-buscar" placeholder="Buscar…" autocomplete="off">
+        </label>
+        <select id="zc-anio"></select>
+      </div>
+      <div class="pay-chips">
+        <button type="button" class="pay-chip on" data-zc-tipo="">Todos</button>
+        <button type="button" class="pay-chip" data-zc-tipo="zelle">Zelle</button>
+        <button type="button" class="pay-chip" data-zc-tipo="cash">Cash</button>
+      </div>
+      <select id="zc-tipo" hidden><option value="">Zelle y Cash</option><option value="zelle">Solo Zelle</option><option value="cash">Solo Cash</option></select>
+      <div id="zc-resumen"></div>
+      <div class="gc-empty" id="zc-empty">Todavía no hay pagos por Zelle o cash.</div>
+      <div class="pay-lista" id="zc-tbl" style="display:none;"><div id="zc-tbody"></div></div>
+    </div>
+  </div>
+
+  <!-- 1099: lo pagado a cada persona en el año (cheques + Zelle + cash) -->
+  <div class="pay-subpanel" id="pay-sub-r1099">
+    <div class="gc-card">
+      <div class="pay-card-hd">
+        <div>
+          <p class="gc-card-title">1099 — pagado por persona</p>
+        </div>
+        <div class="pay-hd-acts">
+          <button type="button" class="gc-action-btn" id="r99-hojas">Hojas 1099</button>
+          <button type="button" class="gc-action-btn" id="r99-imprimir">Imprimir</button>
+          <button type="button" class="gc-action-btn" id="r99-csv">⬇ CSV</button>
+        </div>
+      </div>
+      <div class="pay-tools">
+        <select id="r99-anio"></select>
+        <label class="pay-limite">Límite $<input type="number" id="r99-umbral" step="1" min="0" inputmode="numeric"></label>
+      </div>
+      <div class="pay-chips">
+        <label class="pay-chip"><input type="checkbox" id="r99-solo"> Solo los que llevan 1099</label>
+      </div>
+      <div id="r99-resumen"></div>
+      <div class="pay-lista" id="r99-tbl"><div id="r99-tbody"></div></div>
+      <div id="r99-detalle" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+</div><!-- /panel-payroll -->
+
+
+
+<!-- Overlay de recibo de nómina -->
+<div class="gc-print-overlay" id="nom-ov" style="display:none;">
+  <div class="gc-print-toolbar no-print">
+    <button class="gc-save-btn" data-i18n="imprimir" id="nom-btn-imprimir-recibo">Imprimir</button>
+    <button class="gc-action-btn" data-i18n="descargar" id="nom-btn-descargar-recibo" style="background:#fff;">⬇ Descargar</button>
+    <button class="gc-action-btn" data-i18n="cerrar" id="nom-btn-cerrar-recibo" style="background:#fff;">Cerrar</button>
+  </div>
+  <div class="inv-print-sheet" id="nom-recibo-content"></div>
+</div>
+
+<!-- ===== FACTURAS ===== -->
+<div class="gc-panel" id="panel-facturas">
+  <div class="inv-subnav">
+    <button class="inv-subtab active" data-i18n="nueva_factura" data-sub="nueva">+ Nueva Factura</button>
+    <button class="inv-subtab" data-i18n="guardadas" data-sub="guardadas">Guardadas</button>
+    <button class="inv-subtab" data-sub="completion">Completion Sheets</button>
+    <button class="inv-subtab" data-sub="clientes">Clientes</button>
+    <button class="inv-subtab" data-sub="trabajos">Trabajos</button>
+    <button class="inv-subtab" data-sub="colonias">Colonias</button>
+  </div>
+  <!-- Nueva Factura -->
+  <div class="inv-subpanel active" id="inv-sub-nueva">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="informacion">Información</p>
+      <div class="gc-form-row">
+        <div class="gc-field"><label data-i18n="invoice">Invoice #</label><input type="text" id="inv-num" inputmode="numeric" placeholder="1"></div>
+        <div class="gc-field"><label data-i18n="fecha">Fecha</label><input type="date" id="inv-fecha"></div>
+        <div class="gc-field"><label data-i18n="bill_to_nombre_compania">Bill To — Nombre / Compañía</label>
+          <input type="text" id="inv-cliente" list="dl-clientes" placeholder="Nombre del cliente" autocomplete="off">
+          <datalist id="dl-clientes"></datalist>
+        </div>
+      </div>
+      <div class="gc-form-row">
+        <div class="gc-field"><label>Dirección de la empresa (sale arriba en la factura)</label>
+          <input type="text" id="inv-direccion-emisor" autocomplete="off">
+        </div>
+        <div class="gc-field"><label>Dirección del cliente (Bill To)</label>
+          <input type="text" id="inv-cliente-direccion" placeholder="Dirección de quien paga" autocomplete="off">
+        </div>
+      </div>
+      <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin-top:8px;">Estos datos se recuerdan para la siguiente factura — solo cámbialos si son distintos.</p>
+    </div>
+    <div class="gc-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <p class="gc-card-title" data-i18n="trabajos" style="margin:0;">Trabajos</p>
+        <button type="button" class="inv-add" id="inv-btn-cargar-semana" style="display:none;border-color:var(--accent);color:var(--accent-dk);">
+          📅 Cargar trabajos de esta semana
+        </button>
+      </div>
+      <div style="overflow-x:auto;margin-bottom:12px;">
+        <table class="inv-tbl"><thead><tr>
+          <th style="width:36px;">#</th><th style="width:132px;">DATE</th>
+          <th style="width:220px;">SUBDIVISION</th><th>WORK PERFORMED</th>
+          <th class="r" style="width:78px;">TONS</th>
+          <th class="r" style="width:130px;">AMOUNT DUE</th><th style="width:104px;"></th>
+        </tr></thead><tbody id="inv-tbody"></tbody></table>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="inv-add" id="inv-btn-add">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Agregar línea
+        </button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start;">
+      <div class="gc-card">
+        <p class="gc-card-title" data-i18n="notas">Notas</p>
+        <div class="gc-field"><textarea id="inv-notas" placeholder="Notas adicionales…" style="min-height:80px;"></textarea></div>
+      </div>
+      <div class="gc-card" style="padding:18px 20px;min-width:250px;">
+        <div class="inv-totals">
+          <div class="inv-tot sub" id="inv-t-tons-row" style="display:none;"><span>Total toneladas</span><span class="inv-tot-v" id="inv-t-tons">0</span></div>
+          <div class="inv-tot sub"><span>Subtotal</span><span class="inv-tot-v" id="inv-t-sub">$0.00</span></div>
+          <div class="inv-tot tax"><span>Tax <input type="number" id="inv-tax" value="0" min="0" max="100" step="0.5" style="width:48px;padding:2px 6px;font-size:12px;border:1.5px solid var(--border);border-radius:6px;text-align:right;"> %</span><span class="inv-tot-v" id="inv-t-tax">$0.00</span></div>
+          <div class="inv-tot grand"><span>TOTAL</span><span class="inv-tot-v" id="inv-t-total">$0.00</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+      <button class="gc-action-btn" data-i18n="limpiar" id="inv-btn-limpiar">Limpiar</button>
+      <button class="gc-action-btn" data-i18n="vista_previa" id="inv-btn-preview">Vista previa</button>
+      <button class="gc-save-btn" data-i18n="guardar_factura" id="inv-btn-guardar">Guardar Factura</button>
+    </div>
+    <input type="hidden" id="inv-editando" value="">
+  </div>
+  <!-- Guardadas -->
+  <div class="inv-subpanel" id="inv-sub-guardadas">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="facturas_guardadas">Facturas Guardadas</p>
+      <div style="margin-bottom:16px;">
+        <input type="text" id="inv-buscar" placeholder="Buscar por Job #, colonia, lote, cliente o # de factura…"
+          style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
+        <div class="inv-filtros">
+          <div class="gc-field"><label>Lote #</label><input type="text" id="inv-f-lote" placeholder="Ej. 12" autocomplete="off" inputmode="text"></div>
+          <div class="gc-field"><label>Subdivisión</label><input type="text" id="inv-f-sub" list="dl-colonias" placeholder="Todas" autocomplete="off"></div>
+        </div>
+        <div class="inv-estados" role="tablist">
+          <button type="button" class="on" data-est="todas">Todas</button>
+          <button type="button" data-est="pendientes">Pendientes</button>
+          <button type="button" data-est="pagadas">Pagadas</button>
+          <button type="button" class="inv-f-limpiar" id="inv-f-limpiar" style="display:none;">✕ Limpiar filtros</button>
+        </div>
+        <p id="inv-buscar-info" class="inv-resumen"></p>
+      </div>
+      <div id="inv-sel-host"></div>
+      <div class="gc-empty" id="inv-list-empty" style="display:none;">No hay facturas guardadas aún.</div>
+      <div style="overflow-x:auto;">
+        <table class="inv-list-t" id="inv-list-tbl" style="display:none;">
+          <thead><tr><th data-i18n="invoice">Invoice #</th><th data-i18n="fecha">Fecha</th><th data-i18n="h_cliente">Cliente</th><th class="r" data-i18n="h_total">Total</th><th data-i18n="estado">Estado</th><th></th></tr></thead>
+          <tbody id="inv-list-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hoja de terminación (Trim-Out) de American Heating & Cooling -->
+  <div class="inv-subpanel" id="inv-sub-completion">
+    <div class="gc-card">
+      <div class="cs-tipos">
+        <button type="button" class="cs-tipo-btn active" data-cstipo="rough">Rough-In</button>
+        <button type="button" class="cs-tipo-btn" data-cstipo="trim">Trim-Out</button>
+        <button type="button" class="cs-tipo-btn" data-cstipo="pull">Pull Sheet</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+        <p class="gc-card-title" id="cs-titulo" style="margin:0;">Rough-In Completion Sheet</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="gc-action-btn" id="cs-btn-limpiar" style="padding:8px 14px;font-size:12.5px;">Limpiar</button>
+          <button type="button" class="gc-action-btn" id="cs-btn-imprimir" style="padding:8px 14px;font-size:12.5px;">🖨 Imprimir esta</button>
+          <button type="button" class="gc-save-btn" id="cs-btn-imprimir-ambas" style="padding:8px 18px;font-size:13px;">🖨 Imprimir las dos</button>
+        </div>
+      </div>
+      <div id="cs-form-pull" style="display:none;">
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">AHC Trim Out Pull Sheet — Standard Trim. Sale igual que el papel, en <strong>dos páginas</strong> (elige <em>Doble cara</em> al imprimir). Escribe directo en la hoja: los cuadros amarillos son los que se llenan (DATE, JOB, BUILDER, LOT/SUB, PULLER, INSTALLER, ORDER y SHIP). Usa <strong>+</strong> para agrandarla. <span id="ps-contador" style="font-weight:700;color:var(--accent-dk);"></span></p>
+        <div class="ps-zoom">
+          <button type="button" class="gc-action-btn" id="ps-zoom-menos">−</button>
+          <span id="ps-zoom-lbl">100%</span>
+          <button type="button" class="gc-action-btn" id="ps-zoom-mas">+</button>
+          <button type="button" class="gc-action-btn" id="ps-zoom-ajustar">Ajustar</button>
+          <button type="button" class="gc-action-btn" id="ps-btn-editar" style="margin-left:auto;">✎ Editar hoja</button>
+        </div>
+        <div class="ps-cfg" id="ps-cfg">
+          <select id="ps-cfg-sel" aria-label="Configuración de material"><option value="">Configuración de material…</option></select>
+          <button type="button" class="gc-save-btn" id="ps-cfg-aplicar">Aplicar</button>
+          <button type="button" class="gc-action-btn" id="ps-cfg-nueva-btn">＋ Guardar como…</button>
+          <button type="button" class="gc-action-btn" id="ps-cfg-limpiar">Limpiar cantidades</button>
+          <button type="button" class="gc-del" id="ps-cfg-borrar" title="Borrar esta configuración">✕</button>
+        </div>
+        <div class="ps-cfg" id="ps-cfg-nueva" style="display:none;">
+          <input type="text" id="ps-cfg-nombre" placeholder="Nombre (ej. Casa de gas)" autocomplete="off" maxlength="40">
+          <button type="button" class="gc-save-btn" id="ps-cfg-nueva-ok">Guardar</button>
+          <button type="button" class="gc-action-btn" id="ps-cfg-nueva-no">Cancelar</button>
+        </div>
+        <div id="ps-editbar" style="display:none;">
+          <p id="ps-sel-info">Toca un renglón de la hoja para moverlo o cambiarlo</p>
+          <div class="ps-editbtns">
+            <button type="button" class="gc-action-btn" data-psacc="subir">↑ Subir</button>
+            <button type="button" class="gc-action-btn" data-psacc="bajar">↓ Bajar</button>
+            <button type="button" class="gc-action-btn" data-psacc="insertar">＋ Renglón arriba</button>
+            <button type="button" class="gc-action-btn" data-psacc="quitar">🗑 Quitar renglón</button>
+            <button type="button" class="gc-action-btn" data-psacc="seccion" id="ps-ed-seccion">▤ Hacer sección</button>
+            <button type="button" class="gc-action-btn" id="ps-ed-restaurar" style="color:var(--ember);">↺ Original</button>
+          </div>
+          <p class="gh-ayuda" style="font-size:11px;color:var(--muted);margin:6px 0 0;">Escribe directo en PART y DESCRIPTION para cambiar el texto. Un renglón vacío se vuelve parte en cuanto le escribes. Toca <strong>✓ Listo</strong> para volver a llenar cantidades.</p>
+        </div>
+        <div class="ps-marco-hoja" id="ps-marco-hoja"><div id="ps-hoja"></div></div>
+      </div>
+
+      <div id="cs-form-check">
+      <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">American Heating &amp; Cooling — New Construction Completion Sheet. Cada hoja se llena por separado. <strong>Imprimir las dos</strong> saca Rough-In y Trim-Out en dos páginas: en la ventana de impresión elige <em>Doble cara</em> para que queden al frente y al reverso de la misma hoja.</p>
+
+      <div class="gc-form-row">
+        <div class="gc-field"><label>Date</label><input type="date" id="cs-fecha"></div>
+        <div class="gc-field"><label>Leadman</label><input type="text" id="cs-leadman" autocomplete="off"></div>
+      </div>
+      <div class="gc-form-row">
+        <div class="gc-field"><label>Builder name</label><input type="text" id="cs-builder" list="dl-clientes" autocomplete="off"></div>
+        <div class="gc-field"><label>Lot# / Subdivision</label><input type="text" id="cs-lote" list="dl-colonias" placeholder="Lote + colonia" autocomplete="off"></div>
+      </div>
+
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 16px;">
+        <label class="cs-check"><input type="radio" name="cs-estado" value="completo" id="cs-completo"> Job is complete and ready for inspection</label>
+        <label class="cs-check"><input type="radio" name="cs-estado" value="incompleto" id="cs-incompleto"> Job is not complete</label>
+      </div>
+
+      <div class="gc-field" style="margin-bottom:12px;"><label>Additional work to be performed</label>
+        <textarea id="cs-trabajo" rows="4" style="resize:vertical;"></textarea></div>
+      <div class="gc-field" style="margin-bottom:12px;"><label>Time needed</label>
+        <input type="text" id="cs-tiempo" autocomplete="off"></div>
+      <div class="gc-field" style="margin-bottom:16px;"><label>Material needed</label>
+        <textarea id="cs-material" rows="3" style="resize:vertical;"></textarea></div>
+
+      <div style="padding:14px;background:#F5F7FC;border-radius:var(--r-sm);margin-bottom:18px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+          <label class="cs-check" style="margin:0;"><input type="checkbox" id="cs-ahc"> AHC informed / scheduled for</label>
+          <input type="date" id="cs-ahc-fecha" style="font-family:'Inter',sans-serif;font-size:13px;padding:7px 9px;border:1.5px solid var(--border);border-radius:8px;">
+          <span style="font-size:12.5px;color:var(--muted);">Time</span>
+          <input type="time" id="cs-ahc-hora" style="font-family:'Inter',sans-serif;font-size:13px;padding:7px 9px;border:1.5px solid var(--border);border-radius:8px;">
+        </div>
+        <label class="cs-check"><input type="checkbox" id="cs-salesman"> Salesman informed</label>
+        <label class="cs-check"><input type="checkbox" id="cs-customer"> Customer informed</label>
+      </div>
+
+      <p style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px;">Checklist</p>
+      <div class="cs-checklist" id="cs-checklist"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cobros por casa -->
+  <div class="inv-subpanel" id="inv-sub-cobros">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="cobros_por_casa">Cobros por casa</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Cada trabajo de todas tus facturas aparece aquí como un cobro individual. Se llena solo cuando guardas una factura. Busca por Job #, colonia o lote.</p>
+      <div style="margin-bottom:16px;">
+        <input type="text" id="cobros-buscar" placeholder="Buscar por Job #, colonia, lote o trabajo…"
+          style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
+        <p id="cobros-info" style="font-size:11.5px;color:var(--muted);margin-top:6px;"></p>
+      </div>
+      <div class="gc-empty" id="cobros-empty" style="display:none;">No hay cobros aún. Guarda una factura para verlos aquí.</div>
+      <div style="overflow-x:auto;">
+        <table class="inv-list-t" id="cobros-tbl" style="display:none;">
+          <thead><tr><th class="r">Tons</th><th data-i18n="h_colonia_lote">Colonia / Lote</th><th data-i18n="h_trabajo">Trabajo</th><th data-i18n="h_factura">Factura</th><th data-i18n="h_cliente">Cliente</th><th class="r" data-i18n="h_monto">Monto</th></tr></thead>
+          <tbody id="cobros-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- Clientes -->
+  <!-- Carpeta: Clientes, Trabajos y Colonias juntos -->
+  <div class="inv-subpanel" id="inv-sub-clientes">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="base_de_datos_de_clientes">Base de datos de Clientes</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estos clientes aparecen como sugerencias en el campo <strong>Bill To</strong> de cada factura. También puedes escribir uno nuevo directo en el campo.</p>
+      <div class="gl-add"><input type="text" id="cli-nueva" placeholder="Nombre del cliente o compañía…" autocomplete="off"><button type="button" class="gc-save-btn" data-i18n="agregar" id="cli-btn-add">+ Agregar</button></div>
+      <div id="cli-list"></div>
+      <div class="gc-empty" id="cli-empty" style="display:none !important;">No hay clientes. Agrega el primero arriba.</div>
+    </div>
+  </div>
+
+  <!-- Trabajos -->
+  <div class="inv-subpanel" id="inv-sub-trabajos">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="descripciones_de_trabajo">Descripciones de Trabajo</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estas descripciones aparecen como sugerencias en el campo <strong>Work Performed</strong>. Si le pones precio, al elegir el trabajo en una factura el monto se llena solo — y ahí lo puedes cambiar sin que se modifique este precio.</p>
+      <div class="gl-add"><input type="text" id="trab-nueva" placeholder="Descripción del trabajo" autocomplete="off"><input type="text" id="trab-precio" inputmode="decimal" placeholder="Precio" class="gl-precio" autocomplete="off"><button type="button" class="gc-save-btn" data-i18n="agregar" id="trab-btn-add">+ Agregar</button></div>
+      <div id="trab-list"></div>
+      <div class="gc-empty" id="trab-empty" style="display:none !important;">No hay descripciones. Agrega la primera arriba.</div>
+    </div>
+    <datalist id="dl-trabajos"></datalist>
+  </div>
+
+  <!-- Colonias -->
+  <div class="inv-subpanel" id="inv-sub-colonias">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="colonias_subdivisions">Colonias / Subdivisions</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Estas colonias aparecen en el menú de <strong>JOB LOCATION</strong> de cada factura.</p>
+      <div class="gl-add"><input type="text" id="col-nueva" placeholder="Nombre de la colonia…" autocomplete="off"><button type="button" class="gc-save-btn" data-i18n="agregar" id="col-btn-add">+ Agregar</button></div>
+      <div id="col-list"></div>
+      <div class="gc-empty" id="col-empty" style="display:none !important;">No hay colonias. Agrega la primera arriba.</div>
+    </div>
+    <datalist id="dl-colonias"></datalist>
+  </div>
+</div><!-- /panel-facturas -->
+
+  <!-- Calendario de trabajos -->
+  <div class="gc-panel" id="panel-calendario">
+    <div class="gc-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
+        <p class="gc-card-title" data-i18n="cal_calendario_de_trabajos" style="margin:0;">Calendario de trabajos</p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button type="button" class="gc-action-btn" id="cal-btn-prev" style="padding:8px 13px;">‹</button>
+          <span id="cal-semana-label" style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--ink);min-width:135px;text-align:center;"></span>
+          <button type="button" class="gc-action-btn" id="cal-btn-next" style="padding:8px 13px;">›</button>
+        </div>
+      </div>
+      <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Agenda tus trabajos por día. Cada uno se puede mandar directo al Calendario del iPhone con el botón 📅.</p>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+        <button type="button" class="gc-save-btn" data-i18n="cal_exportar_semana" id="cal-btn-exportar-semana" style="padding:9px 18px;font-size:13px;">📅 Exportar semana a Calendario</button>
+      </div>
+      <div id="cal-sel-host"></div>
+      <div id="cal-dias-wrap"></div>
+    </div>
+  </div>
+
+  <!-- Modal: nuevo/editar trabajo agendado -->
+  <div class="cal-modal-overlay" id="cal-modal" style="display:none;">
+    <div class="cal-modal-box">
+      <p class="gc-card-title" id="cal-modal-titulo">Nuevo trabajo</p>
+      <div class="gc-field" style="margin-bottom:12px;"><label data-i18n="fecha">Fecha</label><input type="date" id="cal-f-fecha"></div>
+      <div class="gc-field" style="margin-bottom:12px;"><label data-i18n="h_cliente">Cliente</label><input type="text" id="cal-f-cliente" list="dl-clientes" autocomplete="off"></div>
+      <div class="gc-field" style="margin-bottom:12px;"><label>Job #</label><input type="text" id="cal-f-job" placeholder="Job #" autocomplete="off"></div>
+      <div class="gc-field" style="margin-bottom:6px;"><label>Colonia / Lote</label><input type="text" id="cal-f-loc" list="dl-colonias" placeholder="Colonia + lote" autocomplete="off"></div>
+      <div style="text-align:right;margin-bottom:12px;">
+        <a href="#" id="cal-f-nuevo-sitio" data-i18n="cal_nuevo_sitio" style="display:none;font-size:11px;color:var(--accent-dk);text-decoration:underline;">Es un sitio nuevo — limpiar estos datos</a>
+      </div>
+      <div class="gc-field" style="margin-bottom:14px;"><label data-i18n="cal_work_performed">Work Performed</label><input type="text" id="cal-f-desc" list="dl-trabajos" autocomplete="off"></div>
+      <div class="gc-field" style="margin-bottom:8px;">
+        <label>Fotos del trabajo</label>
+        <div id="cal-f-fotos-grid" class="cal-fotos-grid"></div>
+        <label class="cal-foto-add-btn" for="cal-f-fotos-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Tomar foto / subir imagen
+        </label>
+        <input type="file" id="cal-f-fotos-input" accept="image/*" multiple style="display:none;">
+        <p class="gh-ayuda" style="font-size:10.5px;color:var(--muted-soft);margin-top:6px;">Se guardan comprimidas en este trabajo — mejor unas cuantas fotos clave que muchas.</p>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+        <button type="button" class="gc-action-btn" data-i18n="cancelar" id="cal-modal-cancelar">Cancelar</button>
+        <button type="button" class="gc-save-btn" data-i18n="guardar" id="cal-modal-guardar">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PLANOS ===== -->
+  <div class="gc-panel" id="panel-planos">
+    <div class="pln-subnav">
+      <button class="pln-subtab active" data-i18n="pln_ver_planos" data-psub="ver">Ver planos</button>
+      <button class="pln-subtab" data-i18n="pln_editar_borrar" data-psub="editar">Editar / Borrar</button>
+    </div>
+
+    <!-- Ver planos: tocar una tarjeta abre la foto en grande -->
+    <div class="pln-subpanel active" id="pln-sub-ver">
+      <div class="gc-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
+          <p class="gc-card-title" data-i18n="pln_planos_titulo" style="margin:0;">Planos</p>
+          <button type="button" class="gc-save-btn" data-i18n="pln_agregar_plano" id="pln-btn-nuevo" style="padding:8px 16px;font-size:13px;">+ Agregar plano</button>
+        </div>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Toca un plano para ver la foto en grande. Para editar o borrar, ve a la pestaña "Editar / Borrar".</p>
+        <input type="text" id="pln-buscar" placeholder="Buscar por nombre de plano o constructor…" autocomplete="off"
+          style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);margin-bottom:16px;box-sizing:border-box;">
+        <div id="pln-sel-host"></div>
+        <div class="gc-empty" id="pln-empty" style="display:none;">No hay planos guardados todavía. Toca "+ Agregar plano" para subir el primero.</div>
+        <div id="pln-grid" class="pln-grid"></div>
+      </div>
+    </div>
+
+    <!-- Editar / Borrar: lista aparte, para no borrar por accidente al solo ver -->
+    <div class="pln-subpanel" id="pln-sub-editar">
+      <div class="gc-card">
+        <p class="gc-card-title" data-i18n="pln_editar_o_borrar_planos" style="margin-bottom:4px;">Editar o borrar planos</p>
+        <p class="gh-ayuda" style="font-size:11.5px;color:var(--muted);margin:6px 0 16px;">Toca el lápiz para editar un plano, o la ✕ para borrarlo.</p>
+        <input type="text" id="pln-buscar-editar" placeholder="Buscar por nombre de plano o constructor…" autocomplete="off"
+          style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);margin-bottom:16px;box-sizing:border-box;">
+        <div class="gc-empty" id="pln-empty-editar" style="display:none;">No hay planos guardados todavía.</div>
+        <div id="pln-lista-editar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visor de fotos del plano (a pantalla completa) -->
+  <div class="pln-viewer-overlay" id="pln-viewer" style="display:none;">
+    <div class="pln-viewer-top">
+      <div>
+        <div class="pln-viewer-titulo" id="pln-viewer-titulo"></div>
+        <div class="pln-viewer-sub" id="pln-viewer-sub"></div>
+      </div>
+      <button type="button" class="pln-viewer-cerrar" id="pln-viewer-cerrar">✕</button>
+    </div>
+    <div class="pln-viewer-img-wrap">
+      <button type="button" class="pln-viewer-nav izq" id="pln-viewer-prev" style="display:none;">‹</button>
+      <img id="pln-viewer-img" src="">
+      <button type="button" class="pln-viewer-nav der" id="pln-viewer-next" style="display:none;">›</button>
+    </div>
+    <div class="pln-viewer-dots" id="pln-viewer-dots"></div>
+  </div>
+
+  <!-- Modal: nuevo/editar plano -->
+  <div class="cal-modal-overlay" id="pln-modal" style="display:none;">
+    <div class="cal-modal-box">
+      <p class="gc-card-title" id="pln-modal-titulo">Nuevo plano</p>
+      <div class="gc-field" style="margin-bottom:8px;">
+        <label data-i18n="pln_fotos_del_plano">Fotos del plano</label>
+        <div id="pln-f-fotos-grid" class="cal-fotos-grid"></div>
+        <label class="cal-foto-add-btn" for="pln-f-fotos-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Tomar foto / subir imagen
+        </label>
+        <input type="file" id="pln-f-fotos-input" accept="image/*" multiple style="display:none;">
+        <p class="gh-ayuda" style="font-size:10.5px;color:var(--muted-soft);margin-top:6px;margin-bottom:14px;">Sube la foto primero — así puedes verla mientras escribes el nombre y el constructor.</p>
+      </div>
+      <div class="gc-field" style="margin-bottom:12px;"><label data-i18n="pln_nombre_del_plano">Nombre del plano</label><input type="text" id="pln-f-nombre" placeholder="Ej. Plan 2140 — elevación B" autocomplete="off"></div>
+      <div class="gc-field" style="margin-bottom:14px;"><label data-i18n="pln_constructor">Constructor</label><input type="text" id="pln-f-constructor" list="dl-planos-constructores" placeholder="Nombre del constructor" autocomplete="off"></div>
+      <div class="gc-field" style="margin-bottom:14px;">
+        <label data-i18n="pln_etapa">Etapa</label>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="gc-type-btn pln-fase-btn" data-fase="Trim" style="flex:1;">Trim</button>
+          <button type="button" class="gc-type-btn pln-fase-btn" data-fase="Rough In" style="flex:1;">Rough In</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+        <button type="button" class="gc-action-btn" data-i18n="cancelar" id="pln-modal-cancelar">Cancelar</button>
+        <button type="button" class="gc-save-btn" data-i18n="guardar" id="pln-modal-guardar">Guardar</button>
+      </div>
+    </div>
+  </div>
+  <datalist id="dl-planos-constructores"></datalist>
+
+<!-- Print overlay para invoices -->
+<div class="gc-print-overlay" id="inv-ov" style="display:none;">
+  <div class="gc-print-toolbar no-print">
+    <button class="gc-save-btn" data-i18n="imprimir" id="inv-btn-imprimir">Imprimir</button>
+    <button class="gc-action-btn" data-i18n="enviar" id="inv-btn-enviar" style="background:#fff;">↗ Enviar</button>
+    <button class="gc-action-btn" data-i18n="descargar" id="inv-btn-descargar" style="background:#fff;">⬇ Descargar</button>
+    <button class="gc-action-btn" data-i18n="cerrar" id="inv-btn-cerrar-ov" style="background:#fff;">Cerrar</button>
+  </div>
+  <div class="inv-print-sheet" id="inv-print-content"></div>
+</div>
+
+    </div><!-- /gc-body -->
+</div><!-- /gc-app -->
+
+
+<!-- Modal empleado -->
+<div class="emp-modal-overlay" id="emp-modal" style="display:none;">
+  <div class="emp-modal">
+    <div class="emp-modal-header">
+      <p class="emp-modal-title" id="emp-modal-titulo">Nuevo empleado</p>
+      <button class="emp-modal-close" id="emp-modal-cerrar">✕</button>
+    </div>
+    <div class="emp-modal-tabs">
+      <button class="emp-modal-tab active" data-etab="info">Información</button>
+      <button class="emp-modal-tab" data-etab="docs">Documentos</button>
+    </div>
+    <div class="emp-modal-body">
+      <div id="emp-etab-info">
+        <div class="emp-info-grid">
+          <div class="emp-field"><label data-i18n="nombre_s">Nombre(s)</label><input id="emp-nombre" type="text" placeholder="Juan"></div>
+          <div class="emp-field"><label data-i18n="apellido_s">Apellido(s)</label><input id="emp-apellido" type="text" placeholder="García"></div>
+          <div class="emp-field"><label data-i18n="puesto_rol">Puesto / Rol</label>
+            <select id="emp-rol"><option>Técnico HVAC</option><option>Ayudante</option><option>Instalador</option><option>Electricista</option><option>Administrativo</option><option>Otro</option></select>
+          </div>
+          <div class="emp-field"><label data-i18n="estado">Estado</label>
+            <select id="emp-estado"><option value="activo" data-i18n="activo">Activo</option><option value="inactivo" data-i18n="inactivo">Inactivo</option></select>
+          </div>
+          <div class="emp-field"><label data-i18n="sueldo_por_dia">Sueldo por día ($)</label><input id="emp-sueldo" type="text" inputmode="decimal" placeholder="0.00"></div>
+          <div class="emp-field"><label data-i18n="telefono">Teléfono</label><input id="emp-tel" type="tel" placeholder="615-000-0000"></div>
+          <div class="emp-field"><label data-i18n="email">Email</label><input id="emp-email" type="email" placeholder="juan@email.com"></div>
+          <div class="emp-field"><label data-i18n="fecha_de_inicio">Fecha de inicio</label><input id="emp-inicio" type="date"></div>
+          <div class="emp-field"><label data-i18n="ss_ultimos_4">SS (últimos 4)</label><input id="emp-ss" type="text" maxlength="4" placeholder="XXXX"></div>
+          <div class="emp-field wide"><label data-i18n="contacto_de_emergencia">Contacto de emergencia</label><input id="emp-emergencia" type="text" placeholder="Nombre - Teléfono"></div>
+          <div class="emp-field wide"><label data-i18n="direccion">Dirección</label><input id="emp-direccion" type="text" placeholder="1234 Main St, Nashville, TN"></div>
+          <div class="emp-field wide"><label data-i18n="notas">Notas</label><textarea id="emp-notas" placeholder="Notas adicionales..."></textarea></div>
+        </div>
+        <div class="emp-modal-actions">
+          <button class="gc-save-btn" data-i18n="guardar" id="btn-guardar-empleado">Guardar</button>
+          <button class="gc-action-btn" data-i18n="imprimir" id="btn-imprimir-empleado" style="display:none;">Imprimir</button>
+          <button class="gc-action-btn" data-i18n="descargar" id="btn-descargar-empleado" style="display:none;">⬇ Descargar</button>
+          <button class="gc-action-btn" data-i18n="eliminar" id="btn-eliminar-empleado" style="display:none;color:var(--ember);border-color:var(--ember);">Eliminar</button>
+        </div>
+        <p id="emp-status" style="font-size:12px;margin-top:10px;"></p>
+      </div>
+      <div id="emp-etab-docs" style="display:none;">
+        <div id="docs-electron-ui">
+          <div class="doc-upload-bar">
+            <select id="doc-categoria"><option value="Contrato" data-i18n="contrato">Contrato</option><option value="Seguro" data-i18n="seguro">Seguro</option><option value="Identificación" data-i18n="identificacion">Identificación</option><option value="Licencia" data-i18n="licencia">Licencia</option><option value="Otro" data-i18n="otro">Otro</option></select>
+            <button class="gc-save-btn" data-i18n="subir_pdf" id="btn-subir-doc">+ Subir PDF</button>
+          </div>
+          <div class="doc-list" id="doc-list"></div>
+        </div>
+        <div class="doc-web-note" id="docs-web-note" style="display:none;">La subida de PDFs solo está disponible en la <strong>app de escritorio</strong>.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Print modal -->
+<div class="gc-print-overlay" id="modal-print" style="display:none;">
+  <div class="gc-print-toolbar no-print">
+    <button class="gc-save-btn" data-i18n="imprimir" id="btn-imprimir-modal">Imprimir</button>
+    <button class="gc-action-btn" id="btn-enviar-desde-modal" style="background:#fff;">↗ Enviar</button>
+    <button class="gc-action-btn" id="btn-wa-modal" style="background:#fff;">WhatsApp</button>
+    <button class="gc-action-btn" id="btn-correo-modal" style="background:#fff;">Correo</button>
+    <button class="gc-action-btn" data-i18n="descargar" id="btn-descargar-desde-modal" style="background:#fff;">⬇ Descargar</button>
+    <button class="gc-action-btn" data-i18n="cerrar" id="btn-cerrar-modal" style="background:#fff;">Cerrar</button>
+  </div>
+  <div class="gc-print-sheet" id="modal-print-sheet"></div>
+</div>
+
+<!-- Print area -->
+<div id="gc-toast"></div>
+<div id="print-area"></div>
+
+<script src="vendor/supabase-2.117.1.min.js"></script>
+<script src="supabase-storage.js?v=gh-manager-v200-prueba"></script>
+<script src="browser-storage.js"></script>
+<script src="app.js?v=gh-manager-v200-prueba"></script>
+</body>
+</html>

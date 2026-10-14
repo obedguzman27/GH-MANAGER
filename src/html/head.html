@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <!-- Seguridad: la app solo puede cargar código de ella misma y hablar
+       con su propia base de datos. Si alguien lograra meter un script de otro
+       sitio, el navegador no lo deja correr ni mandar datos afuera. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cubhmlclqovvmsdskooc.supabase.co wss://cubhmlclqovvmsdskooc.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com; frame-src 'self' blob: data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>GH Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Carlito:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+  <!-- PWA: instalación en iPhone (Compartir → Agregar a pantalla de inicio) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#17181C">
+  <!-- Tema claro/oscuro: se aplica antes de pintar (sin destello). Vive solo en este aparato. -->
+  <script>
+  window.GH_TEMA = (function () {
+    var K = 'gh-tema';
+    var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    function pref() { try { return localStorage.getItem(K) || 'auto'; } catch (e) { return 'auto'; } }
+    function aplicar() {
+      var p = pref();
+      var oscuro = p === 'oscuro' || (p === 'auto' && !!(mq && mq.matches));
+      var r = document.documentElement;
+      if (oscuro) r.setAttribute('data-tema', 'oscuro'); else r.removeAttribute('data-tema');
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute('content', oscuro ? '#141519' : '#17181C');
+      var bs = document.querySelectorAll('[data-tema-opt]');
+      for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tema-opt') === p);
+    }
+    function set(p) { try { localStorage.setItem(K, p); } catch (e) {} aplicar(); }
+    if (mq) { try { mq.addEventListener('change', aplicar); } catch (e) { if (mq.addListener) mq.addListener(aplicar); } }
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-tema-opt]') : null;
+      if (b) set(b.getAttribute('data-tema-opt'));
+    });
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('#gh-tema-btn') : null;
+      if (b) set(document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'claro' : 'oscuro');
+    });
+    document.addEventListener('DOMContentLoaded', aplicar);
+    aplicar();
+    return { aplicar: aplicar, set: set, pref: pref };
+  })();
+  </script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GH Manager">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+  <link rel="icon" href="icon-192.png?v=2">
+</head>
+<body>
+
+<!-- Oculto desde el primer pintado — evita cualquier destello de la app
+     (Inicio con datos reales) mientras se confirma sesión/rol. Se revela
+     por JS al final del archivo (revelarAppNormal quita este bloque),
+     una vez que se sabe qué debe ver cada quien: normal, o la interfaz
+     restringida de visor ya armada (no antes). -->
+<style id="gh-oculto-inicial">
+  nav.gc-nav, .gc-body { display: none !important; }
+</style>
+
