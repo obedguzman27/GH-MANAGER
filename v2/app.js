@@ -11475,16 +11475,20 @@
     }
 
     // Sube a la nube una lista de cambios (lee lo último y aplica encima)
+    // Si otro teléfono guardó en el mismo instante, se vuelve a leer y se
+    // aplica encima (antes el último en guardar borraba lo del otro).
     async function subir(cambios) {
-      let actual = {};
-      const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY);   // si no hay señal, esto falla
-      try { actual = r ? JSON.parse(r) : {}; } catch (e) { actual = {}; }
-      if (!actual || typeof actual !== 'object' || Array.isArray(actual)) actual = {};
-      cambios.forEach((c) => aplicar(actual, c));
-      const corte = chkSumarDias(hoy, -120);   // solo los últimos 120 días
-      Object.keys(actual).forEach((k) => { if (/^\d{4}-\d{2}-\d{2}$/.test(k) && k < corte) delete actual[k]; });
-      await window.GH_ESCRIBIR_EN_CUENTA(codigo, CHK_KEY, JSON.stringify(actual));
-      return actual;
+      for (let intento = 0; ; intento++) {
+        let actual = {};
+        const r = await window.GH_LEER_DE_CUENTA(codigo, CHK_KEY);   // si no hay señal, esto falla
+        try { actual = r ? JSON.parse(r) : {}; } catch (e) { actual = {}; }
+        if (!actual || typeof actual !== 'object' || Array.isArray(actual)) actual = {};
+        cambios.forEach((c) => aplicar(actual, c));
+        const corte = chkSumarDias(hoy, -120);   // solo los últimos 120 días
+        Object.keys(actual).forEach((k) => { if (/^\d{4}-\d{2}-\d{2}$/.test(k) && k < corte) delete actual[k]; });
+        try { await window.GH_ESCRIBIR_EN_CUENTA(codigo, CHK_KEY, JSON.stringify(actual)); return actual; }
+        catch (e) { if (!(e && e.conflicto) || intento >= 4) throw e; }
+      }
     }
 
     let cola = Promise.resolve();

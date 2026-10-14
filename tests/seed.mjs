@@ -52,7 +52,7 @@ poner(P + 'gh-nomina', nomina);
 poner(P + 'gh-trabajos', [{ nombre: 'Trim', precio: 250, porTon: false }, { nombre: 'Gas', precio: 75, porTon: false }, { nombre: 'Rough In', precio: 300, porTon: true }]);
 poner(P + 'gh-colonias', ['Oak Hills', 'River Bend', 'Maple Creek']);
 poner(P + 'gh-clientes', ['Airtron']);
-poner(P + 'empleados', trabajadores.map((t, i) => ({ id: 'emp-' + i, nombre: t.split(' ')[0], apellido: t.split(' ')[1], rol: 'Técnico', estado: 'activo', sueldo: 150 + 10 * i, tel: '', email: '', direccion: '', emergencia: '', inicio: '2026-01-05', notas: '', ss: '' })));
+poner(P + 'empleados', trabajadores.map((t, i) => ({ id: 'emp-' + i, nombre: t.split(' ')[0], apellido: t.split(' ')[1], rol: 'Técnico', estado: 'activo', sueldo: 150 + 10 * i, tel: '', email: '', direccion: '', emergencia: '', inicio: '2026-01-05', notas: '', ss: '', pagarA: i < 2 ? 'socio:socio-1' : '' })));
 poner(P + 'gh-checkin', { _trab: trabajadores });
 poner(P + 'gh-cheques', []);
 poner(P + 'gh-cheques-cfg', { offX: 0, offY: 0, talones: true, siguiente: 1001 });

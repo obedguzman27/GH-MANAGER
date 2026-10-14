@@ -11,11 +11,11 @@
   <title>GH Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Carlito:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Semi+Condensed:wght@600;700&family=Carlito:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 
   <!-- PWA: instalación en iPhone (Compartir → Agregar a pantalla de inicio) -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#17181C">
+  <meta name="theme-color" content="#17232D">
   <!-- Tema claro/oscuro: se aplica antes de pintar (sin destello). Vive solo en este aparato. -->
   <script>
   window.GH_TEMA = (function () {
@@ -28,7 +28,7 @@
       var r = document.documentElement;
       if (oscuro) r.setAttribute('data-tema', 'oscuro'); else r.removeAttribute('data-tema');
       var m = document.querySelector('meta[name="theme-color"]');
-      if (m) m.setAttribute('content', oscuro ? '#141519' : '#17181C');
+      if (m) m.setAttribute('content', oscuro ? '#0F161C' : '#17232D');
       var bs = document.querySelectorAll('[data-tema-opt]');
       for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tema-opt') === p);
     }

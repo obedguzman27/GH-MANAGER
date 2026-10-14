@@ -89,5 +89,94 @@ def sin_permiso_avisa(p, c):
     assert a.evaluate('() => window.GH_SYNC.info().pendientes') == 0
     c.errores.clear()
 
+def tab(pg, t, sub=None, attr='data-sub'):
+    pg.click(f'.gc-tab[data-tab="{t}"]'); pg.wait_for_timeout(500)
+    if sub: pg.click(f'#panel-{t} [{attr}="{sub}"]'); pg.wait_for_timeout(400)
+
+@prueba
+def factura_nueva_y_editar(p, c):
+    pg = c.pagina()
+    tab(pg, 'facturas')
+    num = pg.input_value('#inv-num')
+    assert num == '1010', num
+    filas = pg.query_selector_all('#inv-tbody tr')
+    filas[0].query_selector('.inv-loc').fill('Lot 5 Oak Hills')
+    filas[0].query_selector('.inv-work').fill('Trim')
+    filas[0].query_selector('.inv-work').dispatch_event('change')
+    assert filas[0].query_selector('.inv-amt').input_value() == '250.00'
+    # Enter pasa al siguiente campo, no guarda
+    filas[0].query_selector('.inv-loc').press('Enter')
+    assert len(valor(None, 'c:prueba::gh-invoices')) == 4
+    pg.fill('#inv-cliente-direccion', 'Dirección especial 99')
+    pg.click('#inv-btn-guardar'); pg.wait_for_timeout(800)
+    docs = valor(None, 'c:prueba::gh-invoices')
+    nueva = [d for d in docs if d['numero'] == '1010'][0]
+    assert nueva['total'] == 250 and nueva['clienteDireccion'] == 'Dirección especial 99', nueva
+    # editar otra factura: debe traer SU dirección, no la última usada
+    tab(pg, 'facturas', 'guardadas')
+    pg.evaluate("""() => { const b=[...document.querySelectorAll('#inv-list-tbody [data-a="editar"]')].find(x => x.closest('tr').textContent.includes('1007')); b.click(); }""")
+    pg.wait_for_timeout(400)
+    assert pg.input_value('#inv-cliente-direccion') == '123 Main St, Nashville, TN'
+    pg.click('#inv-btn-guardar'); pg.wait_for_timeout(800)
+    d = [d for d in valor(None, 'c:prueba::gh-invoices') if d['numero'] == '1007'][0]
+    assert d['clienteDireccion'] == '123 Main St, Nashville, TN' and d.get('editadoEn') and d['creadoEn'].startswith('20'), d
+    # número repetido pide confirmación
+    pg.fill('#inv-num', '1007')
+    pg.query_selector_all('#inv-tbody tr')[0].query_selector('.inv-amt').fill('10')
+    pg.click('#inv-btn-guardar'); pg.wait_for_timeout(400)
+    assert pg.is_visible('.gc-confirm-overlay'), 'no avisó del número repetido'
+    pg.click('.gc-confirm-overlay [data-r="0"]')
+
+@prueba
+def nomina_semana_y_movimientos_con_socio(p, c):
+    pg = c.pagina()
+    tab(pg, 'nomina')
+    # marcar 2 días a Pedro Lopez en la semana actual
+    for i in [0, 1]:
+        pg.click(f'#nom-grid-lista [data-grid-nombre="Pedro Lopez"] .nom-grid-dia >> nth={i}')
+    pg.click('#nom-grid-guardar'); pg.wait_for_timeout(800)
+    nom = valor(None, 'c:prueba::gh-nomina')
+    pedro = [n for n in nom if n['trabajador'] == 'Pedro Lopez' and len(n['dias']) == 2]
+    assert pedro and pedro[0]['monto'] == 300, pedro
+    # Nueva página (sin abrir Nómina): agregar la nómina de la semana pasada a movimientos
+    pg2 = c.pagina()
+    pg2.click('#mov-nom-abrir'); pg2.wait_for_timeout(1200)
+    pg2.click('#mov-nom-agregar'); pg2.wait_for_timeout(1000)
+    movs = valor(None, 'c:prueba::movimientos')
+    ajustes = [m for m in movs if m['tipo'] == 'ajuste' and m.get('nominaSemana')]
+    gastos = [m for m in movs if m['tipo'] == 'gasto' and m.get('nominaSemana')]
+    assert ajustes and ajustes[0]['ajusteSocioNombre'] == 'CRA HVAC', ajustes
+    cra = [g for g in gastos if g['cat'] == 'CRA HVAC']
+    assert cra and abs(cra[0]['monto'] - ajustes[0]['monto']) < .01, (cra, ajustes)
+
+@prueba
+def cheque_se_registra_antes_de_imprimir(p, c):
+    pg = c.pagina()
+    pg.evaluate("() => { window.__impresos = 0; HTMLIFrameElement.prototype.__p = 1; }")
+    tab(pg, 'payroll'); pg.wait_for_timeout(800)
+    pg.fill('#chq-a', 'Pedro Lopez'); pg.fill('#chq-monto', '450')
+    pg.evaluate("() => { window.FAKE.fallarEscrituras = true; }")
+    pg.click('#chq-btn-imprimir'); pg.wait_for_timeout(800)
+    assert not pg.query_selector('#gh-print-frame'), 'imprimió aunque no se guardó'
+    pg.evaluate("() => { window.FAKE.fallarEscrituras = false; }")
+    pg.click('#chq-btn-imprimir'); pg.wait_for_timeout(1000)
+    lista = valor(None, '__gh-cheques')
+    assert lista and lista[-1]['a'] == 'Pedro Lopez' and lista[-1]['monto'] == 450, lista
+    c.errores.clear()
+
+@prueba
+def checkin_dos_visores(p, c):
+    v1 = c.otro(p, usuario='u-visor').pagina()
+    v2 = c.otro(p, usuario='u-visor').pagina()
+    v1.wait_for_selector('.chk-fila'); v2.wait_for_selector('.chk-fila')
+    v1.click('.chk-fila[data-n="Pedro Lopez"]')
+    v2.click('.chk-fila[data-n="Juan Martinez"]')
+    v1.wait_for_timeout(1500)
+    chk = valor(None, 'c:prueba::gh-checkin')
+    dias = [k for k in chk if k[:2] == '20']
+    assert dias, chk
+    marcados = chk[dias[0]]['v']
+    assert 'Pedro Lopez' in marcados and 'Juan Martinez' in marcados, marcados
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

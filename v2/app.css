@@ -1,4 +1,4 @@
-/* ---- app.css ---- */
+/* ---- 10-app.css ---- */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   html, body { width: 100%; min-height: 100vh; font-family: 'Inter', sans-serif; background: #EEF2F8; -webkit-font-smoothing: antialiased; }
@@ -2196,3 +2196,309 @@
   .us-clave { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #F2FAF4; border: 1px solid #CFE8D6; font-size: 13px; }
   .us-clave code { font-size: 16px; font-weight: 800; letter-spacing: .5px; user-select: all; }
   @media (max-width: 600px) { .us-grid { grid-template-columns: 1fr; } .us-acc .us-sp { display: none; } }
+
+/* ---- 50-diseno.css ---- */
+/* =====================================================================
+   GH MANAGER v200 — DISEÑO "LÁMINA Y TERMOSTATO"
+   Capa final de presentación. No cambia IDs ni lógica.
+   Idea: el mundo del HVAC. Fondo de lámina galvanizada, tinta de acero,
+   el naranja del logo para las acciones, y la pareja frío/calor del
+   oficio para el dinero: azul "supply" = entra, rojo "heat" = sale.
+   Letra Barlow (de señalización industrial: se lee bien bajo el sol).
+   ===================================================================== */
+:root {
+  --font-ui: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+
+  --bg: #E6EAEE;            /* lámina galvanizada */
+  --card: #FFFFFF;
+  --surface-2: #F1F4F6;
+  --surface-3: #E2E7EB;
+  --track: #DCE2E7;
+  --border: #C9D2DA;
+  --border-soft: #DCE2E8;
+  --ink: #132029;           /* acero oscuro */
+  --muted: #55636F;
+  --muted-soft: #85929E;
+  --navy: #17232D;          /* encabezado y barra */
+  --navy2: #1E2D39;
+  --navy3: #263847;
+  --dock: #17232D;
+
+  --copper: #D2621C;        /* naranja del logo, más firme */
+  --copper-dk: #A64A0F;
+  --copper-bg: #FBE8DA;
+  --teal: #1F72B5;          /* supply: entra / pagado / bien */
+  --teal-dk: #165B92;
+  --teal-bg: #E0ECF7;
+  --ember: #BF3A22;         /* heat: sale / pendiente / peligro */
+  --ember-bg: #FAE3DD;
+  --gold: #8E6A0E;
+  --gold-bg: #F7EED3;
+  --income: var(--teal-dk);
+  --expense: var(--ember);
+
+  --shadow-sm: 0 1px 0 rgba(19,32,41,.05);
+  --shadow: 0 1px 0 rgba(19,32,41,.05), 0 12px 28px -18px rgba(19,32,41,.35);
+  --shadow-lg: 0 24px 56px -22px rgba(19,32,41,.45);
+  --r: 14px;
+  --r-sm: 10px;
+  --r-lg: 18px;
+  --nav-h: 62px;
+}
+:root[data-accent="teal"] { --accent: #1F72B5; --accent-dk: #165B92; --accent-bg: #E0ECF7; }
+
+@media screen {
+  :root[data-tema="oscuro"] {
+    --bg: #0F161C;
+    --card: #16212A;
+    --surface-2: #1B2832;
+    --surface-3: #22313C;
+    --track: #22313C;
+    --border: #2C3D4A;
+    --border-soft: #22313C;
+    --ink: #E8EDF1;
+    --muted: #9AA8B4;
+    --muted-soft: #6D7C88;
+    --navy: #0B1116; --navy2: #121B22; --navy3: #18242D;
+    --dock: #0B1116;
+    --copper: #F0823A; --copper-dk: #F7A56D; --copper-bg: rgba(240,130,58,.15);
+    --teal: #5AA7EA; --teal-dk: #86C0F2; --teal-bg: rgba(90,167,234,.15);
+    --ember: #F06A4E; --ember-bg: rgba(240,106,78,.15);
+    --gold: #E2B653; --gold-bg: rgba(226,182,83,.14);
+  }
+  :root[data-tema="oscuro"] .gc-header { background: var(--navy); border-bottom: 1px solid #1D2A34; }
+  :root[data-tema="oscuro"] .gh-hero, :root[data-tema="oscuro"] .iv-hero { background: #121B22; border: 1px solid #22313C; }
+}
+
+/* ---------- Base ---------- */
+html, body, #gc-app { font-family: var(--font-ui); }
+body { font-size: 15px; }
+#gc-app button, #gc-app input, #gc-app select, #gc-app textarea,
+.gc-confirm-overlay button, .sel-actionbar button, .emp-modal button, .emp-modal input, .emp-modal select { font-family: var(--font-ui); }
+[style*="Zilla Slab"], [style*="Plus Jakarta"] { font-family: var(--font-num) !important; }
+[style*="IBM Plex Mono"] { font-family: var(--font-num) !important; letter-spacing: 0 !important; }
+.num, .gc-num, .gc-stat-val, .gh-tile-val, .inv-tot-v, .pay-row-amt, .gh-res-kpi b, td.r, td.num { font-variant-numeric: tabular-nums; }
+#gc-app { background: var(--bg); }
+#gc-app button:focus-visible, #gc-app input:focus-visible, #gc-app select:focus-visible, #gc-app textarea:focus-visible,
+.gh-login button:focus-visible, .gh-login input:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Encabezado ---------- */
+.gc-header {
+  background: var(--navy); border-bottom: 0; box-shadow: none;
+  height: calc(58px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 20px 0;
+}
+.gc-header::before, .gc-header::after { display: none; }
+.gc-brand { gap: 10px; }
+.gc-logo-badge, #gc-logo-custom { width: 34px !important; height: 34px !important; border-radius: 9px !important; }
+.gc-company { font-family: var(--font-num); font-weight: 700; font-size: 20px; letter-spacing: .01em; }
+#app-version-badge { font-family: var(--font-ui); }
+.gc-date-badge { display: none; }
+.gc-header-right { gap: 8px; }
+
+/* Indicador de guardado (en el encabezado) */
+.gh-sync {
+  display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 10px;
+  border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: transparent;
+  color: rgba(255,255,255,.82); font: 600 12.5px var(--font-ui); cursor: pointer; white-space: nowrap;
+}
+.gh-sync i { width: 8px; height: 8px; border-radius: 50%; background: #5BC08A; box-shadow: 0 0 0 3px rgba(91,192,138,.18); flex-shrink: 0; }
+.gh-sync:not(.con-texto) { padding: 0; width: 32px; justify-content: center; }
+.gh-sync[data-estado="guardando"] i { background: #F0B44A; box-shadow: 0 0 0 3px rgba(240,180,74,.2); animation: gh-pulso 1s ease-in-out infinite; }
+.gh-sync[data-estado="offline"] i, .gh-sync[data-estado="error"] i { background: #F06A4E; box-shadow: 0 0 0 3px rgba(240,106,78,.22); }
+.gh-sync[data-estado="offline"], .gh-sync[data-estado="error"] { border-color: rgba(240,106,78,.5); }
+@keyframes gh-pulso { 50% { opacity: .35; } }
+
+/* Barra "cambios de otro teléfono" y aviso de versión nueva */
+.gh-barra-remota, .gh-aviso-update {
+  position: fixed; left: 50%; transform: translate(-50%, -140%); top: calc(66px + env(safe-area-inset-top, 0px));
+  z-index: 9990; width: min(560px, calc(100% - 24px));
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px;
+  background: var(--ink); color: #fff; border-radius: 14px; box-shadow: var(--shadow-lg);
+  font: 500 14px/1.35 var(--font-ui); transition: transform .28s cubic-bezier(.2,.7,.3,1);
+}
+:root[data-tema="oscuro"] .gh-barra-remota, :root[data-tema="oscuro"] .gh-aviso-update { background: #E8EDF1; color: #132029; }
+.gh-barra-remota.show { transform: translate(-50%, 0); }
+.gh-aviso-update { top: auto; bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 0); }
+.gh-barra-remota span, .gh-aviso-update span { flex: 1; min-width: 0; }
+.gh-barra-ok, .gh-aviso-update button {
+  border: 0; background: var(--copper); color: #fff; font: 700 13.5px var(--font-ui);
+  padding: 9px 14px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+}
+.gh-barra-x { border: 0; background: transparent; color: inherit; opacity: .6; font-size: 15px; padding: 6px 8px; cursor: pointer; }
+
+/* ---------- Tarjetas ---------- */
+.gc-card, .gc-chart-card { background: var(--card); border: 1px solid var(--border-soft); box-shadow: var(--shadow-sm); border-radius: var(--r); }
+.gc-card-title { font-family: var(--font-num); font-size: 18px; font-weight: 700; letter-spacing: .005em; }
+.gc-card-title::before { width: 4px; height: 16px; border-radius: 2px; background: var(--accent); }
+
+/* ---------- Formularios ---------- */
+.gc-field label, .gc-label { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
+#gc-app input[type="text"], #gc-app input[type="number"], #gc-app input[type="date"], #gc-app input[type="search"],
+#gc-app input[type="email"], #gc-app input[type="tel"], #gc-app input[type="password"], #gc-app select, #gc-app textarea {
+  border-color: var(--border); border-radius: var(--r-sm); color: var(--ink);
+}
+#gc-app input:focus, #gc-app select:focus, #gc-app textarea:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-bg) !important; }
+
+/* ---------- Botones ---------- */
+.gc-save-btn { background: var(--accent); border-radius: var(--r-sm); font-weight: 700; letter-spacing: .01em; }
+.gc-save-btn:hover { background: var(--accent-dk); }
+.gc-save-btn:disabled { opacity: .55; cursor: wait; }
+.gc-action-btn { border-radius: var(--r-sm); font-weight: 600; border-color: var(--border); }
+
+/* ---------- Navegación interna: pastillas que se deslizan ---------- */
+.inv-subnav, .pln-subnav, .nom-subnav, .pay-subnav, .aj-subnav, .doc-subnav {
+  display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; border-bottom: 0 !important; padding: 2px 0 10px !important; margin-bottom: 8px !important;
+  background: transparent !important;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+          mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+}
+.inv-subnav::-webkit-scrollbar { display: none; }
+.inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab, .pay-subtab {
+  flex: 0 0 auto; scroll-snap-align: start; white-space: nowrap;
+  border: 1px solid var(--border) !important; border-radius: 999px !important;
+  background: var(--card) !important; color: var(--muted) !important;
+  padding: 8px 15px !important; font: 600 14px var(--font-ui) !important; margin: 0 !important;
+  box-shadow: none !important;
+}
+.inv-subtab:first-child, .nom-subtab:first-child, .aj-subtab:first-child, .mov-subtab:first-child, .doc-subtab:first-child, .pln-subtab:first-child, .pay-subtab:first-child { margin-left: 2px !important; }
+.inv-subtab.active, .nom-subtab.active, .aj-subtab.active, .mov-subtab.active, .doc-subtab.active, .pln-subtab.active, .pay-subtab.active {
+  background: var(--ink) !important; color: var(--card) !important; border-color: var(--ink) !important;
+}
+.inv-subtab::after, .nom-subtab::after, .aj-subtab::after, .mov-subtab::after, .pay-subtab::after { display: none !important; }
+
+/* ---------- Resumen de Principal (la "lectura del termostato") ---------- */
+.gh-hero {
+  background: var(--navy) !important; border: 0; border-radius: var(--r-lg);
+  box-shadow: none; padding: 20px 18px 18px;
+}
+.gh-hero::before, .gh-hero::after { display: none !important; }
+.gh-hero-saludo { font-family: var(--font-num) !important; font-weight: 700; font-size: 26px; letter-spacing: .005em; }
+.gh-tile { background: rgba(255,255,255,.04) !important; border: 1px solid rgba(255,255,255,.1) !important; border-radius: 12px !important; }
+.gh-tile-lbl { font: 600 12.5px var(--font-ui) !important; letter-spacing: .01em !important; text-transform: none !important; }
+.gh-tile-val { font-family: var(--font-num) !important; font-weight: 700 !important; font-size: 27px !important; letter-spacing: .005em !important; }
+#gh-tile-cobrar .gh-tile-val { color: #FFB27A; }
+#gh-tile-semana .gh-tile-val { color: #9CCBF4; }
+.gh-tile.alerta { border-color: rgba(255,178,122,.55) !important; }
+
+/* ---------- Tablas ---------- */
+.inv-list-t th, .gc-ledger th, .inv-tbl th { font: 700 12px var(--font-ui) !important; letter-spacing: .02em !important; }
+
+/* ---------- Diálogos y avisos ---------- */
+.gc-confirm-box { border-radius: var(--r-lg); }
+.gc-toast-item { font-family: var(--font-ui); font-size: 14px; border-radius: 12px; }
+
+/* ---------- Inicio de sesión ---------- */
+.gh-login {
+  position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;
+  background: #17232D; padding: 24px; font-family: var(--font-ui);
+}
+.gh-login-card { width: 100%; max-width: 360px; background: #fff; border-radius: 18px; padding: 30px 24px 18px; text-align: center; }
+.gh-login-logo { border-radius: 16px; box-shadow: 0 0 0 1px #DCE2E8; margin-bottom: 10px; }
+.gh-login-titulo { font: 700 24px var(--font-num); color: #132029; }
+.gh-login-sub { font-size: 14px; color: #55636F; margin: 2px 0 20px; }
+.gh-login-campo { display: block; text-align: left; margin-bottom: 12px; }
+.gh-login-campo span { display: block; font-size: 13px; font-weight: 600; color: #55636F; margin-bottom: 5px; }
+.gh-login-campo input { width: 100%; height: 48px; padding: 0 14px; font: 500 16px var(--font-ui); border: 1.5px solid #C9D2DA; border-radius: 10px; color: #132029; background: #fff; }
+.gh-login-campo input:focus { outline: none; border-color: #D2621C; box-shadow: 0 0 0 3px #FBE8DA; }
+.gh-login-pista { font-size: 12.5px; color: #85929E; text-align: left; margin: -4px 0 10px; }
+.gh-login-error { min-height: 18px; font-size: 13.5px; color: #BF3A22; margin-bottom: 10px; text-align: left; }
+.gh-login-btn { width: 100%; height: 48px; border: 0; border-radius: 10px; background: #D2621C; color: #fff; font: 700 15.5px var(--font-ui); cursor: pointer; }
+.gh-login-btn:disabled { opacity: .6; }
+.gh-login-modo { margin-top: 10px; background: none; border: 0; color: #55636F; font: 500 14px var(--font-ui); text-decoration: underline; cursor: pointer; padding: 8px; }
+
+/* =====================================================================
+   TELÉFONO
+   ===================================================================== */
+@media (max-width: 860px) {
+  .gc-header { padding-left: 16px; padding-right: 12px; }
+  .gc-body { padding: 14px 14px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom, 0px)) !important; }
+
+  /* Barra de abajo pegada al borde (antes flotaba y tapaba contenido) */
+  .gc-nav {
+    left: 0 !important; right: 0 !important; bottom: 0 !important;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)) !important; gap: 0 !important;
+    background: var(--dock) !important; border: 0 !important; border-top: 1px solid rgba(255,255,255,.06) !important;
+    border-radius: 0 !important; box-shadow: none !important;
+  }
+  .gc-tab {
+    position: relative; border-radius: 10px !important; padding: 8px 2px 6px !important;
+    color: rgba(255,255,255,.58) !important; font: 600 11.5px var(--font-ui) !important; background: transparent !important;
+  }
+  .gc-tab svg { width: 22px !important; height: 22px !important; }
+  .gc-tab.active, .gc-tab.active:hover { background: transparent !important; color: #fff !important; }
+  .gc-tab.active svg { color: #FF9A55 !important; }
+  .gc-tab.active::before {
+    content: ''; position: absolute; top: -6px; left: 30%; right: 30%; height: 3px; border-radius: 0 0 3px 3px; background: #FF9A55;
+  }
+
+  .gh-fab { bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px)) !important; border-radius: 16px !important; }
+  #gc-toast { bottom: calc(var(--nav-h) + 84px + env(safe-area-inset-bottom, 0px)) !important; }
+
+  .gc-card { padding: 18px 14px; border-radius: var(--r); }
+
+  /* Campos grandes y a 16px (el iPhone no hace zoom) */
+  #gc-app input[type="text"], #gc-app input[type="number"], #gc-app input[type="date"], #gc-app input[type="search"],
+  #gc-app input[type="email"], #gc-app input[type="tel"], #gc-app input[type="password"], #gc-app select { min-height: 46px; font-size: 16px !important; }
+  #gc-app textarea { font-size: 16px !important; }
+
+  .inv-subnav, .pln-subnav { margin-left: -14px !important; margin-right: -14px !important; padding-left: 12px !important; padding-right: 12px !important; }
+
+  /* Facturas: cada línea es una tarjeta (antes la tabla se salía de la pantalla) */
+  .inv-tbl, .inv-tbl tbody { display: block; width: 100%; }
+  .inv-tbl thead { display: none; }
+  .inv-tbl tbody tr {
+    display: grid; grid-template-columns: 30px minmax(0,1fr) minmax(0,1fr) auto; grid-template-areas: "n fecha fecha acc" "loc loc loc loc" "work work work work" "tons tons amt amt";
+    gap: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--surface-2);
+  }
+  .inv-tbl tbody td { display: block; padding: 0 !important; border: 0 !important; width: auto !important; min-width: 0; text-align: left !important; }
+  .inv-tbl tbody td input { min-width: 0 !important; max-width: 100%; box-sizing: border-box; }
+  .inv-tbl { min-width: 0 !important; table-layout: auto; }
+  .inv-tbl tbody td:nth-child(1) { grid-area: n; align-self: center; font: 700 15px var(--font-num); color: var(--muted); }
+  .inv-tbl tbody td:nth-child(2) { grid-area: fecha; }
+  .inv-tbl tbody td:nth-child(3) { grid-area: loc; }
+  .inv-tbl tbody td:nth-child(4) { grid-area: work; }
+  .inv-tbl tbody td:nth-child(5) { grid-area: tons; }
+  .inv-tbl tbody td:nth-child(6) { grid-area: amt; }
+  .inv-tbl tbody td:nth-child(7) { grid-area: acc; display: flex; gap: 6px; align-items: center; }
+  .inv-tbl tbody td:nth-child(5)::before { content: 'Toneladas'; }
+  .inv-tbl tbody td:nth-child(6)::before { content: 'Monto'; }
+  .inv-tbl tbody td:nth-child(5)::before, .inv-tbl tbody td:nth-child(6)::before { display: block; font: 600 12px var(--font-ui); color: var(--muted); margin-bottom: 4px; text-align: left; }
+  .inv-tbl tbody td input { width: 100% !important; background: var(--card); border: 1.5px solid var(--border) !important; border-radius: 10px; min-height: 44px; padding: 8px 10px !important; }
+  .inv-tbl tbody td:nth-child(6) input { font: 700 18px var(--font-num) !important; text-align: right; }
+  .inv-tbl tbody td .inv-mini, .inv-tbl tbody td .gc-del { min-width: 38px; height: 38px; }
+  .inv-pie { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .inv-pie .gc-card { min-width: 0 !important; }
+  .inv-acciones { padding: 4px 0 64px; }
+  .inv-acciones button { flex: 1; min-height: 46px; }
+  .inv-acciones #inv-btn-guardar { flex: 1.6; }
+}
+
+/* =====================================================================
+   COMPUTADORA: barra lateral
+   ===================================================================== */
+@media (min-width: 1000px) {
+  .gc-header { padding-left: 24px; padding-right: 24px; }
+  .gc-nav {
+    position: fixed !important; top: calc(58px + env(safe-area-inset-top, 0px)); bottom: 0; left: 0; width: 212px;
+    flex-direction: column; align-items: stretch; gap: 2px !important; padding: 16px 12px !important;
+    background: var(--card) !important; border-right: 1px solid var(--border-soft) !important; border-bottom: 0 !important;
+    overflow-y: auto; z-index: 40;
+  }
+  .gc-tab {
+    display: flex !important; flex-direction: row !important; align-items: center; justify-content: flex-start !important; gap: 12px;
+    padding: 11px 12px !important; border-radius: 10px !important; border: 0 !important;
+    font: 600 15px var(--font-ui) !important; color: var(--muted) !important; text-align: left;
+  }
+  .gc-tab svg { width: 20px; height: 20px; margin: 0 !important; }
+  .gc-tab:hover { background: var(--surface-2) !important; color: var(--ink) !important; }
+  .gc-tab.active { background: var(--accent-bg) !important; color: var(--accent-dk) !important; }
+  .gc-tab.active svg { color: var(--accent) !important; }
+  .gc-body { margin-left: 212px !important; max-width: 1180px; padding: 24px 32px 60px !important; }
+  .gh-fab { right: 32px !important; bottom: 32px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-barra-remota, .gh-sync i { transition: none !important; animation: none !important; }
+}
