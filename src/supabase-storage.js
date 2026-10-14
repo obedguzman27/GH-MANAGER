@@ -721,12 +721,12 @@
   window.GH_ELIMINAR_USUARIO = async (userId) => {
     await sesionLista;
     const { error } = await client.rpc('admin_eliminar_usuario', { p_id: userId });
-    if (error) throw new Error(faltaSql(error) ? 'Esta función todavía no está activada en la base de datos.' : error.message);
+    if (error) throw new Error(faltaSql(error) ? 'Falta activar esta función en Supabase (archivo supabase/admin-usuarios.sql).' : error.message);
   };
   window.GH_PONER_CLAVE = async (userId, clave) => {
     await sesionLista;
     const { error } = await client.rpc('admin_poner_clave', { p_id: userId, p_clave: clave });
-    if (error) throw new Error(faltaSql(error) ? 'Esta función todavía no está activada en la base de datos.' : error.message);
+    if (error) throw new Error(faltaSql(error) ? 'Falta activar esta función en Supabase (archivo supabase/admin-usuarios.sql).' : error.message);
   };
 
   // ---------- window.storage (lo que usa toda la app) ----------
