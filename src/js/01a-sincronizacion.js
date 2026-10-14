@@ -75,6 +75,9 @@
     if (d.porUnion) ghBarraRecargar('Se juntaron tus cambios con los de otro teléfono. Actualiza para ver todo junto.');
     else ghBarraRecargar('Hay cambios nuevos hechos desde otro teléfono.');
   });
+  window.addEventListener('gh-lectura-sin-senal', () => {
+    toast('Sin señal: ves lo último que se guardó en este teléfono. Lo que cambies se sube solo cuando vuelva la señal.', 'info', 6000);
+  });
   window.addEventListener('gh-recargar-sugerido', () => {
     ghBarraRecargar('Ya hay señal. Actualiza para ver todos tus datos.');
   });

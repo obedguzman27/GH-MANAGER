@@ -178,5 +178,80 @@ def checkin_dos_visores(p, c):
     marcados = chk[dias[0]]['v']
     assert 'Pedro Lopez' in marcados and 'Juan Martinez' in marcados, marcados
 
+@prueba
+def movimientos_semana_invoice_y_reabrir(p, c):
+    pg = c.pagina()
+    # gasto
+    pg.click('.gc-type-btn[data-type="gasto"]')
+    pg.select_option('#m-cat', 'Material'); pg.fill('#m-monto', '100'); pg.fill('#m-desc', 'Tubo')
+    pg.click('#btn-guardar-mov'); pg.wait_for_timeout(500)
+    # ajuste a CRA
+    pg.click('.gc-type-btn[data-type="ajuste"]')
+    pg.select_option('#ajuste-socio-select', 'socio-1'); pg.fill('#m-monto', '50')
+    pg.click('#btn-guardar-mov'); pg.wait_for_timeout(700)
+    movs = valor(None, 'c:prueba::movimientos')
+    assert len(movs) == 5, movs
+    aj = [m for m in movs if m['tipo'] == 'ajuste'][0]
+    assert aj['ajusteSocioId'] == 'socio-1' and aj['ajusteSocioNombre'] == 'CRA HVAC', aj
+    # cálculo del reparto: ingresos 3200, gastos 85.5+140+100, taxas 320
+    sem = pg.evaluate("""() => { const btn = document.getElementById('btn-guardar-invoice-top'); return true; }""")
+    pg.click('#btn-guardar-invoice-top'); pg.wait_for_timeout(400)
+    assert not pg.is_visible('#selector-semana-ov'), 'hay más de una semana'
+    pg.click('.gc-confirm-overlay [data-r="1"]'); pg.wait_for_timeout(900)
+    invs = valor(None, 'c:prueba::invoicesGuardados')
+    assert len(invs) == 1, invs
+    inv = invs[0]
+    neto = 3200 - (85.5 + 140 + 100) - 320
+    assert abs(inv['neto'] - neto) < .01, (inv['neto'], neto)
+    cra = [x for x in inv['pagos'] if x['id'] == 'socio-1'][0]
+    esperado = (neto / 2 + 50) * 1.10
+    assert abs(cra['total'] - esperado) < .01, (cra, esperado)
+    assert abs(inv['taxGuzman'] - (320 - (neto / 2 + 50) * .10)) < .01
+    assert valor(None, 'c:prueba::movimientos') == [], valor(None, 'c:prueba::movimientos')
+    # reabrir
+    pg.click('.mov-subtab[data-msub="invoices"]'); pg.wait_for_timeout(500)
+    btn = pg.query_selector('#tbody-invoices-guardados button:has-text("Reabrir"), #tbody-invoices-guardados [data-a="reabrir"], #tbody-invoices-guardados .gc-reabrir')
+    assert btn, 'no hay botón reabrir'
+    btn.click(); pg.wait_for_timeout(400)
+    if pg.is_visible('.gc-confirm-overlay'): pg.click('.gc-confirm-overlay [data-r="1"]')
+    pg.wait_for_timeout(900)
+    assert valor(None, 'c:prueba::invoicesGuardados') == []
+    assert len(valor(None, 'c:prueba::movimientos')) == 5
+
+@prueba
+def zelle_y_1099(p, c):
+    pg = c.pagina()
+    tab(pg, 'payroll', 'zelle', 'data-psub'); pg.wait_for_timeout(500)
+    pg.click('#zc-btn-nuevo'); pg.fill('#zc-a', 'Mario Diaz'); pg.fill('#zc-monto', '700'); pg.click('#zc-guardar'); pg.wait_for_timeout(700)
+    lista = valor(None, '__gh-cheques')
+    assert lista and lista[-1]['a'] == 'Mario Diaz' and lista[-1]['metodo'] in ('zelle', 'cash'), lista
+    tab(pg, 'payroll', 'r1099', 'data-psub'); pg.wait_for_timeout(600)
+    assert 'Mario Diaz' in pg.inner_text('#panel-payroll')
+
+@prueba
+def socios_y_base_nueva(p, c):
+    pg = c.pagina()
+    tab(pg, 'respaldo', 'avanzado', 'data-asub'); pg.wait_for_timeout(500)
+    pg.fill('#aj-bd-nueva', 'Base Nueva'); pg.click('#aj-btn-add-bd'); pg.wait_for_timeout(900)
+    cuentas = valor(None, '__cuentas_lista')
+    assert any(x.get('nombre') == 'Base Nueva' for x in cuentas), cuentas
+    assert any(x.get('nombre') == 'Base de prueba' for x in cuentas), cuentas
+
+@prueba
+def unir_listas_casos(p, c):
+    pg = c.pagina()
+    r = pg.evaluate("""() => {
+      const U = (b, l, r) => JSON.parse(window.GH_SYNC.unirTexto(JSON.stringify(b), JSON.stringify(l), JSON.stringify(r)));
+      const out = {};
+      out.dup = U([], [{id:1,a:1},{id:1,a:2}], [{id:1,a:1},{id:1,a:2},{id:2}]).length;   // no colapsa duplicados
+      out.nombre = U([{nombre:'Trim',precio:250}], [{nombre:'Trim',precio:300}], [{nombre:'Trim',precio:250},{nombre:'Gas',precio:75}]);
+      out.obj = U({a:1,b:1}, {a:2,b:1}, {a:1,b:3});
+      out.strs = U(['x','y'], ['x','y','z'], ['x','w']);
+      return out; }""")
+    assert r['dup'] == 3, r
+    assert r['nombre'] == [{'nombre':'Trim','precio':300},{'nombre':'Gas','precio':75}], r
+    assert r['obj'] == {'a':2,'b':3}, r
+    assert sorted(r['strs']) == ['w','x','z'], r
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

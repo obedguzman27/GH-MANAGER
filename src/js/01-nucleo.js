@@ -82,7 +82,8 @@
   let movEditandoId = null;
 
   const $ = (id) => document.getElementById(id);
-  const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Dinero: -$225.50 (antes salía $-225.50). Redondea a centavos para no mostrar -$0.00.
+  const fmt = (n) => { const v = Math.round((Number(n) || 0) * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
   const APP_VERSION = window.GH_APP_VERSION;
   (function mostrarVersion() {
@@ -300,6 +301,7 @@
   const cfgCacheKey = () => 'gh-cfg-cache:' + ((typeof window.GH_GET_CUENTA === 'function' && window.GH_GET_CUENTA()) || 'principal');
   let cfgCargada = false;   // true cuando ya se leyó la config real (nube o copia)
   async function cfgLeerSeguro() {
+    let sinSenal = false;
     for (let intento = 0; intento < 3; intento++) {
       try {
         const r = await window.storage.get(CFG_KEY);
@@ -308,12 +310,12 @@
           try { localStorage.setItem(cfgCacheKey(), r.value); } catch (e) {}
           return c;
         }
-      } catch (e) {}
+      } catch (e) { sinSenal = !!(e && e.sinSenal); if (!sinSenal && intento === 0 && e && e.message === 'not found') break; }
       if (intento < 2) await new Promise((res) => setTimeout(res, 800 * (intento + 1)));
     }
     const copia = localStorage.getItem(cfgCacheKey());
     if (copia) { setTimeout(() => cargarConfig(), 15000); return JSON.parse(copia); }   // reintenta la nube más tarde
-    throw new Error('sin-config');
+    const err = new Error('sin-config'); err.sinSenal = sinSenal; throw err;
   }
 
   async function cargarConfig() {
@@ -347,6 +349,14 @@
       if (typeof c.ultimoClienteDir === 'string') cfgUltimoClienteDir = c.ultimoClienteDir;
       if (typeof c.tasaTaxas === 'number' && c.tasaTaxas >= 0 && c.tasaTaxas < 1) TASA_TAXAS = c.tasaTaxas;
     } catch (e) {
+      if (e && e.sinSenal) {
+        // No se pudo leer (sin señal) y no hay copia: NO es una base nueva.
+        // No se guarda nada (para no borrar el nombre de la compañía ni los
+        // socios) y se vuelve a intentar en un rato.
+        setTimeout(() => cargarConfig().then(() => { try { renderMovimientos(); renderReparto(); } catch (e2) {} }), 15000);
+        aplicarNombresEstaticos();
+        return;
+      }
       // No hay configuración ni en la nube ni en este teléfono: base de datos nueva.
       cfgCargada = true;
       if (ghEsBasePrincipal()) {

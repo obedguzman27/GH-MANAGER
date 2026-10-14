@@ -293,6 +293,7 @@
       lecturasFallidas++;
       const avisar = () => { try { window.dispatchEvent(new CustomEvent('gh-recargar-sugerido')); } catch (e) {} };
       if (lecturasFallidas === 1) {
+        setTimeout(() => { try { window.dispatchEvent(new CustomEvent('gh-lectura-sin-senal')); } catch (e) {} }, 300);
         window.addEventListener('online', avisar, { once: true });
         // señal débil (navigator dice "en línea"): revisar cada 20 s si ya se puede leer
         const iv = setInterval(async () => {
@@ -339,14 +340,26 @@
     const parse = (t) => { if (t == null) return undefined; try { return JSON.parse(t); } catch (e) { return undefined; } };
     const igual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     const esObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
-    const idDe = (x) => (esObj(x) && x.id != null && x.id !== '') ? 'i:' + String(x.id) : 'j:' + JSON.stringify(x);
+    // Identidad de un elemento de lista: su id; si no tiene, su código o
+    // nombre (cuentas, trabajos); si no, el elemento completo. Si hay dos
+    // con la misma identidad, se numeran para que nunca se junten en uno.
+    const idBase = (x) => {
+      if (esObj(x)) {
+        if (x.id != null && x.id !== '') return 'i:' + String(x.id);
+        if (x.codigo != null && x.codigo !== '') return 'c:' + String(x.codigo).toLowerCase();
+        if (typeof x.nombre === 'string' && x.nombre.trim()) return 'n:' + x.nombre.trim().toLowerCase();
+      }
+      return 'j:' + JSON.stringify(x);
+    };
+    const conIds = (arr) => { const n = new Map(); return arr.map((x) => { const k = idBase(x); const c = (n.get(k) || 0) + 1; n.set(k, c); return [c > 1 ? k + '#' + c : k, x]; }); };
+    const idsDe = (arr) => conIds(arr).map((p) => p[0]);
 
     function unirListas(b, l, r) {
       b = Array.isArray(b) ? b : [];
-      const mb = new Map(b.map((x) => [idDe(x), x]));
-      const ml = new Map(l.map((x) => [idDe(x), x]));
-      const mr = new Map(r.map((x) => [idDe(x), x]));
-      const res = new Map(r.map((x) => [idDe(x), x]));
+      const mb = new Map(conIds(b));
+      const ml = new Map(conIds(l));
+      const mr = new Map(conIds(r));
+      const res = new Map(conIds(r));
       // lo que este teléfono agregó o cambió
       ml.forEach((x, id) => {
         if (!mb.has(id)) { res.set(id, x); return; }
@@ -363,8 +376,8 @@
       // orden: el de este teléfono, y lo nuevo del otro al final
       const orden = [];
       const visto = new Set();
-      l.forEach((x) => { const id = idDe(x); if (res.has(id) && !visto.has(id)) { orden.push(res.get(id)); visto.add(id); } });
-      r.forEach((x) => { const id = idDe(x); if (res.has(id) && !visto.has(id)) { orden.push(res.get(id)); visto.add(id); } });
+      idsDe(l).forEach((id) => { if (res.has(id) && !visto.has(id)) { orden.push(res.get(id)); visto.add(id); } });
+      idsDe(r).forEach((id) => { if (res.has(id) && !visto.has(id)) { orden.push(res.get(id)); visto.add(id); } });
       res.forEach((x, id) => { if (!visto.has(id)) { orden.push(x); visto.add(id); } });
       return orden;
     }
@@ -728,6 +741,23 @@
     }
     throw ultimo;
   }
+  // ---------- Copia local (para abrir sin señal) ----------
+  // Cada dato que se lee bien de la nube se copia en el teléfono. Si después
+  // se abre la app sin señal, se muestra esa copia (en vez de pantallas
+  // vacías). Lo que se guarde así se JUNTA con la nube al volver la señal.
+  const CACHE_PFX = 'gh-copia:';
+  function copiaGuardar(clave, valor) {
+    if (/fotos/.test(clave) || typeof valor !== 'string' || valor.length > 300000) return;
+    try { localStorage.setItem(CACHE_PFX + (window.GH_USER_ID || '') + ':' + clave, valor); }
+    catch (e) {
+      // sin espacio: borrar copias viejas y seguir
+      try { Object.keys(localStorage).filter((k) => k.startsWith(CACHE_PFX)).forEach((k) => localStorage.removeItem(k)); } catch (e2) {}
+    }
+  }
+  function copiaLeer(clave) {
+    try { return localStorage.getItem(CACHE_PFX + (window.GH_USER_ID || '') + ':' + clave); } catch (e) { return null; }
+  }
+
   window.storage = {
     get: async (key) => {
       await sesionLista;
@@ -738,17 +768,20 @@
       if (pend !== undefined) return { key, value: pend, shared: false, pendiente: true };
       const pre = await leerPrecarga(clave);
       if (pre === null) { Sync.registrarLeido(clave, false); throw new Error('not found'); }
-      if (pre) { Sync.registrarLeido(clave, true, pre.valor, pre.actualizado_en); return { key, value: pre.valor, shared: false }; }
+      if (pre) { Sync.registrarLeido(clave, true, pre.valor, pre.actualizado_en); copiaGuardar(clave, pre.valor); return { key, value: pre.valor, shared: false }; }
       let data;
       try { data = await leerConReintentos(clave); }
       catch (e) {
-        // No se pudo leer (señal, sesión). OJO: NO se registra como vacío, así
+        // No se pudo leer (señal, sesión). OJO: NO se registra como leído, así
         // que si la app guarda esta clave, se juntará con la nube sin borrarla.
         Sync.lecturaFallida();
+        const copia = copiaLeer(clave);
+        if (copia != null) return { key, value: copia, shared: false, deCopia: true };
         const err = new Error('not found'); err.sinSenal = true; throw err;
       }
       if (!data) { Sync.registrarLeido(clave, false); throw new Error('not found'); }
       Sync.registrarLeido(clave, true, data.valor, data.actualizado_en);
+      copiaGuardar(clave, data.valor);
       return { key, value: data.valor, shared: false };
     },
     set: async (key, value) => {

@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v200 · prueba';
+  window.GH_APP_VERSION = 'v201 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -173,7 +173,8 @@
   let movEditandoId = null;
 
   const $ = (id) => document.getElementById(id);
-  const fmt = (n) => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Dinero: -$225.50 (antes salía $-225.50). Redondea a centavos para no mostrar -$0.00.
+  const fmt = (n) => { const v = Math.round((Number(n) || 0) * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   // Versión visible de la app — súbela cada vez que haya cambios para confirmar que cargó la nueva
   const APP_VERSION = window.GH_APP_VERSION;
   (function mostrarVersion() {
@@ -391,6 +392,7 @@
   const cfgCacheKey = () => 'gh-cfg-cache:' + ((typeof window.GH_GET_CUENTA === 'function' && window.GH_GET_CUENTA()) || 'principal');
   let cfgCargada = false;   // true cuando ya se leyó la config real (nube o copia)
   async function cfgLeerSeguro() {
+    let sinSenal = false;
     for (let intento = 0; intento < 3; intento++) {
       try {
         const r = await window.storage.get(CFG_KEY);
@@ -399,12 +401,12 @@
           try { localStorage.setItem(cfgCacheKey(), r.value); } catch (e) {}
           return c;
         }
-      } catch (e) {}
+      } catch (e) { sinSenal = !!(e && e.sinSenal); if (!sinSenal && intento === 0 && e && e.message === 'not found') break; }
       if (intento < 2) await new Promise((res) => setTimeout(res, 800 * (intento + 1)));
     }
     const copia = localStorage.getItem(cfgCacheKey());
     if (copia) { setTimeout(() => cargarConfig(), 15000); return JSON.parse(copia); }   // reintenta la nube más tarde
-    throw new Error('sin-config');
+    const err = new Error('sin-config'); err.sinSenal = sinSenal; throw err;
   }
 
   async function cargarConfig() {
@@ -438,6 +440,14 @@
       if (typeof c.ultimoClienteDir === 'string') cfgUltimoClienteDir = c.ultimoClienteDir;
       if (typeof c.tasaTaxas === 'number' && c.tasaTaxas >= 0 && c.tasaTaxas < 1) TASA_TAXAS = c.tasaTaxas;
     } catch (e) {
+      if (e && e.sinSenal) {
+        // No se pudo leer (sin señal) y no hay copia: NO es una base nueva.
+        // No se guarda nada (para no borrar el nombre de la compañía ni los
+        // socios) y se vuelve a intentar en un rato.
+        setTimeout(() => cargarConfig().then(() => { try { renderMovimientos(); renderReparto(); } catch (e2) {} }), 15000);
+        aplicarNombresEstaticos();
+        return;
+      }
       // No hay configuración ni en la nube ni en este teléfono: base de datos nueva.
       cfgCargada = true;
       if (ghEsBasePrincipal()) {
@@ -1721,11 +1731,17 @@
     if (!ok) return;
 
     const registro = { ...s, id: Date.now(), guardadoEn: new Date().toISOString() };
+    // Primero se guarda el invoice; SOLO si se guardó se quitan los
+    // movimientos de la hoja (antes, si fallaba, la semana se perdía).
     invoicesGuardados.push(registro);
-    saveInvoices();
-
+    try { await window.storage.set(KEY_INVOICES, JSON.stringify(invoicesGuardados)); }
+    catch (e) {
+      invoicesGuardados = invoicesGuardados.filter((x) => x !== registro);
+      toast('No se pudo guardar el invoice, la semana sigue en la hoja: ' + ((e && e.message) || e), 'error', 6000);
+      return;
+    }
     movimientos = movimientos.filter((m) => weekInfo(m.fecha || today()).key !== s.key);
-    saveMov();
+    await saveMov();
 
     renderMovimientos();
     renderReparto();
@@ -3704,7 +3720,7 @@
       try {
         const r = await window.storage.get(rbDatoKey(b.dataset.n, b.dataset.s));
         const url = URL.createObjectURL(new Blob([r.value], { type: 'application/json' }));
-        const a = document.createElement('a'); a.href = url; a.download = `respaldo-${b.dataset.n}-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+        const a = document.createElement('a'); a.href = url; a.download = `respaldo-${b.dataset.n}-${ghFechaLocal(new Date())}.json`; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       } catch (e) { toast('No se pudo descargar ese respaldo', 'error'); }
     }));
@@ -5380,7 +5396,7 @@
     'Maintenance service','System inspection','Repair service',
     'Coil cleaning','Refrigerant recharge','Fan motor replacement'
   ];
-  const invFmt = n => '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const invFmt = n => { const v = Math.round((Number(n) || 0) * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   // Días en inglés para la columna DAY de la factura (el invoice siempre se ve en inglés)
   const INV_DIAS_SEMANA = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   // Fecha en números para los documentos (MM/DD/YYYY), nunca en letras
@@ -8157,7 +8173,7 @@
     catch (e) { nomCheckin = {}; }
   }
 
-  const nomFmt = n => '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const nomFmt = n => { const v = Math.round((Number(n) || 0) * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   const nomToday = () => ghFechaLocal(new Date());
 
   // Los trabajadores de Nómina AHORA viven en Empleados (empleados[]). Busca
@@ -8669,7 +8685,16 @@
   function nomFechasTexto(dias) {
     if (!Array.isArray(dias)) return typeof dias === 'number' ? `${dias} día(s)` : '';
     if (dias.length === 0) return '—';
-    return dias.slice().sort().join(', ');
+    // "lun 5, mar 6, mié 7 oct" (antes salía 2026-10-05, 2026-10-06…)
+    const D = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'], M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const ord = [...new Set(dias)].sort();
+    return ord.map((f, i) => {
+      const d = new Date(f + 'T00:00:00');
+      if (isNaN(d)) return f;
+      const sig = ord[i + 1] ? new Date(ord[i + 1] + 'T00:00:00') : null;
+      const finMes = !sig || sig.getMonth() !== d.getMonth();
+      return `${D[d.getDay()]} ${d.getDate()}${finMes ? ' ' + M[d.getMonth()] : ''}`;
+    }).join(', ');
   }
   function nomCuentaDias(dias) {
     return Array.isArray(dias) ? dias.length : (Number(dias) || 0);

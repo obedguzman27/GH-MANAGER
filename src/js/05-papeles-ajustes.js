@@ -233,7 +233,7 @@
       try {
         const r = await window.storage.get(rbDatoKey(b.dataset.n, b.dataset.s));
         const url = URL.createObjectURL(new Blob([r.value], { type: 'application/json' }));
-        const a = document.createElement('a'); a.href = url; a.download = `respaldo-${b.dataset.n}-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+        const a = document.createElement('a'); a.href = url; a.download = `respaldo-${b.dataset.n}-${ghFechaLocal(new Date())}.json`; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       } catch (e) { toast('No se pudo descargar ese respaldo', 'error'); }
     }));

@@ -8,6 +8,8 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CARPETA = os.environ.get('GH_CARPETA', 'v2')
 PUERTO = int(os.environ.get('GH_PUERTO', '8765'))
 FAKE = open(os.path.join(RAIZ, 'tests', 'fake-supabase.js')).read()
+import subprocess
+subprocess.run(['node', os.path.join(RAIZ, 'tests', 'seed.mjs')], check=True, capture_output=True)
 SEED = open(os.path.join(RAIZ, 'tests', 'seed.json')).read()
 SALIDA = os.path.join(RAIZ, 'tests', 'salida'); os.makedirs(SALIDA, exist_ok=True)
 

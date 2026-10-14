@@ -11,7 +11,7 @@
     catch (e) { nomCheckin = {}; }
   }
 
-  const nomFmt = n => '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const nomFmt = n => { const v = Math.round((Number(n) || 0) * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   const nomToday = () => ghFechaLocal(new Date());
 
   // Los trabajadores de Nómina AHORA viven en Empleados (empleados[]). Busca
@@ -523,7 +523,16 @@
   function nomFechasTexto(dias) {
     if (!Array.isArray(dias)) return typeof dias === 'number' ? `${dias} día(s)` : '';
     if (dias.length === 0) return '—';
-    return dias.slice().sort().join(', ');
+    // "lun 5, mar 6, mié 7 oct" (antes salía 2026-10-05, 2026-10-06…)
+    const D = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'], M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const ord = [...new Set(dias)].sort();
+    return ord.map((f, i) => {
+      const d = new Date(f + 'T00:00:00');
+      if (isNaN(d)) return f;
+      const sig = ord[i + 1] ? new Date(ord[i + 1] + 'T00:00:00') : null;
+      const finMes = !sig || sig.getMonth() !== d.getMonth();
+      return `${D[d.getDay()]} ${d.getDate()}${finMes ? ' ' + M[d.getMonth()] : ''}`;
+    }).join(', ');
   }
   function nomCuentaDias(dias) {
     return Array.isArray(dias) ? dias.length : (Number(dias) || 0);

@@ -302,3 +302,39 @@ body { font-size: 15px; }
 @media (prefers-reduced-motion: reduce) {
   .gh-barra-remota, .gh-sync i { transition: none !important; animation: none !important; }
 }
+
+/* ---------- Buscar: nada se sale de la pantalla ---------- */
+.gc-two-col { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) { .gc-two-col { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); } }
+#b-resultados > div { min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.gc-donut-row { flex-wrap: wrap; justify-content: center; }
+.gc-chart-svg-wrap svg { max-width: 100%; height: auto; }
+
+@media (max-width: 860px) {
+  /* Detalle de Buscar como lista (fecha · categoría arriba, monto a la derecha) */
+  #b-resultados .gc-ledger thead { display: none; }
+  #tbody-buscar tr { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 10px 14px; border-bottom: 1px solid var(--border-soft); }
+  #tbody-buscar td { padding: 0 !important; border: 0 !important; }
+  #tbody-buscar td:nth-child(1) { grid-column: 1; grid-row: 2; font-size: 13px; color: var(--muted); }
+  #tbody-buscar td:nth-child(2) { display: none; }
+  #tbody-buscar td:nth-child(3) { grid-column: 1; grid-row: 1; font-weight: 700; }
+  #tbody-buscar td:nth-child(4) { grid-column: 1; grid-row: 3; font-size: 13px; color: var(--muted); }
+  #tbody-buscar td:nth-child(5) { grid-column: 2; grid-row: 1 / span 2; align-self: center; font: 700 17px var(--font-num); }
+  #b-resultados tfoot tr { display: flex; justify-content: space-between; }
+  #b-resultados tfoot td { padding: 12px 14px !important; }
+
+  /* Historial de nómina como tarjetas */
+  #nom-hist-tbl thead { display: none; }
+  #nom-hist-tbl, #nom-hist-tbl tbody { display: block; }
+  #nom-hist-tbl tr { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 2px; border-bottom: 1px solid var(--border-soft); }
+  #nom-hist-tbl td { padding: 0 !important; border: 0 !important; text-align: left !important; }
+  #nom-hist-tbl td:nth-child(1) { grid-column: 1; font-weight: 700; font-size: 15.5px; }
+  #nom-hist-tbl td:nth-child(2) { display: none; }
+  #nom-hist-tbl td:nth-child(3) { grid-column: 1 / -1; grid-row: 2; font-size: 13.5px !important; color: var(--muted); }
+  #nom-hist-tbl td:nth-child(4) { grid-column: 2; grid-row: 1; text-align: right !important; font: 700 17px var(--font-num) !important; }
+  #nom-hist-tbl td:nth-child(5):empty { display: none; }
+  #nom-hist-tbl td:nth-child(5) { grid-column: 1 / -1; font-size: 13px; }
+  #nom-hist-tbl td:nth-child(6) { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 6px; }
+  #nom-hist-tbl td:nth-child(6) button { flex: 1; min-height: 38px; margin: 0 !important; }
+  #nom-hist-tbl td:nth-child(6) .gc-del { flex: 0 0 44px; }
+}

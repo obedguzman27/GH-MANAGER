@@ -955,11 +955,17 @@
     if (!ok) return;
 
     const registro = { ...s, id: Date.now(), guardadoEn: new Date().toISOString() };
+    // Primero se guarda el invoice; SOLO si se guardó se quitan los
+    // movimientos de la hoja (antes, si fallaba, la semana se perdía).
     invoicesGuardados.push(registro);
-    saveInvoices();
-
+    try { await window.storage.set(KEY_INVOICES, JSON.stringify(invoicesGuardados)); }
+    catch (e) {
+      invoicesGuardados = invoicesGuardados.filter((x) => x !== registro);
+      toast('No se pudo guardar el invoice, la semana sigue en la hoja: ' + ((e && e.message) || e), 'error', 6000);
+      return;
+    }
     movimientos = movimientos.filter((m) => weekInfo(m.fecha || today()).key !== s.key);
-    saveMov();
+    await saveMov();
 
     renderMovimientos();
     renderReparto();

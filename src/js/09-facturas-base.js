@@ -22,7 +22,7 @@
     'Maintenance service','System inspection','Repair service',
     'Coil cleaning','Refrigerant recharge','Fan motor replacement'
   ];
-  const invFmt = n => '$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const invFmt = n => { const v = Math.round((Number(n) || 0) * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   // Días en inglés para la columna DAY de la factura (el invoice siempre se ve en inglés)
   const INV_DIAS_SEMANA = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   // Fecha en números para los documentos (MM/DD/YYYY), nunca en letras

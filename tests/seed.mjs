@@ -43,9 +43,9 @@ poner(P + 'kontaly-config', { socios: [{ id: 'socio-1', nombre: 'CRA HVAC', bono
 poner(P + 'catGastos', ['Gas', 'Home Depot', 'Material', 'Nómina', 'Herramientas']);
 poner(P + 'catIngresos', ['Airtron']);
 poner(P + 'movimientos', [
-  { id: 1, fecha: dia(-2), tipo: 'ingreso', cat: 'Airtron', monto: 3200, desc: 'Pago semanal', deducible: false },
-  { id: 2, fecha: dia(-1), tipo: 'gasto', cat: 'Gas', monto: 85.5, desc: 'Gasolina', deducible: true },
-  { id: 3, fecha: dia(-1), tipo: 'gasto', cat: 'Home Depot', monto: 140, desc: 'Material', deducible: false }]);
+  { id: 1, fecha: sem(0, 0), tipo: 'ingreso', cat: 'Airtron', monto: 3200, desc: 'Pago semanal', deducible: false },
+  { id: 2, fecha: sem(0, 0), tipo: 'gasto', cat: 'Gas', monto: 85.5, desc: 'Gasolina', deducible: true },
+  { id: 3, fecha: sem(0, 0), tipo: 'gasto', cat: 'Home Depot', monto: 140, desc: 'Material', deducible: false }]);
 poner(P + 'invoicesGuardados', []);
 poner(P + 'gh-invoices', invoices);
 poner(P + 'gh-nomina', nomina);
