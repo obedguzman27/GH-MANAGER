@@ -2563,3 +2563,23 @@ body { font-size: 15px; }
 @media (max-width: 860px) {
   .gh-modo-visor2 .gc-tab.visor-tab { display: flex !important; flex-direction: column; align-items: center; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* ---------- Nómina: total de la semana y barra de guardar ---------- */
+.nom-resumen-sem { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 12px 14px; margin-bottom: 12px;
+  background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 12px; font-size: 14px; color: var(--muted); }
+.nom-resumen-sem b { color: var(--ink); }
+.nom-resumen-sem strong { font: 700 22px var(--font-num); color: var(--ink); }
+.nom-guardar-barra { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 14px; }
+.nom-guardar-barra span { font-weight: 600; color: var(--copper-dk); font-size: 14px; }
+.nom-guardar-barra.pendiente {
+  position: sticky; bottom: calc(var(--nav-h, 62px) + 10px + env(safe-area-inset-bottom, 0px)); z-index: 6;
+  background: var(--card); border: 1.5px solid var(--copper); border-radius: 14px; padding: 10px 10px 10px 14px; box-shadow: var(--shadow);
+  justify-content: space-between;
+}
+@media (min-width: 1000px) { .nom-guardar-barra.pendiente { bottom: 16px; } }
+.nom-guardar-barra.pendiente span::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--copper); margin-right: 8px; vertical-align: 1px; }
+body.nom-pend:has(#panel-nomina.active) .gh-fab { display: none !important; }
+.nom-guardar-barra.pendiente #nom-grid-guardar { white-space: nowrap; flex-shrink: 0; }
+.nom-guardar-barra.pendiente span { min-width: 0; }
+@media (max-width: 420px) { .nom-guardar-barra.pendiente #nom-grid-guardar { font-size: 0; padding: 12px 20px; } .nom-guardar-barra.pendiente #nom-grid-guardar::after { content: 'Guardar semana'; font-size: 15px; } }
+#nom-grid-sem-titulo::before { display: none; }

@@ -279,7 +279,55 @@
     const tb = $('inv-tbody');
     while (tb.querySelectorAll('tr').length < INV_LINEAS_MIN) tb.appendChild(invCrearFila());
   }
-  $('inv-btn-limpiar').addEventListener('click', invLimpiar);
+  $('inv-btn-limpiar').addEventListener('click', () => { invBorradorBorrar(); invLimpiar(); });
+
+  // ---- Borrador: lo que vas escribiendo en una factura se guarda en este
+  // teléfono, así si se cierra la app (o se acaba la batería) no se pierde ----
+  const invBorradorKey = () => ghLK('gh-inv-borrador');
+  function invLeerFormulario() {
+    const items = [];
+    $('inv-tbody').querySelectorAll('tr').forEach((tr) => {
+      const it = { dia: tr.querySelector('.inv-dia').value, location: tr.querySelector('.inv-loc').value, work: tr.querySelector('.inv-work').value,
+        tons: tr.querySelector('.inv-tons').value, amount: tr.querySelector('.inv-amt').value };
+      if (it.location || it.work || it.tons || it.amount) items.push(it);
+    });
+    return { editando: $('inv-editando').value, numero: $('inv-num').value, fecha: $('inv-fecha').value, cliente: $('inv-cliente').value,
+      clienteDireccion: ($('inv-cliente-direccion') || {}).value || '', direccionEmisor: $('inv-direccion-emisor').value,
+      notas: $('inv-notas').value, taxPct: $('inv-tax').value, items, en: Date.now() };
+  }
+  let invBorradorT = null;
+  function invBorradorGuardar() {
+    clearTimeout(invBorradorT);
+    invBorradorT = setTimeout(() => {
+      const b = invLeerFormulario();
+      try {
+        if (b.items.length || b.notas) localStorage.setItem(invBorradorKey(), JSON.stringify(b));
+        else localStorage.removeItem(invBorradorKey());
+      } catch (e) {}
+    }, 400);
+  }
+  function invBorradorBorrar() { clearTimeout(invBorradorT); try { localStorage.removeItem(invBorradorKey()); } catch (e) {} }
+  function invBorradorRestaurar() {
+    let b = null;
+    try { b = JSON.parse(localStorage.getItem(invBorradorKey()) || 'null'); } catch (e) {}
+    if (!b || !Array.isArray(b.items) || (!b.items.length && !b.notas)) return false;
+    if (Date.now() - (b.en || 0) > 30 * 86400000) { invBorradorBorrar(); return false; }
+    $('inv-editando').value = b.editando && invDocs.some((i) => i.id === b.editando) ? b.editando : '';
+    $('inv-num').value = b.numero || invAutoNum();
+    $('inv-fecha').value = b.fecha || invToday();
+    if (b.cliente) $('inv-cliente').value = b.cliente;
+    if ($('inv-cliente-direccion') && b.clienteDireccion) $('inv-cliente-direccion').value = b.clienteDireccion;
+    if (b.direccionEmisor) $('inv-direccion-emisor').value = b.direccionEmisor;
+    $('inv-notas').value = b.notas || '';
+    $('inv-tax').value = b.taxPct || '0';
+    $('inv-tbody').innerHTML = '';
+    b.items.forEach((it) => $('inv-tbody').appendChild(invCrearFila(it)));
+    invRellenarLineas(); invRenumerar(); invCalcTotales();
+    toast('Recuperé la factura que estabas haciendo ✓', 'info', 3500);
+    return true;
+  }
+  const invForm = document.getElementById('inv-sub-nueva');
+  if (invForm) { invForm.addEventListener('input', invBorradorGuardar); invForm.addEventListener('change', invBorradorGuardar); invForm.addEventListener('click', (e) => { if (e.target.closest('.gc-del, .inv-mini')) invBorradorGuardar(); }); }
 
   $('inv-btn-guardar').addEventListener('click', async () => {
     const num = $('inv-num').value.trim();
@@ -329,6 +377,7 @@
       return;
     }
     btnG.disabled = false;
+    invBorradorBorrar();
     toast(idx>=0 ? 'Factura actualizada ✓' : 'Factura guardada ✓');
     invLimpiar();
     if (document.getElementById('cobros-tbody')) invRenderCobros();
@@ -907,6 +956,7 @@
           $('inv-tbody').innerHTML='';
           invRellenarLineas();
           invRenumerar(); invCalcTotales();
+          invBorradorRestaurar();
         }
       });
     }

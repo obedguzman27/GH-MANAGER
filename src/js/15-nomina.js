@@ -258,6 +258,7 @@
         nomGridFilas[fi].montoTocado = true;
         nomGridFilas[fi].tocado = true; nomGridFilas[fi].deCheckin = false;
         nomGridFilas[fi].monto = parseFloat(inp.value.replace(',', '.')) || 0;
+        nomActualizarResumen();
       });
     });
     cont.querySelectorAll('.nom-grid-extra-toggle').forEach((btn) => {
@@ -272,6 +273,7 @@
         const fi = Number(inp.dataset.fi);
         nomGridFilas[fi].extraDesc = inp.value;
         nomGridFilas[fi].tocado = true; nomGridFilas[fi].deCheckin = false;
+        nomActualizarResumen();
       });
     });
     cont.querySelectorAll('.nom-grid-extra-monto').forEach((inp) => {
@@ -285,12 +287,43 @@
           const montoInp = cont.querySelector(`.nom-grid-monto[data-fi="${fi}"]`);
           if (montoInp) montoInp.value = fila.monto ? fila.monto.toFixed(2) : '';
         }
+        nomActualizarResumen();
       });
     });
+    nomActualizarResumen();
   }
 
-  $('nom-grid-sem-prev').addEventListener('click', () => { nomRegSemanaOffset--; nomGridAbrirSemana(); });
-  $('nom-grid-sem-next').addEventListener('click', () => { nomRegSemanaOffset++; nomGridAbrirSemana(); });
+  // ---- Total de la semana y aviso de cambios sin guardar ----
+  function nomHayCambios() { return nomGridFilas.some((f) => f.tocado); }
+  function nomActualizarResumen() {
+    const cont = $('nom-resumen-sem'); if (!cont) return;
+    const conPago = nomGridFilas.filter((f) => f.dias.length || (Number(f.monto) || 0) > 0);
+    const total = conPago.reduce((t, f) => t + (Number(f.monto) || 0), 0);
+    const dias = conPago.reduce((t, f) => t + f.dias.length, 0);
+    cont.innerHTML = conPago.length
+      ? `<span><b>${conPago.length}</b> trabajador${conPago.length === 1 ? '' : 'es'} · <b>${dias}</b> día${dias === 1 ? '' : 's'}</span><strong>${nomFmt(total)}</strong>`
+      : '<span>Nadie tiene días marcados esta semana.</span>';
+    const pend = nomHayCambios();
+    const barra = $('nom-guardar-barra');
+    if (barra) barra.classList.toggle('pendiente', pend);
+    document.body.classList.toggle('nom-pend', pend);
+    const txt = $('nom-pend-txt');
+    if (txt) txt.textContent = pend ? 'Cambios sin guardar' : '';
+  }
+  // Antes de cambiar de semana con cambios sin guardar, preguntar
+  async function nomCambiarSemana(delta) {
+    if (nomHayCambios()) {
+      const ok = await gcConfirm('Tienes cambios sin guardar en esta semana.\n\n¿Guardarlos antes de cambiar de semana?', { okText: 'Guardar y seguir', cancelText: 'No guardar' });
+      if (ok) { await nomGuardarSemana(); if (nomHayCambios()) return; }
+    }
+    nomRegSemanaOffset += delta; nomGridAbrirSemana();
+  }
+  $('nom-grid-sem-prev').addEventListener('click', () => nomCambiarSemana(-1));
+  $('nom-grid-sem-next').addEventListener('click', () => nomCambiarSemana(1));
+  window.addEventListener('beforeunload', (e) => { if (nomHayCambios()) { e.preventDefault(); e.returnValue = ''; } });
+  document.querySelectorAll('.gc-tab').forEach((t) => t.addEventListener('click', () => {
+    if (t.dataset.tab !== 'nomina' && nomHayCambios()) toast('Ojo: dejaste cambios sin guardar en Nómina → Registrar pago', 'info', 4500);
+  }));
 
   // Agregar un trabajador nuevo a la lista de esta semana (si el nombre no
   // existe en Empleados, lo crea con sueldo $0, editable luego).
@@ -334,7 +367,8 @@
   }
 
   // ---- Guardar cambios de la semana (crea/actualiza/quita pagos de todos los trabajadores a la vez) ----
-  $('nom-grid-guardar').addEventListener('click', async () => {
+  $('nom-grid-guardar').addEventListener('click', () => nomGuardarSemana());
+  async function nomGuardarSemana() {
     let creados = 0, actualizados = 0, borrados = 0;
     nomGridFilas.forEach((fila) => {
       if (!fila.tocado) return; // nadie tocó esta fila — no hay nada que guardar
@@ -391,7 +425,7 @@
     if (actualizados) partes.push(`${actualizados} actualizado(s)`);
     if (borrados) partes.push(`${borrados} quitado(s)`);
     toast(partes.length ? `Semana guardada — ${partes.join(', ')} ✓` : 'Sin cambios', 'success');
-  });
+  }
 
   // Lleva al usuario a Registrar pago, en la semana que corresponde, y si
   // se da un nombre, resalta su tarjeta (usado por "Editar" en Historial,

@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v203 · prueba';
+  window.GH_APP_VERSION = 'v204 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -1144,7 +1144,8 @@
     const gas = movSem.filter(m => m.tipo === 'gasto').reduce((s,m) => s + (Number(m.monto)||0), 0);
     const ingAnt = movAnt.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + (Number(m.monto)||0), 0);
     const gasAnt = movAnt.filter(m => m.tipo === 'gasto').reduce((s,m) => s + (Number(m.monto)||0), 0);
-    const net = ing - gas;
+    // Igual que el resumen de arriba: el neto ya descuenta las taxas (antes salían dos "Neto semana" distintos)
+    const net = ing - gas - ing * TASA_TAXAS;
     if ($('stat-ing')) $('stat-ing').textContent = fmt(ing);
     if ($('stat-gas')) $('stat-gas').textContent = fmt(gas);
     if ($('stat-net')) { $('stat-net').textContent = fmt(net); $('stat-net').style.color = net >= 0 ? 'var(--teal)' : 'var(--ember)'; }
@@ -1558,7 +1559,7 @@
       else {
         const pr = datos[0].key.split('-').map(Number), ul = datos[datos.length - 1].key.split('-').map(Number);
         const txt = (d) => `${d[2]} ${RES_MESES[(d[1] || 1) - 1]}${d[0] !== new Date().getFullYear() ? ' ' + d[0] : ''}`;
-        rango.textContent = resPag === 0 ? `Últimas ${datos.length} semana${datos.length === 1 ? '' : 's'}` : `${txt(pr)} – ${txt(ul)}`;
+        rango.textContent = resPag === 0 ? (datos.length === 1 ? '1 semana' : `Últimas ${datos.length} semanas`) : `${txt(pr)} – ${txt(ul)}`;
       }
     }
     if (kpis) kpis.innerHTML = `
@@ -7524,7 +7525,55 @@
     const tb = $('inv-tbody');
     while (tb.querySelectorAll('tr').length < INV_LINEAS_MIN) tb.appendChild(invCrearFila());
   }
-  $('inv-btn-limpiar').addEventListener('click', invLimpiar);
+  $('inv-btn-limpiar').addEventListener('click', () => { invBorradorBorrar(); invLimpiar(); });
+
+  // ---- Borrador: lo que vas escribiendo en una factura se guarda en este
+  // teléfono, así si se cierra la app (o se acaba la batería) no se pierde ----
+  const invBorradorKey = () => ghLK('gh-inv-borrador');
+  function invLeerFormulario() {
+    const items = [];
+    $('inv-tbody').querySelectorAll('tr').forEach((tr) => {
+      const it = { dia: tr.querySelector('.inv-dia').value, location: tr.querySelector('.inv-loc').value, work: tr.querySelector('.inv-work').value,
+        tons: tr.querySelector('.inv-tons').value, amount: tr.querySelector('.inv-amt').value };
+      if (it.location || it.work || it.tons || it.amount) items.push(it);
+    });
+    return { editando: $('inv-editando').value, numero: $('inv-num').value, fecha: $('inv-fecha').value, cliente: $('inv-cliente').value,
+      clienteDireccion: ($('inv-cliente-direccion') || {}).value || '', direccionEmisor: $('inv-direccion-emisor').value,
+      notas: $('inv-notas').value, taxPct: $('inv-tax').value, items, en: Date.now() };
+  }
+  let invBorradorT = null;
+  function invBorradorGuardar() {
+    clearTimeout(invBorradorT);
+    invBorradorT = setTimeout(() => {
+      const b = invLeerFormulario();
+      try {
+        if (b.items.length || b.notas) localStorage.setItem(invBorradorKey(), JSON.stringify(b));
+        else localStorage.removeItem(invBorradorKey());
+      } catch (e) {}
+    }, 400);
+  }
+  function invBorradorBorrar() { clearTimeout(invBorradorT); try { localStorage.removeItem(invBorradorKey()); } catch (e) {} }
+  function invBorradorRestaurar() {
+    let b = null;
+    try { b = JSON.parse(localStorage.getItem(invBorradorKey()) || 'null'); } catch (e) {}
+    if (!b || !Array.isArray(b.items) || (!b.items.length && !b.notas)) return false;
+    if (Date.now() - (b.en || 0) > 30 * 86400000) { invBorradorBorrar(); return false; }
+    $('inv-editando').value = b.editando && invDocs.some((i) => i.id === b.editando) ? b.editando : '';
+    $('inv-num').value = b.numero || invAutoNum();
+    $('inv-fecha').value = b.fecha || invToday();
+    if (b.cliente) $('inv-cliente').value = b.cliente;
+    if ($('inv-cliente-direccion') && b.clienteDireccion) $('inv-cliente-direccion').value = b.clienteDireccion;
+    if (b.direccionEmisor) $('inv-direccion-emisor').value = b.direccionEmisor;
+    $('inv-notas').value = b.notas || '';
+    $('inv-tax').value = b.taxPct || '0';
+    $('inv-tbody').innerHTML = '';
+    b.items.forEach((it) => $('inv-tbody').appendChild(invCrearFila(it)));
+    invRellenarLineas(); invRenumerar(); invCalcTotales();
+    toast('Recuperé la factura que estabas haciendo ✓', 'info', 3500);
+    return true;
+  }
+  const invForm = document.getElementById('inv-sub-nueva');
+  if (invForm) { invForm.addEventListener('input', invBorradorGuardar); invForm.addEventListener('change', invBorradorGuardar); invForm.addEventListener('click', (e) => { if (e.target.closest('.gc-del, .inv-mini')) invBorradorGuardar(); }); }
 
   $('inv-btn-guardar').addEventListener('click', async () => {
     const num = $('inv-num').value.trim();
@@ -7574,6 +7623,7 @@
       return;
     }
     btnG.disabled = false;
+    invBorradorBorrar();
     toast(idx>=0 ? 'Factura actualizada ✓' : 'Factura guardada ✓');
     invLimpiar();
     if (document.getElementById('cobros-tbody')) invRenderCobros();
@@ -8152,6 +8202,7 @@
           $('inv-tbody').innerHTML='';
           invRellenarLineas();
           invRenumerar(); invCalcTotales();
+          invBorradorRestaurar();
         }
       });
     }
@@ -8422,6 +8473,7 @@
         nomGridFilas[fi].montoTocado = true;
         nomGridFilas[fi].tocado = true; nomGridFilas[fi].deCheckin = false;
         nomGridFilas[fi].monto = parseFloat(inp.value.replace(',', '.')) || 0;
+        nomActualizarResumen();
       });
     });
     cont.querySelectorAll('.nom-grid-extra-toggle').forEach((btn) => {
@@ -8436,6 +8488,7 @@
         const fi = Number(inp.dataset.fi);
         nomGridFilas[fi].extraDesc = inp.value;
         nomGridFilas[fi].tocado = true; nomGridFilas[fi].deCheckin = false;
+        nomActualizarResumen();
       });
     });
     cont.querySelectorAll('.nom-grid-extra-monto').forEach((inp) => {
@@ -8449,12 +8502,43 @@
           const montoInp = cont.querySelector(`.nom-grid-monto[data-fi="${fi}"]`);
           if (montoInp) montoInp.value = fila.monto ? fila.monto.toFixed(2) : '';
         }
+        nomActualizarResumen();
       });
     });
+    nomActualizarResumen();
   }
 
-  $('nom-grid-sem-prev').addEventListener('click', () => { nomRegSemanaOffset--; nomGridAbrirSemana(); });
-  $('nom-grid-sem-next').addEventListener('click', () => { nomRegSemanaOffset++; nomGridAbrirSemana(); });
+  // ---- Total de la semana y aviso de cambios sin guardar ----
+  function nomHayCambios() { return nomGridFilas.some((f) => f.tocado); }
+  function nomActualizarResumen() {
+    const cont = $('nom-resumen-sem'); if (!cont) return;
+    const conPago = nomGridFilas.filter((f) => f.dias.length || (Number(f.monto) || 0) > 0);
+    const total = conPago.reduce((t, f) => t + (Number(f.monto) || 0), 0);
+    const dias = conPago.reduce((t, f) => t + f.dias.length, 0);
+    cont.innerHTML = conPago.length
+      ? `<span><b>${conPago.length}</b> trabajador${conPago.length === 1 ? '' : 'es'} · <b>${dias}</b> día${dias === 1 ? '' : 's'}</span><strong>${nomFmt(total)}</strong>`
+      : '<span>Nadie tiene días marcados esta semana.</span>';
+    const pend = nomHayCambios();
+    const barra = $('nom-guardar-barra');
+    if (barra) barra.classList.toggle('pendiente', pend);
+    document.body.classList.toggle('nom-pend', pend);
+    const txt = $('nom-pend-txt');
+    if (txt) txt.textContent = pend ? 'Cambios sin guardar' : '';
+  }
+  // Antes de cambiar de semana con cambios sin guardar, preguntar
+  async function nomCambiarSemana(delta) {
+    if (nomHayCambios()) {
+      const ok = await gcConfirm('Tienes cambios sin guardar en esta semana.\n\n¿Guardarlos antes de cambiar de semana?', { okText: 'Guardar y seguir', cancelText: 'No guardar' });
+      if (ok) { await nomGuardarSemana(); if (nomHayCambios()) return; }
+    }
+    nomRegSemanaOffset += delta; nomGridAbrirSemana();
+  }
+  $('nom-grid-sem-prev').addEventListener('click', () => nomCambiarSemana(-1));
+  $('nom-grid-sem-next').addEventListener('click', () => nomCambiarSemana(1));
+  window.addEventListener('beforeunload', (e) => { if (nomHayCambios()) { e.preventDefault(); e.returnValue = ''; } });
+  document.querySelectorAll('.gc-tab').forEach((t) => t.addEventListener('click', () => {
+    if (t.dataset.tab !== 'nomina' && nomHayCambios()) toast('Ojo: dejaste cambios sin guardar en Nómina → Registrar pago', 'info', 4500);
+  }));
 
   // Agregar un trabajador nuevo a la lista de esta semana (si el nombre no
   // existe en Empleados, lo crea con sueldo $0, editable luego).
@@ -8498,7 +8582,8 @@
   }
 
   // ---- Guardar cambios de la semana (crea/actualiza/quita pagos de todos los trabajadores a la vez) ----
-  $('nom-grid-guardar').addEventListener('click', async () => {
+  $('nom-grid-guardar').addEventListener('click', () => nomGuardarSemana());
+  async function nomGuardarSemana() {
     let creados = 0, actualizados = 0, borrados = 0;
     nomGridFilas.forEach((fila) => {
       if (!fila.tocado) return; // nadie tocó esta fila — no hay nada que guardar
@@ -8555,7 +8640,7 @@
     if (actualizados) partes.push(`${actualizados} actualizado(s)`);
     if (borrados) partes.push(`${borrados} quitado(s)`);
     toast(partes.length ? `Semana guardada — ${partes.join(', ')} ✓` : 'Sin cambios', 'success');
-  });
+  }
 
   // Lleva al usuario a Registrar pago, en la semana que corresponde, y si
   // se da un nombre, resalta su tarjeta (usado por "Editar" en Historial,

@@ -366,7 +366,8 @@
     const gas = movSem.filter(m => m.tipo === 'gasto').reduce((s,m) => s + (Number(m.monto)||0), 0);
     const ingAnt = movAnt.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + (Number(m.monto)||0), 0);
     const gasAnt = movAnt.filter(m => m.tipo === 'gasto').reduce((s,m) => s + (Number(m.monto)||0), 0);
-    const net = ing - gas;
+    // Igual que el resumen de arriba: el neto ya descuenta las taxas (antes salían dos "Neto semana" distintos)
+    const net = ing - gas - ing * TASA_TAXAS;
     if ($('stat-ing')) $('stat-ing').textContent = fmt(ing);
     if ($('stat-gas')) $('stat-gas').textContent = fmt(gas);
     if ($('stat-net')) { $('stat-net').textContent = fmt(net); $('stat-net').style.color = net >= 0 ? 'var(--teal)' : 'var(--ember)'; }
@@ -780,7 +781,7 @@
       else {
         const pr = datos[0].key.split('-').map(Number), ul = datos[datos.length - 1].key.split('-').map(Number);
         const txt = (d) => `${d[2]} ${RES_MESES[(d[1] || 1) - 1]}${d[0] !== new Date().getFullYear() ? ' ' + d[0] : ''}`;
-        rango.textContent = resPag === 0 ? `Últimas ${datos.length} semana${datos.length === 1 ? '' : 's'}` : `${txt(pr)} – ${txt(ul)}`;
+        rango.textContent = resPag === 0 ? (datos.length === 1 ? '1 semana' : `Últimas ${datos.length} semanas`) : `${txt(pr)} – ${txt(ul)}`;
       }
     }
     if (kpis) kpis.innerHTML = `

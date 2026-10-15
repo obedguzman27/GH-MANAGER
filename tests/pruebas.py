@@ -307,5 +307,28 @@ def visor_orden_por_frecuencia(p, c):
     filas = pg.eval_on_selector_all('.vz-tr:not(.vz-th):not(.vz-tf) .vz-tn', 'els => els.map(e => e.title)')
     assert filas[0] == 'Mario Diaz', filas
 
+@prueba
+def borrador_factura_y_nomina_pendiente(p, c):
+    pg = c.pagina()
+    tab(pg, 'facturas')
+    f = pg.query_selector_all('#inv-tbody tr')[0]
+    f.query_selector('.inv-loc').fill('Lot 77 Borrador'); f.query_selector('.inv-amt').fill('321')
+    pg.wait_for_timeout(700)
+    pg.close()
+    pg2 = c.pagina(); tab(pg2, 'facturas'); pg2.wait_for_timeout(500)
+    assert pg2.query_selector_all('#inv-tbody tr')[0].query_selector('.inv-loc').input_value() == 'Lot 77 Borrador'
+    pg2.click('#inv-btn-guardar'); pg2.wait_for_timeout(900)
+    assert pg2.evaluate("() => !Object.keys(localStorage).some(k => k.startsWith('gh-inv-borrador'))")
+    # Nómina: total y aviso de cambios sin guardar
+    tab(pg2, 'nomina')
+    pg2.click('#nom-grid-lista [data-grid-nombre="Mario Diaz"] .nom-grid-dia >> nth=0'); pg2.wait_for_timeout(200)
+    assert 'pendiente' in pg2.get_attribute('#nom-guardar-barra', 'class')
+    assert '$180.00' in pg2.inner_text('#nom-resumen-sem'), pg2.inner_text('#nom-resumen-sem')
+    pg2.click('#nom-grid-sem-prev'); pg2.wait_for_timeout(300)
+    assert pg2.is_visible('.gc-confirm-overlay')
+    pg2.click('.gc-confirm-overlay [data-r="1"]'); pg2.wait_for_timeout(900)
+    nom = valor(None, 'c:prueba::gh-nomina')
+    assert any(n['trabajador'] == 'Mario Diaz' and n['monto'] == 180 for n in nom), 'no guardó al cambiar de semana'
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)
