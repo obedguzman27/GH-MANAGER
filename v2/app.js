@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v209 · prueba';
+  window.GH_APP_VERSION = 'v210 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -7139,7 +7139,9 @@
     html, body { margin: 0; padding: 0; background: #fff; }
     body { font-family: 'Carlito', 'Calibri', 'Helvetica Neue', Arial, sans-serif; color: #111;
            -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .ps-pag { position: relative; width: 8.5in; height: 11in; overflow: hidden; }
+    /* 10.9in (no 11): en iPhone una página de 11in exactas se pasa por un pelo
+       y Safari mete una hoja en blanco detrás de cada página */
+    .ps-pag { position: relative; width: 8.5in; height: 10.9in; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
     .ps-pag + .ps-pag { page-break-before: always; break-before: page; }
     .ps-t { position: absolute; font-size: 8.9pt; font-weight: 700; white-space: nowrap; line-height: ${PS_ALTO}in; height: ${PS_ALTO}in; }
     .ps-g { position: absolute; border-collapse: collapse; table-layout: fixed; font-size: 8.9pt; }
