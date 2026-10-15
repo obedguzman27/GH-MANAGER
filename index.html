@@ -52,7 +52,7 @@
   <meta name="apple-mobile-web-app-title" content="GH Manager">
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
   <link rel="icon" href="icon-192.png?v=2">
-  <link rel="stylesheet" href="app.css?v=gh-manager-v206">
+  <link rel="stylesheet" href="app.css?v=gh-manager-v207">
 </head>
 <body>
 
@@ -1330,7 +1330,10 @@
         <button type="button" class="cs-tipo-btn active" data-cstipo="rough">Rough-In</button>
         <button type="button" class="cs-tipo-btn" data-cstipo="trim">Trim-Out</button>
         <button type="button" class="cs-tipo-btn" data-cstipo="pull">Pull Sheet</button>
+        <button type="button" class="cs-tipo-btn" data-cstipo="imprimir">🖨 Imprimir</button>
       </div>
+      <div class="cs-lote-guardado" id="cs-lote-guardado"></div>
+      <div id="cs-form-hojas">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
         <p class="gc-card-title" id="cs-titulo" style="margin:0;">Rough-In Completion Sheet</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1412,6 +1415,26 @@
 
       <p style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px;">Checklist</p>
       <div class="cs-checklist" id="cs-checklist"></div>
+      </div>
+      </div><!-- /cs-form-hojas -->
+
+      <!-- Imprimir: hojas guardadas por lote / colonia -->
+      <div id="cs-form-imprimir" style="display:none;">
+        <p class="gc-card-title" style="margin:0 0 4px;">Imprimir hojas por lote</p>
+        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cada hoja se guarda sola por <b>lote y colonia</b> (lo que escribes en LOT#/SUBDIVISION). Marca los lotes y toca Imprimir: sale Rough-In al frente y Trim-Out atrás, y el Pull Sheet en otra hoja, frente y vuelta.</p>
+        <input type="search" id="csl-buscar" placeholder="Buscar lote o colonia (ej. Greystone 165)" autocomplete="off" style="width:100%;margin-bottom:10px;">
+        <div class="csl-opciones">
+          <label><input type="checkbox" id="csl-op-rough" checked> Rough-In</label>
+          <label><input type="checkbox" id="csl-op-trim" checked> Trim-Out</label>
+          <label><input type="checkbox" id="csl-op-pull" checked> Pull Sheet</label>
+          <label><input type="checkbox" id="csl-op-factura"> Factura del lote</label>
+          <label><input type="checkbox" id="csl-op-doble" checked> Doble cara</label>
+        </div>
+        <div id="csl-lista" class="csl-lista"></div>
+        <div class="csl-barra">
+          <span id="csl-cuenta"></span>
+          <button type="button" class="gc-save-btn" id="csl-imprimir" disabled>🖨 Imprimir</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1692,8 +1715,8 @@
 <div id="print-area"></div>
 
 <script src="vendor/supabase-2.117.1.min.js"></script>
-<script src="supabase-storage.js?v=gh-manager-v206"></script>
+<script src="supabase-storage.js?v=gh-manager-v207"></script>
 <script src="browser-storage.js"></script>
-<script src="app.js?v=gh-manager-v206"></script>
+<script src="app.js?v=gh-manager-v207"></script>
 </body>
 </html>

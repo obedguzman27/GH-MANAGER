@@ -280,6 +280,7 @@
     const d = psLeer();
     try { localStorage.setItem(ghLK(PS_KEY), JSON.stringify(d)); } catch (e) {}
     csCompartirLote(d.lote, 'pull');
+    cslProgramar('pull', d);
     psContar();
   }
   function psContar() {

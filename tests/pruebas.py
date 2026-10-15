@@ -375,5 +375,60 @@ def fotos_en_almacen_y_migracion(p, c):
     pg2.evaluate("async (png) => { await window.GH_FOTOS.guardar('plano', 'p1', [{ dataUrl: png }]); }", png)
     assert valor(None, 'c:prueba::gh-plano-fotos-p1')[0]['dataUrl'] == png
 
+def _imprimir_capturado(pg):
+    return pg.evaluate("() => { const f = document.getElementById('gh-print-frame'); return f ? f.contentDocument.documentElement.outerHTML : ''; }")
+
+@prueba
+def completion_por_lote_e_imprimir(p, c):
+    pg = c.pagina()
+    pg.add_init_script("window.print = () => {};")
+    pg.evaluate("() => { HTMLIFrameElement.prototype.focus = function(){}; }")
+    tab(pg, 'facturas', 'completion')
+    # Rough-In de Greystone 165
+    pg.fill('#cs-lote', 'Greystone 165'); pg.fill('#cs-leadman', 'Pedro'); pg.check('#cs-completo')
+    pg.wait_for_timeout(1800)
+    # Trim-Out del mismo lote, escrito distinto
+    pg.click('.cs-tipo-btn[data-cstipo="trim"]'); pg.wait_for_timeout(200)
+    pg.fill('#cs-lote', 'Lot 165 Greystone'); pg.fill('#cs-leadman', 'Juan')
+    pg.wait_for_timeout(1800)
+    # Pull Sheet
+    pg.click('.cs-tipo-btn[data-cstipo="pull"]'); pg.wait_for_timeout(400)
+    pg.fill('#ps-hoja input[data-h="job"]', 'J-77'); pg.wait_for_timeout(1800)
+    datos = valor(None, 'c:prueba::gh-completion')
+    assert list(datos.keys()) == ['165-greystone'], datos.keys()
+    e = datos['165-greystone']
+    assert e['rough']['leadman'] == 'Pedro' and e['trim']['leadman'] == 'Juan' and e['pull']['job'] == 'J-77', e
+    # otro lote, escrito con letras a medias: no deja basura
+    pg.click('.cs-tipo-btn[data-cstipo="rough"]'); pg.wait_for_timeout(200)
+    pg.fill('#cs-lote', 'Oak 1'); pg.wait_for_timeout(1500); pg.fill('#cs-lote', 'Oak 12'); pg.wait_for_timeout(1800)
+    assert sorted(valor(None, 'c:prueba::gh-completion').keys()) == ['12-oak', '165-greystone'], valor(None, 'c:prueba::gh-completion').keys()
+    # Imprimir: marcar Greystone, con factura
+    pg.click('.cs-tipo-btn[data-cstipo="imprimir"]'); pg.wait_for_timeout(600)
+    pg.check('.csl-fila[data-k="165-greystone"] input'); pg.check('#csl-op-factura')
+    pg.click('#csl-imprimir'); pg.wait_for_timeout(800)
+    html = _imprimir_capturado(pg)
+    assert html.count('class="pag"') == 2 and html.count('class="ps-pag"') == 2, (html.count('class="pag"'), html.count('class="ps-pag"'))
+    assert 'Pedro' in html and 'Juan' in html
+    # Abrir lote: vuelve a la pantalla de hojas con sus datos
+    pg.click('.cs-tipo-btn[data-cstipo="imprimir"]'); pg.wait_for_timeout(400)
+    pg.click('.csl-fila[data-k="165-greystone"] .csl-abrir'); pg.wait_for_timeout(500)
+    assert pg.input_value('#cs-leadman') == 'Pedro'
+
+@prueba
+def visor_imprime_hojas_y_factura(p, c):
+    d = db()
+    d['datos_app']['c:prueba::gh-completion'] = {'clave': 'c:prueba::gh-completion', 'actualizado_en': '2026-10-01T12:00:00.000+00:00',
+      'valor': json.dumps({'12-hills-oak': {'lote': 'Lot 12 Oak Hills', 'rough': {'lote': 'Lot 12 Oak Hills', 'leadman': 'Mario', 'checks': {}}, 'trim': {'lote': 'Lot 12 Oak Hills', 'leadman': 'Luis', 'checks': {}}}})}
+    d['datos_app']['c:prueba::gh-factura-pub'] = {'clave': 'c:prueba::gh-factura-pub', 'actualizado_en': '2026-10-01T12:00:00.000+00:00', 'valor': json.dumps({'nombre': 'GUZMAN HVAC', 'direccion': '500 Demo', 'logo': '', 'color': 'clasico'})}
+    poner_db(d)
+    v = c.otro(p, usuario='u-visor'); pg = v.pagina()
+    pg.evaluate("() => { HTMLIFrameElement.prototype.focus = function(){}; }")
+    pg.wait_for_selector('.chk-fila')
+    pg.click('.vz-vista [data-vista="imprimir"]'); pg.wait_for_selector('.vz-imp-btn')
+    assert 'Factura #1007' in pg.inner_text('.vz-imp-lista') or 'Factura #' in pg.inner_text('.vz-imp-lista'), pg.inner_text('.vz-imp-lista')
+    pg.click('.vz-imp-btn'); pg.wait_for_timeout(800)
+    html = _imprimir_capturado(pg)
+    assert 'INVOICE' in html and 'GUZMAN HVAC' in html and html.count('class="pag"') == 2, html[:300]
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

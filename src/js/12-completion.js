@@ -159,6 +159,7 @@
     const d = csLeer();
     try { localStorage.setItem(CS_KEY(csTipo), JSON.stringify(d)); } catch (e) {}
     if (csTipo !== 'trim') csCompartirLote(d.lote, csTipo);   // Trim-Out no comparte nada
+    cslProgramar(csTipo, d);   // y se guarda en la nube bajo su lote / colonia
   }
 
   // Lot# / Subdivision es el mismo en Rough-In y Pull Sheet: si cambia en una,
@@ -314,8 +315,13 @@
   }
 
   function csCambiarTipo(tipo) {
+    if (tipo === 'imprimir') {
+      if (csTipo === 'pull') { if (psModo === 'editar') psCambiarModo('llenar'); psGuardarBorrador(); } else if (csTipo) csGuardarBorrador();
+      cslMostrar(true); return;
+    }
+    if (cslVisible) { cslMostrar(false); if (tipo === csTipo) return; }
     if (tipo === csTipo) return;
-    if (csTipo === 'pull') { if (psModo === 'editar') psCambiarModo('llenar'); psGuardarBorrador(); } else csGuardarBorrador();   // guarda la hoja que estaba en pantalla
+    if (csTipo === 'pull') { if (psModo === 'editar') psCambiarModo('llenar'); psGuardarBorrador(); } else if (csTipo) csGuardarBorrador();   // guarda la hoja que estaba en pantalla
     csTipo = tipo;
     csMostrarForma();
     if (tipo === 'pull') psLlenar(psLeerGuardado());

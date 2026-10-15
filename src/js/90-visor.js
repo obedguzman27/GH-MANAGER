@@ -401,6 +401,7 @@
           <div class="vz-vista" role="tablist">
             <button type="button" data-vista="dia" class="${vista === 'dia' ? 'on' : ''}">Día</button>
             <button type="button" data-vista="semana" class="${vista === 'semana' ? 'on' : ''}">Semana</button>
+            <button type="button" data-vista="imprimir" class="${vista === 'imprimir' ? 'on' : ''}">🖨 Imprimir</button>
           </div>
         </section>`;
     }
@@ -510,7 +511,7 @@
     function render() {
       const enfAdd = document.activeElement && document.activeElement.classList.contains('chk-add-in');
       const enfQ = document.activeElement && document.activeElement.classList.contains('vz-q');
-      cont.innerHTML = vista === 'semana' ? renderSemana() : renderDia();
+      cont.innerHTML = vista === 'semana' ? renderSemana() : vista === 'imprimir' ? renderImprimir() : renderDia();
       if (filtro || chip !== 'todos') aplicarFiltro();
       if (enfAdd) { const i = cont.querySelector('.chk-add-in'); if (i) i.focus(); }
       if (enfQ) { const i = cont.querySelector('.vz-q'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }
@@ -526,7 +527,9 @@
         if (nf < minimo) nf = minimo;
         fecha = nf; estado = ''; estadoTipo = ''; deshacer = null; render();
       });
-      on('.vz-vista button', 'click', (b) => { vista = b.dataset.vista; estado = ''; estadoTipo = ''; render(); });
+      on('.vz-vista button', 'click', (b) => { vista = b.dataset.vista; estado = ''; estadoTipo = ''; if (vista === 'imprimir') impCargar(); render(); });
+      on('.vz-imp-buscar', 'input', (i) => { impFiltro = i.value; const l = cont.querySelector('.vz-imp-lista'); if (l) { l.outerHTML = htmlImpLista(); conectarImp(); } });
+      conectarImp();
       on('.chk-fila', 'click', (b) => {
         const n = b.dataset.n; const v = marcadosDe(fecha);
         vibrar(); deshacer = null;
@@ -601,6 +604,53 @@
       try { await navigator.clipboard.writeText(texto); estado = 'Copiado — pégalo en WhatsApp'; estadoTipo = 'ok'; }
       catch (e) { estado = 'No se pudo compartir en este teléfono'; estadoTipo = 'error'; }
       render();
+    }
+
+    // ---- Imprimir hojas (completion sheets) y factura de un lote ----
+    let imp = null, impCargando = false, impFiltro = '';
+    async function impCargar() {
+      if (impCargando) return; impCargando = true;
+      const leer = async (k) => { try { const r = await window.GH_LEER_DE_CUENTA(codigo, k); return r ? JSON.parse(r) : null; } catch (e) { return undefined; } };
+      const [hojas, facturas, cfg, layout] = await Promise.all([leer('gh-completion'), leer('gh-invoices'), leer('gh-factura-pub'), leer('gh-ps-layout')]);
+      imp = { hojas: hojas && typeof hojas === 'object' ? hojas : {}, facturas: Array.isArray(facturas) ? facturas : [], cfg: cfg || null, layout: layout || null,
+        sinSenal: hojas === undefined };
+      impCargando = false;
+      if (vista === 'imprimir') render();
+    }
+    function htmlImpLista() {
+      if (!imp) return '<div class="vz-imp-lista"><div class="vz-sinres">Cargando…</div></div>';
+      const q = window.GH_CSL_CLAVE ? window.GH_CSL_CLAVE(impFiltro) : '';
+      const filas = Object.entries(imp.hojas).filter(([k, e]) => e && (!q || q.split('-').every((w) => k.split('-').some((x) => x.startsWith(w)))))
+        .sort((a, b) => String(b[1].en || '').localeCompare(String(a[1].en || '')));
+      if (!filas.length) {
+        const msg = imp.sinSenal ? 'Sin señal: no se pudieron traer las hojas.'
+          : Object.keys(imp.hojas).length ? 'Ningún lote coincide.' : 'Todavía no hay hojas guardadas en esta base (o el administrador aún no te dio permiso de verlas).';
+        return `<div class="vz-imp-lista"><div class="vz-vacio"><span>${msg}</span></div></div>`;
+      }
+      return `<div class="vz-imp-lista">${filas.slice(0, 40).map(([k, e]) => {
+        const facts = imp.facturas.filter((inv) => (inv.items || []).some((it) => window.GH_CSL_COINCIDE(k, it.location)));
+        const hojas = [['rough', 'Rough-In'], ['trim', 'Trim-Out'], ['pull', 'Pull Sheet']].filter(([t]) => e[t]).map(([, n]) => n);
+        return `<div class="vz-imp-fila"><div style="min-width:0;"><b>${escapeHtmlVisor(e.lote || k)}</b>
+          <small>${escapeHtmlVisor(hojas.join(' · ') || 'Sin hojas')}${facts.length ? ' · Factura ' + facts.map((f) => '#' + escapeHtmlVisor(f.numero || '')).join(', ') : ''}</small></div>
+          <button type="button" class="vz-imp-btn" data-k="${escapeHtmlVisor(k)}">🖨 Imprimir</button></div>`;
+      }).join('')}</div>`;
+    }
+    function renderImprimir() {
+      const nn = trabajadores(), vv = marcadosDe(fecha);
+      return htmlHero(nn.filter((x) => vv[x] === 1).length, nn.length) + `
+        <div class="vz-dia-head"><div style="min-width:0;"><div class="vz-fecha">Imprimir hojas</div>
+          <div class="chk-estado vz-estado ${estadoTipo}">${estado || 'Busca el lote y toca Imprimir: salen sus completion sheets y su factura.'}</div></div></div>
+        <div class="vz-card">
+          <input type="search" class="vz-imp-buscar" placeholder="Buscar lote o colonia (ej. Greystone 165)" value="${escapeHtmlVisor(impFiltro)}" autocomplete="off" enterkeyhint="search">
+          ${htmlImpLista()}
+        </div>`;
+    }
+    function conectarImp() {
+      cont.querySelectorAll('.vz-imp-btn').forEach((b) => b.addEventListener('click', () => {
+        const e = imp && imp.hojas[b.dataset.k]; if (!e || !window.GH_IMPRIMIR_HOJAS) return;
+        const facts = imp.facturas.filter((inv) => (inv.items || []).some((it) => window.GH_CSL_COINCIDE(b.dataset.k, it.location)));
+        window.GH_IMPRIMIR_HOJAS({ entradas: [e], facturas: facts, doble: true, cfg: imp.cfg, layout: imp.layout, titulo: 'Hojas ' + (e.lote || '') });
+      }));
     }
 
     async function compartirSemana() {

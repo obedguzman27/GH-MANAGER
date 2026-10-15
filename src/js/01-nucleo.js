@@ -420,6 +420,7 @@
     };
     try { localStorage.setItem(cfgCacheKey(), JSON.stringify(c)); } catch (e) {}
     try { await window.storage.set(CFG_KEY, JSON.stringify(c)); } catch (e) {}
+    if (window.GH_PUBLICAR_FACTURA) window.GH_PUBLICAR_FACTURA();
   }
   // El encabezado usa el logo de la app (GH Manager), salvo que en Ajustes se
   // elija "usar mi logo también en la app" y haya un logo subido.

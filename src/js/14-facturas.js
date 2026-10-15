@@ -682,6 +682,7 @@
           <button class="gc-action-btn" data-i18n="ver" style="padding:4px 10px;font-size:11.5px;" data-a="ver" data-id="${inv.id}">Ver</button>
           <button class="gc-action-btn" data-i18n="editar" style="padding:4px 10px;font-size:11.5px;margin-left:4px;" data-a="editar" data-id="${inv.id}">Editar</button>
           <button class="gc-action-btn" style="padding:4px 10px;font-size:11.5px;margin-left:4px;" data-a="duplicar" data-id="${inv.id}" title="Hacer una factura nueva igual a esta">Duplicar</button>
+          ${csActivo ? `<button class="gc-action-btn" style="padding:4px 10px;font-size:11.5px;margin-left:4px;" data-a="conhojas" data-id="${inv.id}" title="Imprimir esta factura con las completion sheets de sus lotes">🖨 + Hojas</button>` : ''}
           <button class="gc-del" style="margin-left:4px;" data-a="borrar" data-id="${inv.id}">✕</button>
         </td>`;
       tbody.appendChild(tr);
@@ -704,6 +705,7 @@
         if (btn.dataset.a==='ver') invMostrarVista(inv);
         if (btn.dataset.a==='editar') invEditar(inv);
         if (btn.dataset.a==='duplicar') invDuplicar(inv);
+        if (btn.dataset.a==='conhojas') cslImprimirFacturaConHojas(inv);
         if (btn.dataset.a==='borrar') {
           if (!await gcConfirm(`¿Eliminar ${inv.numero}?`, { okText: 'Eliminar', danger: true })) return;
           invDocs = invDocs.filter(i=>i.id!==inv.id);
