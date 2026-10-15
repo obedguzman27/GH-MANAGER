@@ -1,29 +1,18 @@
-// Service worker de GH Manager — guarda una copia local de la app
-// para que abra rápido y funcione aunque no haya internet.
-// Los datos NO se guardan aquí (eso vive en localStorage / futuro backend),
-// solo el "cascarón" de la app (HTML, íconos).
-
-const CACHE_NAME = 'gh-manager-v152';
+// Service worker de GH Manager — guarda el "cascarón" de la app (HTML, JS,
+// CSS, íconos) para que abra rápido y funcione sin señal. Los datos NO se
+// guardan aquí: viven en la nube (Supabase).
+const CACHE_NAME = 'gh-manager-v206';
+const PREFIJO = CACHE_NAME.replace(/-v\d+.*$/, '');      // "gh-manager"
+const CANAL = CACHE_NAME.endsWith('-prueba') ? '-prueba' : '';
 const ARCHIVOS_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  './icon-maskable-192.png',
-  './icon-maskable-512.png',
-  './apple-touch-icon.png',
-  './browser-storage.js',
-  './supabase-storage.js',
-  './vendor/supabase-2.117.1.min.js'
+  './', './index.html', './app.js', './app.css', './manifest.json',
+  './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png', './apple-touch-icon.png',
+  './browser-storage.js', './supabase-storage.js', './vendor/supabase-2.117.1.min.js', './vendor/xlsx-0.18.5.full.min.js'
 ];
 
-// Al instalar se bajan los archivos SIN usar la copia vieja del navegador
-// (cache: 'reload'); si no, GitHub Pages puede entregar la versión anterior
-// por unos minutos y la "nueva" versión se quedaba con el código viejo.
-// Cada archivo se guarda por separado: si uno falla, no se cae todo.
+// Se descarga la versión nueva completa, pero NO se activa sola: espera a
+// que el usuario toque "Actualizar" (así no se recarga a media tarea).
 self.addEventListener('install', (evento) => {
-  self.skipWaiting();
   evento.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
     await Promise.all(ARCHIVOS_CACHE.map(async (url) => {
@@ -35,37 +24,25 @@ self.addEventListener('install', (evento) => {
   })());
 });
 
-// Permite que la app fuerce la actualización al instante (botón "Actualizar")
 self.addEventListener('message', (evento) => {
   if (evento.data === 'skip-waiting') self.skipWaiting();
 });
 
+// Solo borra copias viejas de ESTE mismo canal (la versión de prueba y la
+// principal no se borran la una a la otra).
 self.addEventListener('activate', (evento) => {
-  evento.waitUntil(
-    caches.keys().then((nombres) =>
-      Promise.all(
-        nombres
-          .filter((n) => n !== CACHE_NAME && n !== 'gh-fuentes-v1')
-          .map((n) => caches.delete(n))
-      )
-    )
-  );
-  self.clients.claim();
+  evento.waitUntil((async () => {
+    const nombres = await caches.keys();
+    await Promise.all(nombres
+      .filter((n) => n !== CACHE_NAME && n.startsWith(PREFIJO + '-v') && (CANAL ? n.endsWith(CANAL) : !n.endsWith('-prueba')))
+      .map((n) => caches.delete(n)));
+    await self.clients.claim();
+  })());
 });
 
-// Estrategia: copia guardada primero (la app abre AL INSTANTE, incluso con
-// señal débil), y en segundo plano busca una versión nueva para la próxima
-// vez — el aviso "Hay una versión nueva de GH Manager" ya le dice al usuario
-// cuándo actualizar (y a qué versión), así que no hace falta esperar la red
-// en cada apertura.
-// Solo aplica al "cascarón" de la app (mismo origen: HTML, JS, íconos).
-// Las llamadas a Supabase y a Google Fonts son de OTRO dominio y van
-// siempre directo a la red, sin pasar por aquí ni guardarse en caché.
 self.addEventListener('fetch', (evento) => {
   if (evento.request.method !== 'GET') return;
   const url = new URL(evento.request.url);
-  // Fuentes de Google: se guardan la primera vez y después salen del
-  // teléfono (no cambian), así la app no espera la red para pintar letras.
   if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
     evento.respondWith((async () => {
       const cache = await caches.open('gh-fuentes-v1');
@@ -80,22 +57,16 @@ self.addEventListener('fetch', (evento) => {
     return;
   }
   if (url.origin !== self.location.origin) return;
-
+  // Copia de ESTA versión primero (todo el cascarón coincide entre sí: nunca
+  // se mezcla un index.html nuevo con un app.js viejo); si no está, la red.
   evento.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const enCache = await cache.match(evento.request);
-
-    // 'no-cache' = pregunta al servidor si cambió (rápido), en vez de usar
-    // una copia vieja del navegador
-    const buscarEnRed = fetch(evento.request, { cache: 'no-cache' })
-      .then((respuesta) => {
-        if (respuesta && respuesta.ok) cache.put(evento.request, respuesta.clone());
-        return respuesta;
-      })
-      .catch(() => null);
-    evento.waitUntil(buscarEnRed);  // que termine de guardar aunque ya hayamos respondido
-
-    if (enCache) return enCache;                       // instantáneo
-    return (await buscarEnRed) || cache.match('./index.html');  // primera vez / sin caché
+    const enCache = await cache.match(evento.request, { ignoreSearch: true });
+    if (enCache) return enCache;
+    try {
+      return await fetch(evento.request);
+    } catch (e) {
+      return (evento.request.mode === 'navigate' && await cache.match('./index.html')) || Response.error();
+    }
   })());
 });

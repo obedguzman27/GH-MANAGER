@@ -33,12 +33,14 @@
     const liviano = planos.map((p) => { const { fotos, ...resto } = p; return resto; });
     try { await window.storage.set(PLANOS_KEY, JSON.stringify(liviano)); } catch (e) {}
   }
+  // Fotos: archivos en el almacén de fotos (antes iban dentro de la base de
+  // datos y la hacían pesada). Si falla, se avisa (antes se perdían sin aviso).
   async function plnGuardarFotosDe(id, fotos) {
-    try { await window.storage.set('gh-plano-fotos-' + id, JSON.stringify(fotos)); } catch (e) {}
+    try { await GH_FOTOS.guardar('plano', id, fotos); }
+    catch (e) { toast('No se pudieron guardar las fotos: ' + ((e && e.message) || e), 'error', 5000); }
   }
   async function plnCargarFotosDe(id) {
-    const r = await window.storage.get('gh-plano-fotos-' + id).catch(() => null);
-    try { return JSON.parse(r.value); } catch (e) { return []; }
+    try { return await GH_FOTOS.cargar('plano', id); } catch (e) { return []; }
   }
   function plnMiniPortada(dataUrlOrigen) {
     return new Promise((resolve, reject) => {
@@ -148,7 +150,7 @@
         } },
       { id: 'borrar', texto: '🗑 Borrar', peligro: true, fn: async (ids) => {
           if (!await gcConfirm(`¿Borrar ${ids.length} plano(s)? Esta acción no se puede deshacer.`, { okText: 'Borrar', danger: true })) return;
-          planos = planos.filter((p) => !ids.includes(p.id));
+          planos = planos.filter((p) => !ids.includes(p.id)); ids.forEach((id) => GH_FOTOS.borrar('plano', id).catch(() => {}));
           await plnGuardar();
           plnSel.salir();
           plnRefreshDlConstructores();
@@ -186,7 +188,7 @@
       btnEditar.addEventListener('click', () => plnAbrirModal(p));
       btnBorrar.addEventListener('click', async () => {
         if (!(await gcConfirm(idiomaActual() === 'en' ? I18N.t_borrar_este_plano.en : '¿Borrar este plano?', { okText: idiomaActual() === 'en' ? 'Delete' : 'Borrar', danger: true }))) return;
-        planos = planos.filter((x) => x.id !== p.id);
+        planos = planos.filter((x) => x.id !== p.id); GH_FOTOS.borrar('plano', p.id).catch(() => {});
         await plnGuardar();
         plnRefreshDlConstructores();
         plnRender();

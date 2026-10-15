@@ -8,7 +8,7 @@ import path from 'path';
 const args = new Set(process.argv.slice(2));
 const leer = (p) => fs.readFileSync(p, 'utf8');
 const jsDir = 'src/js';
-const modulos = fs.readdirSync(jsDir).filter((f) => /^\d\d-.*\.js$/.test(f)).sort();
+const modulos = fs.readdirSync(jsDir).filter((f) => /^\d\d[a-z]?-.*\.js$/.test(f)).sort();
 const arranque = modulos.filter((f) => f.startsWith('00-'));
 const app = modulos.filter((f) => !f.startsWith('00-') && !f.startsWith('9'));
 const acceso = modulos.filter((f) => f.startsWith('9'));   // control de acceso / visor (alcance propio)
@@ -19,7 +19,7 @@ if (args.has('--verificar')) {
     '<script src="vendor/supabase-2.117.1.min.js"></script>\n<script src="supabase-storage.js"></script>\n<script src="browser-storage.js"></script>\n<script>\n' +
     arranque.map((f) => leer(path.join(jsDir, f))).join('') + '(function () {\n' +
     app.map((f) => leer(path.join(jsDir, f))).join('') + '})();\n</script>\n';
-  const orig = leer('index.html');
+  const orig = leer('legado/index-v152.html');
   console.log(html === orig ? 'IDÉNTICO ✓' : 'DIFERENTE ✗ (' + html.length + ' vs ' + orig.length + ')');
   process.exit(html === orig ? 0 : 1);
 }
@@ -28,7 +28,8 @@ const destino = args.has('--raiz') ? '.' : 'v2';
 fs.mkdirSync(path.join(destino, 'vendor'), { recursive: true });
 
 const version = JSON.parse(leer('src/version.json'));
-const sub = (s) => s.replaceAll('__APP_VERSION__', version.etiqueta).replaceAll('__CACHE__', version.cache + (destino === 'v2' ? '-prueba' : ''));
+const etiqueta = destino === 'v2' ? version.etiqueta : version.etiqueta.replace(/\s*·\s*prueba\s*$/, '');
+const sub = (s) => s.replaceAll('__APP_VERSION__', etiqueta).replaceAll('__CACHE__', version.cache + (destino === 'v2' ? '-prueba' : ''));
 
 // Un solo archivo de JS (los módulos comparten el mismo alcance, igual que antes)
 const js = '// GH Manager — generado por build.mjs desde src/js. No editar a mano.\n' +
@@ -64,4 +65,4 @@ if (destino === 'v2') {
   for (const f of ['icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'apple-touch-icon.png']) fs.copyFileSync(f, path.join(destino, f));
   for (const f of fs.readdirSync('vendor')) fs.copyFileSync(path.join('vendor', f), path.join(destino, 'vendor', f));
 }
-console.log('Listo →', destino, '(' + version.etiqueta + ', ' + app.length + ' módulos)');
+console.log('Listo →', destino, '(' + etiqueta + ', ' + app.length + ' módulos)');

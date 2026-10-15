@@ -215,7 +215,7 @@
       tel: $('emp-tel').value.trim(),
       email: $('emp-email').value.trim(),
       inicio: $('emp-inicio').value,
-      ss: $('emp-ss').value.trim(),
+      ss: $('emp-ss').value.replace(/\D/g, '').slice(-4),   // solo los últimos 4 (nunca el número completo)
       emergencia: $('emp-emergencia').value.trim(),
       direccion: $('emp-direccion').value.trim(),
       notas: $('emp-notas').value.trim()

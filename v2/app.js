@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v205 · prueba';
+  window.GH_APP_VERSION = 'v206 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -774,6 +774,225 @@
     optNueva.textContent = '+ Nueva categoría…';
     select.appendChild(optNueva);
   }
+
+// ---- 01a-sincronizacion.js ----
+  // ====================================================================
+  // SINCRONIZACIÓN — indicador de guardado y avisos de cambios de otro
+  // teléfono (el motor vive en supabase-storage.js → window.GH_SYNC)
+  // ====================================================================
+  window.GH_TOAST = (m, t, d) => { try { toast(m, t, d); } catch (e) {} };
+
+  (function indicadorGuardado() {
+    const sync = window.GH_SYNC;
+    const lugar = document.querySelector('.gc-header-right');
+    if (!sync || !lugar) return;
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.id = 'gh-sync';
+    pill.className = 'gh-sync';
+    pill.setAttribute('aria-live', 'polite');
+    pill.innerHTML = '<i></i><span></span>';
+    lugar.insertBefore(pill, lugar.firstChild);
+    let ocultar = null, ultimo = '';
+    sync.on((i) => {
+      const txt = pill.querySelector('span');
+      pill.dataset.estado = i.estado;
+      clearTimeout(ocultar);
+      if (i.estado === 'guardando') txt.textContent = 'Guardando…';
+      else if (i.estado === 'offline') txt.textContent = `Sin señal · ${i.pendientes} por subir`;
+      else if (i.estado === 'error') txt.textContent = `Reintentando · ${i.pendientes}`;
+      else {
+        txt.textContent = ultimo && ultimo !== 'ok' ? 'Guardado ✓' : '';
+        ocultar = setTimeout(() => { txt.textContent = ''; }, 2200);
+      }
+      pill.classList.toggle('con-texto', !!txt.textContent);
+      pill.title = i.estado === 'ok' ? 'Todo está guardado en la nube'
+        : i.estado === 'offline' ? 'Sin señal: los cambios están guardados en este teléfono y se suben solos al volver la señal'
+        : i.estado === 'error' ? 'No se pudo subir todavía (' + (i.error || 'conexión') + '). Se reintenta solo.'
+        : 'Subiendo cambios a la nube';
+      ultimo = i.estado;
+    });
+    pill.addEventListener('click', () => {
+      const i = sync.info();
+      if (i.pendientes) { sync.vaciar(); toast(navigator.onLine ? 'Subiendo cambios pendientes…' : 'Sin señal: tus cambios están a salvo en este teléfono y se suben solos al volver la señal.', 'info', 3500); }
+      else toast('Todo está guardado en la nube ✓', 'success', 1800);
+    });
+  })();
+
+  // ---- Barra "hay cambios de otro teléfono" ----
+  function ghBarraRecargar(texto, boton) {
+    let barra = document.getElementById('gh-barra-remota');
+    if (!barra) {
+      barra = document.createElement('div');
+      barra.id = 'gh-barra-remota';
+      barra.className = 'gh-barra-remota';
+      barra.innerHTML = '<span></span><button type="button" class="gh-barra-ok"></button><button type="button" class="gh-barra-x" aria-label="Cerrar">✕</button>';
+      document.body.appendChild(barra);
+      barra.querySelector('.gh-barra-x').addEventListener('click', () => barra.classList.remove('show'));
+      barra.querySelector('.gh-barra-ok').addEventListener('click', async () => {
+        barra.querySelector('.gh-barra-ok').textContent = 'Actualizando…';
+        await ghRecargarConservando();
+      });
+    }
+    barra.querySelector('span').textContent = texto;
+    barra.querySelector('.gh-barra-ok').textContent = boton || 'Actualizar';
+    requestAnimationFrame(() => barra.classList.add('show'));
+  }
+  async function ghRecargarConservando() {
+    try {
+      const tab = document.querySelector('.gc-tab.active');
+      const sub = document.querySelector('.gc-panel.active .active[data-sub], .gc-panel.active .active[data-msub], .gc-panel.active .active[data-nsub], .gc-panel.active .active[data-psub], .gc-panel.active .active[data-asub], .gc-panel.active .active[data-dsub]');
+      sessionStorage.setItem('gh-volver-a', JSON.stringify({ tab: tab ? tab.dataset.tab : '', sub: sub ? [...sub.attributes].filter((a) => /^data-.?sub$/.test(a.name)).map((a) => `[${a.name}="${a.value}"]`)[0] : '', y: window.scrollY }));
+    } catch (e) {}
+    if (window.GH_SYNC) await window.GH_SYNC.esperarGuardado(8000);
+    location.reload();
+  }
+  window.GH_RECARGAR_CONSERVANDO = ghRecargarConservando;
+  window.addEventListener('gh-datos-remotos', (e) => {
+    const d = e.detail || {};
+    if (d.porUnion) ghBarraRecargar('Se juntaron tus cambios con los de otro teléfono. Actualiza para ver todo junto.');
+    else ghBarraRecargar('Hay cambios nuevos hechos desde otro teléfono.');
+  });
+  window.addEventListener('gh-lectura-sin-senal', () => {
+    toast('Sin señal: ves lo último que se guardó en este teléfono. Lo que cambies se sube solo cuando vuelva la señal.', 'info', 6000);
+  });
+  window.addEventListener('gh-recargar-sugerido', () => {
+    ghBarraRecargar('Ya hay señal. Actualiza para ver todos tus datos.');
+  });
+  // Después de recargar, volver a la misma pantalla
+  (function volverAPantalla() {
+    let destino = null;
+    try { destino = JSON.parse(sessionStorage.getItem('gh-volver-a') || 'null'); sessionStorage.removeItem('gh-volver-a'); } catch (e) {}
+    if (!destino || !destino.tab) return;
+    const t0 = Date.now();
+    const iv = setInterval(() => {
+      if (document.getElementById('gh-oculto-inicial') && Date.now() - t0 < 15000) return;
+      clearInterval(iv);
+      const tab = document.querySelector(`.gc-tab[data-tab="${destino.tab}"]`);
+      if (tab && tab.offsetParent) tab.click();
+      if (destino.sub) { const s = document.querySelector(`#panel-${destino.tab} ${destino.sub}`); if (s && s.offsetParent) s.click(); }
+      if (destino.y) setTimeout(() => window.scrollTo(0, destino.y), 300);
+    }, 150);
+  })();
+
+// ---- 01b-fotos.js ----
+  // ====================================================================
+  // FOTOS — se guardan como archivos en Supabase Storage (bucket "fotos"),
+  // no dentro de la base de datos. En la base solo queda la lista de
+  // archivos de cada trabajo/plano. Las fotos viejas (guardadas dentro de la
+  // base) se siguen viendo y se mudan solas al abrirlas.
+  // Para el resto de la app nada cambia: guardar/cargar siguen usando
+  // [{ dataUrl, nombre }].
+  // ====================================================================
+  const GH_FOTOS = (function () {
+    const BUCKET = 'fotos';
+    const cache = new Map();              // path -> dataUrl
+    let disponible = null;                // null = no se sabe, true/false
+    const cli = () => window.GH_SUPABASE;
+    const cuenta = () => ((typeof window.GH_GET_CUENTA === 'function' && window.GH_GET_CUENTA()) || 'principal');
+    const claveDe = (tipo, id) => `gh-${tipo}-fotos-${id}`;
+
+    function dataUrlABlob(dataUrl) {
+      const [cab, datos] = String(dataUrl).split(',');
+      const tipo = (cab.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+      const bin = atob(datos || ''); const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return new Blob([arr], { type: tipo });
+    }
+    function blobADataUrl(blob) {
+      return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+    }
+    // Huella corta del contenido: la misma foto no se vuelve a subir
+    async function huella(dataUrl) {
+      try {
+        const buf = new TextEncoder().encode(dataUrl);
+        const h = await crypto.subtle.digest('SHA-256', buf);
+        return [...new Uint8Array(h)].slice(0, 10).map((b) => b.toString(16).padStart(2, '0')).join('');
+      } catch (e) { let h = 0; for (let i = 0; i < dataUrl.length; i += 7) h = (h * 31 + dataUrl.charCodeAt(i)) >>> 0; return h.toString(16) + dataUrl.length.toString(16); }
+    }
+    const ext = (dataUrl) => (/^data:image\/png/.test(dataUrl) ? 'png' : /^data:image\/webp/.test(dataUrl) ? 'webp' : 'jpg');
+
+    async function leerLista(tipo, id) {
+      const r = await window.storage.get(claveDe(tipo, id)).catch(() => null);
+      if (!r) return null;
+      try { return JSON.parse(r.value); } catch (e) { return null; }
+    }
+    const esFormatoNuevo = (v) => v && typeof v === 'object' && !Array.isArray(v) && Array.isArray(v.archivos);
+
+    async function subirTodas(tipo, id, fotos) {
+      const c = cli(); if (!c || !c.storage) throw new Error('sin-storage');
+      const base = `${cuenta()}/${tipo}/${id}/`;
+      const archivos = [];
+      for (const f of fotos) {
+        if (!f || !f.dataUrl) continue;
+        const path = base + (await huella(f.dataUrl)) + '.' + ext(f.dataUrl);
+        if (!cache.has(path)) {
+          const { error } = await c.storage.from(BUCKET).upload(path, dataUrlABlob(f.dataUrl), { upsert: true, contentType: dataUrlABlob(f.dataUrl).type });
+          if (error && !/exists|duplicate/i.test(error.message || '')) throw error;
+          cache.set(path, f.dataUrl);
+        }
+        archivos.push({ path, nombre: f.nombre || '' });
+      }
+      return archivos;
+    }
+
+    async function guardar(tipo, id, fotos) {
+      fotos = Array.isArray(fotos) ? fotos : [];
+      const anterior = await leerLista(tipo, id);
+      if (disponible !== false) {
+        try {
+          const archivos = await subirTodas(tipo, id, fotos);
+          await window.storage.set(claveDe(tipo, id), JSON.stringify({ archivos }));
+          disponible = true;
+          // Borrar del almacén las fotos que se quitaron
+          if (esFormatoNuevo(anterior)) {
+            const quedan = new Set(archivos.map((a) => a.path));
+            const sobran = anterior.archivos.map((a) => a.path).filter((p) => !quedan.has(p));
+            if (sobran.length) cli().storage.from(BUCKET).remove(sobran).catch(() => {});
+          }
+          return;
+        } catch (e) {
+          if (/bucket not found|sin-storage/i.test(String(e && e.message))) disponible = false;
+          else throw e;
+        }
+      }
+      // Sin almacén de fotos: como antes (dentro de la base)
+      await window.storage.set(claveDe(tipo, id), JSON.stringify(fotos));
+    }
+
+    async function cargar(tipo, id) {
+      const v = await leerLista(tipo, id);
+      if (!v) return [];
+      if (Array.isArray(v)) {
+        // Formato viejo: se ve igual y se muda al almacén en segundo plano
+        if (v.length && disponible !== false && window.GH_ROL !== 'visor') setTimeout(() => guardar(tipo, id, v).catch(() => {}), 1500);
+        return v;
+      }
+      if (!esFormatoNuevo(v)) return [];
+      const c = cli();
+      const salida = await Promise.all(v.archivos.map(async (a) => {
+        if (cache.has(a.path)) return { dataUrl: cache.get(a.path), nombre: a.nombre };
+        try {
+          const { data, error } = await c.storage.from(BUCKET).download(a.path);
+          if (error || !data) throw error || new Error('sin datos');
+          const url = await blobADataUrl(data);
+          cache.set(a.path, url);
+          return { dataUrl: url, nombre: a.nombre };
+        } catch (e) { return null; }
+      }));
+      const ok = salida.filter(Boolean);
+      if (ok.length < v.archivos.length) toast(`No se pudieron bajar ${v.archivos.length - ok.length} foto(s). Revisa la señal.`, 'error', 4000);
+      return ok;
+    }
+
+    async function borrar(tipo, id) {
+      const v = await leerLista(tipo, id);
+      if (esFormatoNuevo(v) && v.archivos.length) { try { await cli().storage.from(BUCKET).remove(v.archivos.map((a) => a.path)); } catch (e) {} }
+      try { await window.storage.delete(claveDe(tipo, id)); } catch (e) {}
+    }
+    return { guardar, cargar, borrar };
+  })();
+  window.GH_FOTOS = GH_FOTOS;
 
 // ---- 02-movimientos.js ----
   // ============================================================
@@ -5228,7 +5447,7 @@
       tel: $('emp-tel').value.trim(),
       email: $('emp-email').value.trim(),
       inicio: $('emp-inicio').value,
-      ss: $('emp-ss').value.trim(),
+      ss: $('emp-ss').value.replace(/\D/g, '').slice(-4),   // solo los últimos 4 (nunca el número completo)
       emergencia: $('emp-emergencia').value.trim(),
       direccion: $('emp-direccion').value.trim(),
       notas: $('emp-notas').value.trim()
@@ -5477,12 +5696,14 @@
     const liviano = citas.map((c) => { const { fotos, ...resto } = c; return resto; });
     try { await window.storage.set(CITAS_KEY, JSON.stringify(liviano)); } catch (e) {}
   }
+  // Fotos: archivos en el almacén de fotos (antes iban dentro de la base de
+  // datos y la hacían pesada). Si falla, se avisa (antes se perdían sin aviso).
   async function calGuardarFotosDe(id, fotos) {
-    try { await window.storage.set('gh-cita-fotos-' + id, JSON.stringify(fotos)); } catch (e) {}
+    try { await GH_FOTOS.guardar('cita', id, fotos); }
+    catch (e) { toast('No se pudieron guardar las fotos: ' + ((e && e.message) || e), 'error', 5000); }
   }
   async function calCargarFotosDe(id) {
-    const r = await window.storage.get('gh-cita-fotos-' + id).catch(() => null);
-    try { return JSON.parse(r.value); } catch (e) { return []; }
+    try { return await GH_FOTOS.cargar('cita', id); } catch (e) { return []; }
   }
   // Miniatura chiquita (para la vista de la semana) — separada de las fotos
   // completas, así el bloque principal de citas se queda siempre liviano.
@@ -5554,7 +5775,7 @@
           btnEditar.addEventListener('click', () => calAbrirModal(c));
           btnBorrar.addEventListener('click', async () => {
             if (!(await gcConfirm('¿Borrar este trabajo agendado?', { okText: 'Borrar', danger: true }))) return;
-            citas = citas.filter((x) => x.id !== c.id);
+            citas = citas.filter((x) => x.id !== c.id); GH_FOTOS.borrar('cita', c.id).catch(() => {});
             await calGuardar();
             calRender();
           });
@@ -5733,7 +5954,7 @@
         } },
       { id: 'borrar', texto: '🗑 Borrar', peligro: true, fn: async (ids) => {
           if (!await gcConfirm(`¿Borrar ${ids.length} trabajo(s) agendado(s)?`, { okText: 'Borrar', danger: true })) return;
-          citas = citas.filter((c) => !ids.includes(c.id));
+          citas = citas.filter((c) => !ids.includes(c.id)); ids.forEach((id) => GH_FOTOS.borrar('cita', id).catch(() => {}));
           await calGuardar();
           calSel.salir();
           calRender();
@@ -5826,12 +6047,14 @@
     const liviano = planos.map((p) => { const { fotos, ...resto } = p; return resto; });
     try { await window.storage.set(PLANOS_KEY, JSON.stringify(liviano)); } catch (e) {}
   }
+  // Fotos: archivos en el almacén de fotos (antes iban dentro de la base de
+  // datos y la hacían pesada). Si falla, se avisa (antes se perdían sin aviso).
   async function plnGuardarFotosDe(id, fotos) {
-    try { await window.storage.set('gh-plano-fotos-' + id, JSON.stringify(fotos)); } catch (e) {}
+    try { await GH_FOTOS.guardar('plano', id, fotos); }
+    catch (e) { toast('No se pudieron guardar las fotos: ' + ((e && e.message) || e), 'error', 5000); }
   }
   async function plnCargarFotosDe(id) {
-    const r = await window.storage.get('gh-plano-fotos-' + id).catch(() => null);
-    try { return JSON.parse(r.value); } catch (e) { return []; }
+    try { return await GH_FOTOS.cargar('plano', id); } catch (e) { return []; }
   }
   function plnMiniPortada(dataUrlOrigen) {
     return new Promise((resolve, reject) => {
@@ -5941,7 +6164,7 @@
         } },
       { id: 'borrar', texto: '🗑 Borrar', peligro: true, fn: async (ids) => {
           if (!await gcConfirm(`¿Borrar ${ids.length} plano(s)? Esta acción no se puede deshacer.`, { okText: 'Borrar', danger: true })) return;
-          planos = planos.filter((p) => !ids.includes(p.id));
+          planos = planos.filter((p) => !ids.includes(p.id)); ids.forEach((id) => GH_FOTOS.borrar('plano', id).catch(() => {}));
           await plnGuardar();
           plnSel.salir();
           plnRefreshDlConstructores();
@@ -5979,7 +6202,7 @@
       btnEditar.addEventListener('click', () => plnAbrirModal(p));
       btnBorrar.addEventListener('click', async () => {
         if (!(await gcConfirm(idiomaActual() === 'en' ? I18N.t_borrar_este_plano.en : '¿Borrar este plano?', { okText: idiomaActual() === 'en' ? 'Delete' : 'Borrar', danger: true }))) return;
-        planos = planos.filter((x) => x.id !== p.id);
+        planos = planos.filter((x) => x.id !== p.id); GH_FOTOS.borrar('plano', p.id).catch(() => {});
         await plnGuardar();
         plnRefreshDlConstructores();
         plnRender();
@@ -10844,7 +11067,7 @@
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-soft);">
         <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Datos para el 1099 (W-9)</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
-          <label style="font-size:12px;color:var(--muted);">Número de taxes (SSN, ITIN o EIN)<input type="text" id="r99-i-tin" value="${escapeHtml(info.tin || '')}" autocomplete="off" style="${inp}"></label>
+          <label style="font-size:12px;color:var(--muted);">Número de taxes (SSN, ITIN o EIN)<span style="display:flex;gap:6px;align-items:center;"><input type="password" id="r99-i-tin" value="${escapeHtml(info.tin || '')}" autocomplete="off" spellcheck="false" style="${inp};flex:1;min-width:0;"><button type="button" class="gc-action-btn" id="r99-i-tin-ver" style="padding:6px 10px;font-size:12px;margin-top:4px;">Mostrar</button></span></label>
           <label style="font-size:12px;color:var(--muted);">Dirección<input type="text" id="r99-i-dir" value="${escapeHtml(info.dir || '')}" autocomplete="off" style="${inp}"></label>
           <label style="font-size:12px;color:var(--muted);">Ciudad, estado y ZIP<input type="text" id="r99-i-ciudad" value="${escapeHtml(info.ciudad || '')}" autocomplete="off" style="${inp}"></label>
         </div>
@@ -10858,6 +11081,12 @@
         ${pagos.map((c) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--border-soft);font-size:13px;">
           <span>${escapeHtml(chqFechaUS(c.fecha))} · ${c.metodo === 'zelle' ? 'Zelle' : (c.metodo === 'cash' ? 'Cash' : 'Cheque #' + escapeHtml(String(c.numero || '')))}${c.base ? ` <span style="color:var(--muted);font-size:11.5px;">· ${escapeHtml(c.base)}</span>` : ''}</span><span>${nomFmt(c.monto)}</span></div>`).join('')}
       </div></div>`;
+    const ver = $('r99-i-tin-ver');
+    if (ver) ver.addEventListener('click', () => {
+      const i = $('r99-i-tin'); const mostrar = i.type === 'password';
+      i.type = mostrar ? 'text' : 'password'; ver.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      if (mostrar) setTimeout(() => { if (i.isConnected) { i.type = 'password'; ver.textContent = 'Mostrar'; } }, 20000);
+    });
     const g = $('r99-i-guardar');
     if (g) g.addEventListener('click', async () => {
       r99Info[clave] = Object.assign({}, r99Info[clave] || {}, {

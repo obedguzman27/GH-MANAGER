@@ -349,5 +349,31 @@ def duplicar_factura(p, c):
     assert nueva['total'] == 1225 and not nueva['pagada'] and nueva['clienteDireccion'] == '123 Main St, Nashville, TN', nueva
     assert [d for d in docs if d['numero'] == '1007'][0]['total'] == 1225   # la original no cambia
 
+@prueba
+def fotos_en_almacen_y_migracion(p, c):
+    import base64
+    png = 'data:image/png;base64,' + base64.b64encode(bytes.fromhex('89504e470d0a1a0a0000000d4948445200000001000000010806000000') + b'x'*40).decode()
+    d = db()
+    # una foto vieja guardada dentro de la base (formato de antes)
+    d['datos_app']['c:prueba::gh-cita-fotos-cita-1'] = {'clave': 'c:prueba::gh-cita-fotos-cita-1', 'valor': json.dumps([{'dataUrl': png, 'nombre': 'vieja.png'}]), 'actualizado_en': '2026-10-01T12:00:00.000+00:00'}
+    d['datos_app']['c:prueba::gh-citas']['valor'] = json.dumps([{'id': 'cita-1', 'fecha': '2026-10-14', 'cliente': 'Airtron', 'loc': 'Lot 20', 'descripcion': 'Trim', 'numFotos': 1, 'portada': ''}])
+    poner_db(d)
+    pg = c.pagina()
+    r = pg.evaluate("""async (png) => { const v = await window.GH_FOTOS.cargar('cita', 'cita-1'); await new Promise(r => setTimeout(r, 2500)); return v.length && v[0].dataUrl === png; }""", png)
+    assert r, 'no cargó la foto vieja'
+    lista = valor(None, 'c:prueba::gh-cita-fotos-cita-1')
+    assert isinstance(lista, dict) and lista['archivos'][0]['path'].startswith('prueba/cita/cita-1/'), lista
+    assert len(db()['storage']) == 1
+    # se vuelve a leer desde el almacén igualita
+    r2 = pg.evaluate("""async (png) => { const v = await window.GH_FOTOS.cargar('cita', 'cita-1'); return v.length === 1 && v[0].dataUrl === png; }""", png)
+    assert r2
+    # quitar la foto: se borra del almacén
+    pg.evaluate("async () => { await window.GH_FOTOS.guardar('cita', 'cita-1', []); }")
+    assert db()['storage'] == {}, db()['storage']
+    # sin almacén (bucket no existe): se guarda como antes, sin perder nada
+    pg2 = c.pagina(); pg2.evaluate("() => { window.FAKE.sinBucket = true; }")
+    pg2.evaluate("async (png) => { await window.GH_FOTOS.guardar('plano', 'p1', [{ dataUrl: png }]); }", png)
+    assert valor(None, 'c:prueba::gh-plano-fotos-p1')[0]['dataUrl'] == png
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

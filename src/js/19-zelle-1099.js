@@ -187,7 +187,7 @@
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-soft);">
         <div style="font-weight:700;font-size:13.5px;margin-bottom:8px;">Datos para el 1099 (W-9)</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
-          <label style="font-size:12px;color:var(--muted);">Número de taxes (SSN, ITIN o EIN)<input type="text" id="r99-i-tin" value="${escapeHtml(info.tin || '')}" autocomplete="off" style="${inp}"></label>
+          <label style="font-size:12px;color:var(--muted);">Número de taxes (SSN, ITIN o EIN)<span style="display:flex;gap:6px;align-items:center;"><input type="password" id="r99-i-tin" value="${escapeHtml(info.tin || '')}" autocomplete="off" spellcheck="false" style="${inp};flex:1;min-width:0;"><button type="button" class="gc-action-btn" id="r99-i-tin-ver" style="padding:6px 10px;font-size:12px;margin-top:4px;">Mostrar</button></span></label>
           <label style="font-size:12px;color:var(--muted);">Dirección<input type="text" id="r99-i-dir" value="${escapeHtml(info.dir || '')}" autocomplete="off" style="${inp}"></label>
           <label style="font-size:12px;color:var(--muted);">Ciudad, estado y ZIP<input type="text" id="r99-i-ciudad" value="${escapeHtml(info.ciudad || '')}" autocomplete="off" style="${inp}"></label>
         </div>
@@ -201,6 +201,12 @@
         ${pagos.map((c) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--border-soft);font-size:13px;">
           <span>${escapeHtml(chqFechaUS(c.fecha))} · ${c.metodo === 'zelle' ? 'Zelle' : (c.metodo === 'cash' ? 'Cash' : 'Cheque #' + escapeHtml(String(c.numero || '')))}${c.base ? ` <span style="color:var(--muted);font-size:11.5px;">· ${escapeHtml(c.base)}</span>` : ''}</span><span>${nomFmt(c.monto)}</span></div>`).join('')}
       </div></div>`;
+    const ver = $('r99-i-tin-ver');
+    if (ver) ver.addEventListener('click', () => {
+      const i = $('r99-i-tin'); const mostrar = i.type === 'password';
+      i.type = mostrar ? 'text' : 'password'; ver.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      if (mostrar) setTimeout(() => { if (i.isConnected) { i.type = 'password'; ver.textContent = 'Mostrar'; } }, 20000);
+    });
     const g = $('r99-i-guardar');
     if (g) g.addEventListener('click', async () => {
       r99Info[clave] = Object.assign({}, r99Info[clave] || {}, {

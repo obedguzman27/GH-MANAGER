@@ -747,13 +747,16 @@
   // vacías). Lo que se guarde así se JUNTA con la nube al volver la señal.
   const CACHE_PFX = 'gh-copia:';
   function copiaGuardar(clave, valor) {
-    if (/fotos/.test(clave) || typeof valor !== 'string' || valor.length > 300000) return;
+    // No se copian al teléfono: fotos (pesadas), respaldos, ni los datos del
+    // 1099 (números de taxes) — esos solo viven en la nube.
+    if (/fotos|respaldo|1099/.test(clave) || typeof valor !== 'string' || valor.length > 300000) return;
     try { localStorage.setItem(CACHE_PFX + (window.GH_USER_ID || '') + ':' + clave, valor); }
     catch (e) {
       // sin espacio: borrar copias viejas y seguir
       try { Object.keys(localStorage).filter((k) => k.startsWith(CACHE_PFX)).forEach((k) => localStorage.removeItem(k)); } catch (e2) {}
     }
   }
+  try { Object.keys(localStorage).filter((k) => k.startsWith(CACHE_PFX) && /1099|respaldo/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch (e) {}
   function copiaLeer(clave) {
     try { return localStorage.getItem(CACHE_PFX + (window.GH_USER_ID || '') + ':' + clave); } catch (e) { return null; }
   }

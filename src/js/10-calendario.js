@@ -51,12 +51,14 @@
     const liviano = citas.map((c) => { const { fotos, ...resto } = c; return resto; });
     try { await window.storage.set(CITAS_KEY, JSON.stringify(liviano)); } catch (e) {}
   }
+  // Fotos: archivos en el almacén de fotos (antes iban dentro de la base de
+  // datos y la hacían pesada). Si falla, se avisa (antes se perdían sin aviso).
   async function calGuardarFotosDe(id, fotos) {
-    try { await window.storage.set('gh-cita-fotos-' + id, JSON.stringify(fotos)); } catch (e) {}
+    try { await GH_FOTOS.guardar('cita', id, fotos); }
+    catch (e) { toast('No se pudieron guardar las fotos: ' + ((e && e.message) || e), 'error', 5000); }
   }
   async function calCargarFotosDe(id) {
-    const r = await window.storage.get('gh-cita-fotos-' + id).catch(() => null);
-    try { return JSON.parse(r.value); } catch (e) { return []; }
+    try { return await GH_FOTOS.cargar('cita', id); } catch (e) { return []; }
   }
   // Miniatura chiquita (para la vista de la semana) — separada de las fotos
   // completas, así el bloque principal de citas se queda siempre liviano.
@@ -128,7 +130,7 @@
           btnEditar.addEventListener('click', () => calAbrirModal(c));
           btnBorrar.addEventListener('click', async () => {
             if (!(await gcConfirm('¿Borrar este trabajo agendado?', { okText: 'Borrar', danger: true }))) return;
-            citas = citas.filter((x) => x.id !== c.id);
+            citas = citas.filter((x) => x.id !== c.id); GH_FOTOS.borrar('cita', c.id).catch(() => {});
             await calGuardar();
             calRender();
           });
@@ -307,7 +309,7 @@
         } },
       { id: 'borrar', texto: '🗑 Borrar', peligro: true, fn: async (ids) => {
           if (!await gcConfirm(`¿Borrar ${ids.length} trabajo(s) agendado(s)?`, { okText: 'Borrar', danger: true })) return;
-          citas = citas.filter((c) => !ids.includes(c.id));
+          citas = citas.filter((c) => !ids.includes(c.id)); ids.forEach((id) => GH_FOTOS.borrar('cita', id).catch(() => {}));
           await calGuardar();
           calSel.salir();
           calRender();

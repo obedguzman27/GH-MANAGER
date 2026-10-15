@@ -92,5 +92,19 @@
     async signOut() { localStorage.removeItem('fake-session'); return { error: null }; },
     async updateUser() { return { error: null }; }
   };
-  window.supabase = { createClient: () => ({ auth, from: (t) => Q(t), rpc: async () => ({ error: { message: 'function does not exist' } }) }) };
+  const aDataUrl = (blob) => new Promise((r) => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(blob); });
+  const storage = { from: (bucket) => ({
+    async upload(path, blob) {
+      await red(); if (window.FAKE.offline) return { data: null, error: errRed };
+      if (window.FAKE.sinBucket) return { data: null, error: { message: 'Bucket not found' } };
+      const db = leerDB(); tabla(db, 'storage')[bucket + '/' + path] = await aDataUrl(blob); guardarDB(db); return { data: { path }, error: null };
+    },
+    async download(path) {
+      await red(); if (window.FAKE.offline) return { data: null, error: errRed };
+      const u = (leerDB().storage || {})[bucket + '/' + path]; if (!u) return { data: null, error: { message: 'Object not found' } };
+      return { data: await (await fetch(u)).blob(), error: null };
+    },
+    async remove(paths) { const db = leerDB(); paths.forEach((p) => delete tabla(db, 'storage')[bucket + '/' + p]); guardarDB(db); return { data: null, error: null }; }
+  }) };
+  window.supabase = { createClient: () => ({ auth, storage, from: (t) => Q(t), rpc: async () => ({ error: { message: 'function does not exist' } }) }) };
 })();
