@@ -431,6 +431,13 @@ def imprimir_trae_factura_sin_tocar_nada(p, c):
     pg.click('#csl-imprimir'); pg.wait_for_timeout(800)
     html = _imprimir_capturado(pg)
     assert 'INVOICE' in html and 'Mario' in html, html[:300]
+    # Solo había Rough-In: el Trim-Out y el Pull Sheet salen en blanco, en orden
+    assert html.count('class="pag"') == 2 and html.count('class="ps-pag"') == 2, (html.count('class="pag"'), html.count('class="ps-pag"'))
+    i_inv, i_rough, i_trim, i_pull = html.find('INVOICE'), html.find('ROUGH-IN'), html.find('TRIM-OUT'), html.find('class="ps-pag"')
+    assert -1 < i_inv < i_rough < i_trim < i_pull, (i_inv, i_rough, i_trim, i_pull)
+    # En Rough-In ya no está "Imprimir esta"
+    pg.click('.cs-tipo-btn[data-cstipo="rough"]'); pg.wait_for_timeout(300)
+    assert not pg.is_visible('#cs-btn-imprimir') and pg.is_visible('#cs-btn-imprimir-ambas'), (pg.is_visible('#cs-btn-imprimir'), pg.is_visible('#cs-btn-imprimir-ambas'), pg.is_visible('#cs-form-hojas'))
 
 @prueba
 def visor_imprime_hojas_y_factura(p, c):

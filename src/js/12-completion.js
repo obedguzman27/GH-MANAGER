@@ -334,7 +334,9 @@
     $('cs-form-pull').style.display = esPull ? '' : 'none';
     $('cs-form-check').style.display = esPull ? 'none' : '';
     $('cs-btn-imprimir-ambas').style.display = esPull ? 'none' : '';
-    $('cs-btn-imprimir').textContent = esPull ? '🖨 Imprimir (2 páginas)' : '🖨 Imprimir esta';
+    // En Rough-In / Trim-Out solo queda "Imprimir las dos" (frente y vuelta)
+    $('cs-btn-imprimir').style.display = esPull ? '' : 'none';
+    $('cs-btn-imprimir').textContent = '🖨 Imprimir (2 páginas)';
     document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', b.dataset.cstipo === csTipo));
     if (esPull) { $('cs-titulo').textContent = 'Trim Out Pull Sheet'; requestAnimationFrame(psAplicarZoom); }
   }
@@ -391,7 +393,10 @@
     $('cs-btn-imprimir-ambas').addEventListener('click', () => {
       csGuardarBorrador();
       const rough = csLeerGuardado('rough');
-      const trim = csLeerGuardado('trim');
+      let trim = csLeerGuardado('trim');
+      // Si el Trim-Out es de otro lote (o está vacío), sale en blanco con el lote del Rough-In
+      const kr = cslClave(rough.lote || ''), kt = cslClave(trim.lote || '');
+      if (kr && kt !== kr) trim = { lote: rough.lote, checks: {} };
       const titulo = `Completion ${rough.lote || trim.lote || ''}`.trim();
       ghImprimirEnVentana('', titulo, csDocumento([csBuildPrint(rough, 'rough'), csBuildPrint(trim, 'trim')], titulo));
       toast('En la ventana de impresión elige "Doble cara" para frente y vuelta', 'info', 4500);

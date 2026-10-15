@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v208';
+  window.GH_APP_VERSION = 'v209';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -6701,7 +6701,9 @@
     $('cs-form-pull').style.display = esPull ? '' : 'none';
     $('cs-form-check').style.display = esPull ? 'none' : '';
     $('cs-btn-imprimir-ambas').style.display = esPull ? 'none' : '';
-    $('cs-btn-imprimir').textContent = esPull ? '🖨 Imprimir (2 páginas)' : '🖨 Imprimir esta';
+    // En Rough-In / Trim-Out solo queda "Imprimir las dos" (frente y vuelta)
+    $('cs-btn-imprimir').style.display = esPull ? '' : 'none';
+    $('cs-btn-imprimir').textContent = '🖨 Imprimir (2 páginas)';
     document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', b.dataset.cstipo === csTipo));
     if (esPull) { $('cs-titulo').textContent = 'Trim Out Pull Sheet'; requestAnimationFrame(psAplicarZoom); }
   }
@@ -6758,7 +6760,10 @@
     $('cs-btn-imprimir-ambas').addEventListener('click', () => {
       csGuardarBorrador();
       const rough = csLeerGuardado('rough');
-      const trim = csLeerGuardado('trim');
+      let trim = csLeerGuardado('trim');
+      // Si el Trim-Out es de otro lote (o está vacío), sale en blanco con el lote del Rough-In
+      const kr = cslClave(rough.lote || ''), kt = cslClave(trim.lote || '');
+      if (kr && kt !== kr) trim = { lote: rough.lote, checks: {} };
       const titulo = `Completion ${rough.lote || trim.lote || ''}`.trim();
       ghImprimirEnVentana('', titulo, csDocumento([csBuildPrint(rough, 'rough'), csBuildPrint(trim, 'trim')], titulo));
       toast('En la ventana de impresión elige "Doble cara" para frente y vuelta', 'info', 4500);
@@ -7573,7 +7578,8 @@
   // ---------- Armar el documento para imprimir ----------
   // Orden (para doble cara): facturas primero (cada una con su vuelta en
   // blanco), y por cada lote: Rough-In al frente / Trim-Out atrás, y el Pull
-  // Sheet en otra hoja (sus dos páginas, frente y vuelta).
+  // Sheet en otra hoja (sus dos páginas, frente y vuelta). Siempre salen las
+  // tres aunque alguna no se haya llenado (sale en blanco con el lote).
   function ghDocumentoHojas(o) {
     const incluir = Object.assign({ rough: true, trim: true, pull: true }, o.incluir || {});
     const paginas = [];
@@ -7587,12 +7593,14 @@
         paginas.push(`<div class="hoja inv-pag">${invBuildPrint(inv)}</div>`);
         if (o.doble) paginas.push(blanca);
       });
+      // Las hojas que falten (ej. Trim-Out sin llenar) salen en blanco con el lote
       (o.entradas || []).forEach((e) => {
-        const r = incluir.rough && e.rough, t = incluir.trim && e.trim;
-        if (r) paginas.push(`<div class="hoja">${csBuildPrint(e.rough, 'rough')}</div>`);
-        if (t) paginas.push(`<div class="hoja">${csBuildPrint(e.trim, 'trim')}</div>`);
+        const vacia = { lote: e.lote || '', checks: {} };
+        const r = incluir.rough, t = incluir.trim;
+        if (r) paginas.push(`<div class="hoja">${csBuildPrint(e.rough || vacia, 'rough')}</div>`);
+        if (t) paginas.push(`<div class="hoja">${csBuildPrint(e.trim || vacia, 'trim')}</div>`);
         if (o.doble && (r ? 1 : 0) + (t ? 1 : 0) === 1) paginas.push(blanca);
-        if (incluir.pull && e.pull) paginas.push(`<div class="hoja">${psBuildPrint(e.pull)}</div>`);
+        if (incluir.pull) paginas.push(`<div class="hoja">${psBuildPrint(e.pull || { lote: e.lote || '', q: {} })}</div>`);
       });
     } finally {
       psLayout = layoutAntes;

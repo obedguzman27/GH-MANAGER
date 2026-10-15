@@ -96,7 +96,8 @@
   // ---------- Armar el documento para imprimir ----------
   // Orden (para doble cara): facturas primero (cada una con su vuelta en
   // blanco), y por cada lote: Rough-In al frente / Trim-Out atrás, y el Pull
-  // Sheet en otra hoja (sus dos páginas, frente y vuelta).
+  // Sheet en otra hoja (sus dos páginas, frente y vuelta). Siempre salen las
+  // tres aunque alguna no se haya llenado (sale en blanco con el lote).
   function ghDocumentoHojas(o) {
     const incluir = Object.assign({ rough: true, trim: true, pull: true }, o.incluir || {});
     const paginas = [];
@@ -110,12 +111,14 @@
         paginas.push(`<div class="hoja inv-pag">${invBuildPrint(inv)}</div>`);
         if (o.doble) paginas.push(blanca);
       });
+      // Las hojas que falten (ej. Trim-Out sin llenar) salen en blanco con el lote
       (o.entradas || []).forEach((e) => {
-        const r = incluir.rough && e.rough, t = incluir.trim && e.trim;
-        if (r) paginas.push(`<div class="hoja">${csBuildPrint(e.rough, 'rough')}</div>`);
-        if (t) paginas.push(`<div class="hoja">${csBuildPrint(e.trim, 'trim')}</div>`);
+        const vacia = { lote: e.lote || '', checks: {} };
+        const r = incluir.rough, t = incluir.trim;
+        if (r) paginas.push(`<div class="hoja">${csBuildPrint(e.rough || vacia, 'rough')}</div>`);
+        if (t) paginas.push(`<div class="hoja">${csBuildPrint(e.trim || vacia, 'trim')}</div>`);
         if (o.doble && (r ? 1 : 0) + (t ? 1 : 0) === 1) paginas.push(blanca);
-        if (incluir.pull && e.pull) paginas.push(`<div class="hoja">${psBuildPrint(e.pull)}</div>`);
+        if (incluir.pull) paginas.push(`<div class="hoja">${psBuildPrint(e.pull || { lote: e.lote || '', q: {} })}</div>`);
       });
     } finally {
       psLayout = layoutAntes;
