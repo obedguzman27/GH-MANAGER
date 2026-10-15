@@ -1,0 +1,17 @@
+GH Manager - Respaldo diario a esta computadora
+================================================
+
+1) Doble clic en "INSTALAR respaldo diario.cmd" (solo una vez).
+   - Escribe tu usuario y contrasena de GH Manager (usa un usuario admin).
+   - Escribe la hora (o Enter para 8:00 PM).
+   - Hace un respaldo de prueba y deja programado el diario.
+
+2) Los respaldos quedan en la carpeta "Respaldos", uno por dia:
+   respaldo-2026-10-15.zip, respaldo-2026-10-16.zip, ...
+   Se guardan los ultimos 60 dias.
+
+3) "Respaldar ahora.cmd" hace uno en ese momento.
+   "registro.txt" dice si cada respaldo salio bien (OK) o con ERROR.
+
+Si cambias tu contrasena de GH Manager, vuelve a abrir el INSTALAR.
+Para quitarlo: Programador de tareas de Windows > "GH Manager - Respaldo diario" > Eliminar.
