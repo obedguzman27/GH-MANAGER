@@ -15,13 +15,20 @@ Write-Host '  de Windows la puede leer.'
 Write-Host ''
 
 try {
-  $cred = Get-Credential -Message 'Usuario y contrasena de GH Manager'
-  if (-not $cred) { throw 'Cancelado.' }
-  @($cred.UserName.TrimStart('\'), ($cred.Password | ConvertFrom-SecureString)) | Set-Content -Path $Config -Encoding UTF8
+  # Se escribe aqui mismo en esta ventana negra (antes salia una ventanita
+  # aparte que a veces se quedaba escondida o no dejaba escribir).
+  $usuario = ''
+  while (-not $usuario) { $usuario = (Read-Host '  Usuario de GH Manager').Trim() }
+  Write-Host '  (Al escribir la contrasena salen asteriscos * ; es normal)'
+  $clave = $null
+  while (-not $clave -or $clave.Length -eq 0) { $clave = Read-Host '  Contrasena' -AsSecureString }
+  @($usuario, ($clave | ConvertFrom-SecureString)) | Set-Content -Path $Config -Encoding UTF8
 
   $hora = Read-Host '  A que hora quieres el respaldo cada dia? (Enter = 8:00 PM, o escribe por ejemplo 21:30)'
   if (-not $hora) { $hora = '20:00' }
-  $cuando = [datetime]::ParseExact($hora.Trim(), 'H:mm', $null)
+  $h = $hora.Trim().ToUpper() -replace '\.', '' -replace '\s+', ' '
+  $formatos = [string[]]@('H:mm', 'h:mm tt', 'h:mmtt', 'h tt', 'htt', 'H')
+  $cuando = [datetime]::ParseExact($h, $formatos, [Globalization.CultureInfo]::InvariantCulture, 'None')
 
   Write-Host ''
   Write-Host '  Haciendo un respaldo de prueba...' -ForegroundColor Yellow
