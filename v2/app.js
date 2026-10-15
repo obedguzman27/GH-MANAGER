@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v207 · prueba';
+  window.GH_APP_VERSION = 'v208 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -7487,7 +7487,8 @@
   const CSL_KEY = 'gh-completion';
   const CSL_PALABRAS_FUERA = new Set(['lot', 'lote', 'lt', 'no', 'num', 'number', 'subdivision', 'sub']);
   function cslClave(txt) {
-    const t = glNorm(txt).replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter((w) => w && !CSL_PALABRAS_FUERA.has(w));
+    // "Timberwalk124" = "Timberwalk 124"
+    const t = glNorm(txt).replace(/([a-z])(\d)/g, '$1 $2').replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter((w) => w && !CSL_PALABRAS_FUERA.has(w));
     return [...new Set(t)].sort().join('-');
   }
   // ¿Esta línea de factura (ej. "Lot 165 Greystone Ph 2") es de este lote?
@@ -7619,6 +7620,15 @@
     return true;
   };
 
+  // Facturas guardadas: si todavía no se abrió la pestaña Facturas en esta
+  // sesión, se leen aquí (antes salían vacías)
+  let cslInvCache = null;
+  function cslDocs() { return (typeof invDocs !== 'undefined' && invDocs.length) ? invDocs : (cslInvCache || []); }
+  async function cslCargarFacturas() {
+    if (typeof invDocs !== 'undefined' && invDocs.length) return invDocs;
+    try { const r = await window.storage.get(INV_KEY); const v = JSON.parse(r.value); cslInvCache = Array.isArray(v) ? v : []; } catch (e) { if (!cslInvCache) cslInvCache = []; }
+    return cslInvCache;
+  }
   function cslFacturasDe(clave, docs) {
     return (docs || []).filter((inv) => (inv.items || []).some((it) => cslCoincide(clave, it.location)));
   }
@@ -7632,7 +7642,7 @@
     if (f) f.style.display = si ? '' : 'none';
     if (h) h.style.display = si ? 'none' : '';
     document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', si ? b.dataset.cstipo === 'imprimir' : b.dataset.cstipo === csTipo));
-    if (si) { cslCargar(true).then(cslRender); cslRender(); }
+    if (si) { Promise.all([cslCargar(true), cslCargarFacturas()]).then(cslRender); cslRender(); }
   }
   window.GH_CSL_MOSTRAR = cslMostrar;
   function cslRender() {
@@ -7640,7 +7650,7 @@
     const q = cslClave(($('csl-buscar') || {}).value || '');
     const filas = Object.entries(cslDatos).filter(([k, e]) => e && (!q || q.split('-').every((w) => k.split('-').some((x) => x.startsWith(w)))))
       .sort((a, b) => String(b[1].en || '').localeCompare(String(a[1].en || '')));
-    const docs = typeof invDocs !== 'undefined' ? invDocs : [];
+    const docs = cslDocs();
     cont.innerHTML = filas.length ? filas.map(([k, e]) => {
       const facts = cslFacturasDe(k, docs);
       const tags = [['rough', 'Rough-In'], ['trim', 'Trim-Out'], ['pull', 'Pull Sheet']].map(([t, n]) => `<span class="csl-tag${e[t] ? ' si' : ''}">${n}</span>`).join('');
@@ -7669,9 +7679,9 @@
     if ($('csl-imprimir')) $('csl-imprimir').disabled = !n;
   }
   if ($('csl-buscar')) $('csl-buscar').addEventListener('input', debounce(cslRender, 150));
-  if ($('csl-imprimir')) $('csl-imprimir').addEventListener('click', () => {
+  if ($('csl-imprimir')) $('csl-imprimir').addEventListener('click', async () => {
     const claves = [...cslMarcados].filter((k) => cslDatos[k]);
-    const docs = typeof invDocs !== 'undefined' ? invDocs : [];
+    const docs = $('csl-op-factura').checked ? await cslCargarFacturas() : [];
     const facturas = $('csl-op-factura').checked ? [...new Set(claves.flatMap((k) => cslFacturasDe(k, docs)))] : [];
     window.GH_IMPRIMIR_HOJAS({
       entradas: claves.map((k) => cslDatos[k]), facturas,

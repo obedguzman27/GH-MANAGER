@@ -415,6 +415,24 @@ def completion_por_lote_e_imprimir(p, c):
     assert pg.input_value('#cs-leadman') == 'Pedro'
 
 @prueba
+def imprimir_trae_factura_sin_tocar_nada(p, c):
+    # Entrar directo a Imprimir (las facturas aún cargando): igual salen
+    d = db()
+    d['datos_app']['c:prueba::gh-completion'] = {'clave': 'c:prueba::gh-completion', 'actualizado_en': '2026-10-01T12:00:00.000+00:00',
+      'valor': json.dumps({'12-hills-oak': {'lote': 'OAK HILLS 12', 'rough': {'lote': 'OAK HILLS 12', 'leadman': 'Mario', 'checks': {}}}})}
+    poner_db(d)
+    pg = c.pagina()
+    pg.add_init_script("window.print = () => {};")
+    pg.evaluate("() => { HTMLIFrameElement.prototype.focus = function(){}; }")
+    pg.click('.gc-tab[data-tab="facturas"]'); pg.click('#panel-facturas [data-sub="completion"]')
+    pg.click('.cs-tipo-btn[data-cstipo="imprimir"]')
+    pg.wait_for_function("() => /Factura #.*1007/.test((document.querySelector('.csl-fila[data-k=\"12-hills-oak\"]') || {}).textContent || '')", timeout=5000)
+    pg.check('.csl-fila[data-k="12-hills-oak"] input')
+    pg.click('#csl-imprimir'); pg.wait_for_timeout(800)
+    html = _imprimir_capturado(pg)
+    assert 'INVOICE' in html and 'Mario' in html, html[:300]
+
+@prueba
 def visor_imprime_hojas_y_factura(p, c):
     d = db()
     d['datos_app']['c:prueba::gh-completion'] = {'clave': 'c:prueba::gh-completion', 'actualizado_en': '2026-10-01T12:00:00.000+00:00',
