@@ -12,7 +12,7 @@ $Carpeta   = $PSScriptRoot
 $Destino   = Join-Path $Carpeta 'Respaldos'
 $Config    = Join-Path $Carpeta 'config.dat'
 $Registro  = Join-Path $Carpeta 'registro.txt'
-$DiasGuardar = 60
+$CuantosGuardar = 8   # se quedan solo los 8 respaldos mas nuevos
 
 $SupabaseUrl = 'https://cubhmlclqovvmsdskooc.supabase.co'
 $ApiKey      = 'sb_publishable_drw-q0SBYKj0I3fV0BKvmA_0nmV1DkW'
@@ -70,9 +70,9 @@ try {
   Remove-Item $archivoJson -Force
   $kb = [math]::Round((Get-Item $archivoZip).Length / 1KB)
 
-  # 4) Borrar los viejos
-  $limite = (Get-Date).AddDays(-$DiasGuardar)
-  Get-ChildItem $Destino -Filter 'respaldo-*.zip' | Where-Object { $_.LastWriteTime -lt $limite } | Remove-Item -Force
+  # 4) Dejar solo los 8 mas nuevos (por fecha en el nombre); los demas se borran
+  $todos = @(Get-ChildItem $Destino -Filter 'respaldo-*.zip' | Sort-Object Name -Descending)
+  if ($todos.Count -gt $CuantosGuardar) { $todos[$CuantosGuardar..($todos.Count - 1)] | Remove-Item -Force }
 
   Anotar "OK  $total datos guardados en respaldo-$hoy.zip ($kb KB)"
   exit 0

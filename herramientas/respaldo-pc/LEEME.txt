@@ -8,7 +8,7 @@ GH Manager - Respaldo diario a esta computadora
 
 2) Los respaldos quedan en la carpeta "Respaldos", uno por dia:
    respaldo-2026-10-15.zip, respaldo-2026-10-16.zip, ...
-   Se guardan los ultimos 60 dias.
+   Se quedan solo los 8 mas nuevos; los viejos se borran solos.
 
 3) "Respaldar ahora.cmd" hace uno en ese momento.
    "registro.txt" dice si cada respaldo salio bien (OK) o con ERROR.
