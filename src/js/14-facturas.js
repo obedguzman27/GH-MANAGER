@@ -400,6 +400,30 @@
     toast('Editando '+inv.numero, 'info');
   }
 
+  // Duplicar: una factura NUEVA con lo mismo (cliente, direcciones, trabajos,
+  // toneladas, montos, notas y tax), con el siguiente número y la fecha de hoy.
+  // Las fechas de cada línea se dejan en blanco para poner las de este trabajo.
+  async function invDuplicar(inv) {
+    const tieneLineas = $('inv-tbody') && [...$('inv-tbody').querySelectorAll('tr')].some((tr) =>
+      tr.querySelector('.inv-loc').value || tr.querySelector('.inv-work').value || tr.querySelector('.inv-amt').value);
+    if (tieneLineas && !await gcConfirm('Ya tienes una factura a medias en "Nueva factura".\n\n¿Reemplazarla con la copia?', { okText: 'Reemplazar' })) return;
+    $('inv-editando').value = '';
+    $('inv-num').value = invAutoNum();
+    $('inv-fecha').value = invToday();
+    $('inv-cliente').value = inv.cliente || '';
+    if ($('inv-cliente-direccion')) $('inv-cliente-direccion').value = inv.clienteDireccion || '';
+    $('inv-direccion-emisor').value = inv.direccionEmisor || cfgFacturaDireccion || '';
+    $('inv-notas').value = inv.notas || '';
+    $('inv-tax').value = inv.taxPct || 0;
+    $('inv-tbody').innerHTML = '';
+    (inv.items || []).forEach((it) => $('inv-tbody').appendChild(invCrearFila({ ...it, dia: '' })));
+    invRellenarLineas(); invRenumerar(); invCalcTotales();
+    document.querySelector('.inv-subtab[data-sub="nueva"]').click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof invBorradorGuardar === 'function') invBorradorGuardar();
+    toast(`Copia de la factura ${inv.numero || ''} lista como #${$('inv-num').value} — pon las fechas y guarda`, 'success', 4500);
+  }
+
   function invBuildPrint(inv) {
     const FC = facturaColores();
     const rows = (inv.items||[]).map((it,i) => `<tr style="background:${i%2?'#F7F9FC':'#fff'};">
@@ -657,6 +681,7 @@
         <td style="white-space:nowrap;">
           <button class="gc-action-btn" data-i18n="ver" style="padding:4px 10px;font-size:11.5px;" data-a="ver" data-id="${inv.id}">Ver</button>
           <button class="gc-action-btn" data-i18n="editar" style="padding:4px 10px;font-size:11.5px;margin-left:4px;" data-a="editar" data-id="${inv.id}">Editar</button>
+          <button class="gc-action-btn" style="padding:4px 10px;font-size:11.5px;margin-left:4px;" data-a="duplicar" data-id="${inv.id}" title="Hacer una factura nueva igual a esta">Duplicar</button>
           <button class="gc-del" style="margin-left:4px;" data-a="borrar" data-id="${inv.id}">✕</button>
         </td>`;
       tbody.appendChild(tr);
@@ -678,6 +703,7 @@
         if (!inv) return;
         if (btn.dataset.a==='ver') invMostrarVista(inv);
         if (btn.dataset.a==='editar') invEditar(inv);
+        if (btn.dataset.a==='duplicar') invDuplicar(inv);
         if (btn.dataset.a==='borrar') {
           if (!await gcConfirm(`¿Eliminar ${inv.numero}?`, { okText: 'Eliminar', danger: true })) return;
           invDocs = invDocs.filter(i=>i.id!==inv.id);
@@ -717,6 +743,11 @@
           const docs = ids.map((id) => invDocs.find((i) => i.id === id)).filter(Boolean);
           if (!docs.length) return;
           ghImprimirEnVentana(docs.map((d) => `<div class="gh-doc">${invBuildPrint(d)}</div>`).join(''), `Facturas (${docs.length})`);
+        } },
+      { id: 'duplicar', texto: '⧉ Duplicar', fn: async (ids) => {
+          if (ids.length !== 1) { toast('Marca solo una factura para duplicar', 'info'); return; }
+          const inv = invDocs.find((i) => i.id === ids[0]); if (!inv) return;
+          invSel.salir(); invDuplicar(inv);
         } },
       { id: 'pagada', texto: '✓ Pagada', fn: async (ids) => {
           ids.forEach((id) => { const inv = invDocs.find((i) => i.id === id); if (inv) inv.pagada = true; });

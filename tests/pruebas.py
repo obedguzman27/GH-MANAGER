@@ -330,5 +330,24 @@ def borrador_factura_y_nomina_pendiente(p, c):
     nom = valor(None, 'c:prueba::gh-nomina')
     assert any(n['trabajador'] == 'Mario Diaz' and n['monto'] == 180 for n in nom), 'no guardó al cambiar de semana'
 
+@prueba
+def duplicar_factura(p, c):
+    pg = c.pagina()
+    tab(pg, 'facturas', 'guardadas')
+    pg.evaluate("""() => [...document.querySelectorAll('#inv-list-tbody [data-a="duplicar"]')].find(x => x.closest('tr').textContent.includes('1007')).click()""")
+    pg.wait_for_timeout(500)
+    assert pg.is_visible('#inv-sub-nueva')
+    assert pg.input_value('#inv-num') == '1010', pg.input_value('#inv-num')
+    assert pg.input_value('#inv-editando') == ''
+    filas = pg.query_selector_all('#inv-tbody tr')
+    assert filas[0].query_selector('.inv-loc').input_value() == 'Lot 12 Oak Hills'
+    assert filas[0].query_selector('.inv-dia').input_value() == ''
+    pg.click('#inv-btn-guardar'); pg.wait_for_timeout(900)
+    docs = valor(None, 'c:prueba::gh-invoices')
+    assert len(docs) == 5, len(docs)
+    nueva = [d for d in docs if d['numero'] == '1010'][0]
+    assert nueva['total'] == 1225 and not nueva['pagada'] and nueva['clienteDireccion'] == '123 Main St, Nashville, TN', nueva
+    assert [d for d in docs if d['numero'] == '1007'][0]['total'] == 1225   # la original no cambia
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)
