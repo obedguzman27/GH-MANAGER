@@ -412,6 +412,13 @@ def completion_por_lote_e_imprimir(p, c):
     pg.fill('#cs-lote', 'Otro 9'); pg.wait_for_timeout(1600)
     pg.click('.csl-fila[data-k="165-greystone"] .csl-abrir'); pg.wait_for_timeout(500)
     assert pg.input_value('#cs-leadman') == 'Pedro' and pg.input_value('#cs-lote') == 'Greystone 165'
+    # Leadman se queda con lo último que se escribió (Limpiar y hoja nueva)
+    pg.fill('#cs-leadman', 'Ramiro'); pg.wait_for_timeout(300)
+    pg.click('#cs-btn-limpiar'); pg.click('.gc-confirm-overlay [data-r="1"]'); pg.wait_for_timeout(400)
+    assert pg.input_value('#cs-leadman') == 'Ramiro' and pg.input_value('#cs-lote') == ''
+    pg.click('.cs-tipo-btn[data-cstipo="trim"]'); pg.wait_for_timeout(300)
+    pg.click('#cs-btn-limpiar'); pg.click('.gc-confirm-overlay [data-r="1"]'); pg.wait_for_timeout(400)
+    assert pg.input_value('#cs-leadman') == 'Ramiro'
 
 @prueba
 def imprimir_trae_factura_sin_tocar_nada(p, c):
@@ -423,17 +430,17 @@ def imprimir_trae_factura_sin_tocar_nada(p, c):
     pg = c.pagina()
     pg.add_init_script("window.print = () => {};")
     pg.evaluate("() => { HTMLIFrameElement.prototype.focus = function(){}; }")
-    # Se imprime desde la factura guardada: 🖨 + Hojas
+    # En Guardadas ya no está "🖨 + Hojas"
     tab(pg, 'facturas', 'guardadas')
-    pg.evaluate("""() => [...document.querySelectorAll('#inv-list-tbody [data-a="conhojas"]')].find(x => x.closest('tr').textContent.includes('1007')).click()""")
-    pg.wait_for_timeout(1200)
+    assert pg.query_selector('#inv-list-tbody [data-a="conhojas"]') is None
+    # Se imprime desde Hojas guardadas: solo Rough-In y Trim-Out (en blanco)
+    tab(pg, 'facturas', 'nueva')
+    pg.wait_for_selector('.csl-fila[data-k="12-hills-oak"]')
+    pg.click('.csl-fila[data-k="12-hills-oak"] .csl-imp'); pg.wait_for_timeout(800)
     html = _imprimir_capturado(pg)
-    assert 'INVOICE' in html and 'Mario' in html, html[:300]
-    # Solo había Rough-In: el Trim-Out y el Pull Sheet salen en blanco, en orden
-    # Solo había Rough-In: el Trim-Out sale en blanco; ya no hay Pull Sheet
-    assert html.count('class="pag"') == 2 and 'class="ps-pag"' not in html, html.count('class="pag"')
-    i_inv, i_rough, i_trim = html.find('INVOICE'), html.find('ROUGH-IN'), html.find('TRIM-OUT')
-    assert -1 < i_inv < i_rough < i_trim, (i_inv, i_rough, i_trim)
+    assert 'INVOICE' not in html and 'Mario' in html and html.count('class="pag"') == 2 and 'class="ps-pag"' not in html, html[:300]
+    i_rough, i_trim = html.find('ROUGH-IN'), html.find('TRIM-OUT')
+    assert -1 < i_rough < i_trim, (i_rough, i_trim)
     # En Rough-In ya no está "Imprimir esta"
     pg.click('#panel-facturas [data-sub="nueva"]'); pg.wait_for_timeout(300)
     assert not pg.is_visible('#cs-btn-imprimir') and pg.is_visible('#cs-btn-imprimir-ambas'), (pg.is_visible('#cs-btn-imprimir'), pg.is_visible('#cs-btn-imprimir-ambas'), pg.is_visible('#cs-form-hojas'))
@@ -452,7 +459,7 @@ def factura_pasa_a_completion(p, c):
     caja_f = pg.eval_on_selector('#inv-btn-guardar', 'e => e.getBoundingClientRect().top')
     caja_c = pg.eval_on_selector('#inv-sub-completion', 'e => e.getBoundingClientRect().top')
     assert caja_c > caja_f, (caja_f, caja_c)
-    assert pg.is_visible('#inv-cs-auto') and pg.is_checked('#inv-cs-auto')
+    assert pg.query_selector('#inv-cs-auto') is None   # ya no hay casilla: pasa sola
     def linea(i, dia, loc, work):
         while len(pg.query_selector_all('#inv-tbody tr')) <= i: pg.click('#inv-btn-add')
         f = pg.query_selector_all('#inv-tbody tr')[i]
@@ -470,12 +477,6 @@ def factura_pasa_a_completion(p, c):
     for k in ('118-bradshaw-farms', '119-bradshaw-farms'):
         assert cs[k]['trim']['fecha'] == '2026-10-12' and cs[k]['trim']['leadman'] == 'Juan' and 'rough' not in cs[k], cs[k]
     assert not any('fox' in k for k in cs), cs.keys()
-    # Sin la casilla no pasa nada
-    pg.click('#panel-facturas [data-sub="nueva"]'); pg.wait_for_timeout(300)
-    pg.uncheck('#inv-cs-auto')
-    linea(0, '2026-10-14', 'GREYSTONE 190', 'ROUGH-IN')
-    pg.click('#inv-btn-guardar'); pg.wait_for_timeout(1200)
-    assert '190-greystone' not in valor(None, 'c:prueba::gh-completion')
 
 @prueba
 def visor_imprime_hojas_y_factura(p, c):

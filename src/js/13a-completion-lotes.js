@@ -119,6 +119,7 @@
     return m[2].split(/\s*(?:,|&|\by\b|\band\b)\s*/i).filter(Boolean).map((n) => `${m[1].trim()} ${n}`);
   }
   function cslUltimoLeadman() {
+    if (window.GH_CS_ULTIMO_LEADMAN && window.GH_CS_ULTIMO_LEADMAN()) return window.GH_CS_ULTIMO_LEADMAN();
     const e = Object.values(cslDatos).filter(Boolean).sort((a, b) => String(b.en || '').localeCompare(String(a.en || '')));
     for (const x of e) { const l = (x.rough && x.rough.leadman) || (x.trim && x.trim.leadman); if (l) return l; }
     try { return (JSON.parse(localStorage.getItem(CS_KEY('rough')) || '{}') || {}).leadman || ''; } catch (err) { return ''; }
@@ -158,19 +159,10 @@
   }
   window.GH_CSL_DESDE_LINEAS = cslDesdeLineas;
 
-  // Casilla en la factura: "Pasar a Completion Sheets" (se recuerda)
-  const CSL_AUTO_KEY = () => ghLK('gh-inv-cs-auto');
-  function cslAutoActivo() {
-    try { return localStorage.getItem(CSL_AUTO_KEY()) !== '0'; } catch (e) { return true; }
-  }
-  if ($('inv-cs-auto')) {
-    $('inv-cs-auto').checked = cslAutoActivo();
-    $('inv-cs-auto').addEventListener('change', (ev) => { try { localStorage.setItem(CSL_AUTO_KEY(), ev.target.checked ? '1' : '0'); } catch (e) {} });
-  }
+  // Al guardar la factura, Rough-In / Trim-Out pasan solos a las hojas
   // Se llama al guardar la factura
   window.GH_CSL_FACTURA_GUARDADA = async (inv) => {
     if (typeof csActivo !== 'undefined' && !csActivo) return;
-    if (!$('inv-cs-auto') || !$('inv-cs-auto').checked) return;
     try {
       const hechos = await cslDesdeLineas(inv.items || []);
       if (hechos.length) toast(`📋 Completion Sheets: ${hechos.slice(0, 3).join(', ')}${hechos.length > 3 ? ` y ${hechos.length - 3} más` : ''}`, 'success', 4500);

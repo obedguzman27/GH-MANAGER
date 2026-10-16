@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v213';
+  window.GH_APP_VERSION = 'v214';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -6494,6 +6494,15 @@
     };
   }
 
+  // Leadman: siempre se queda el último que se escribió (en hojas nuevas,
+  // al cambiar de Rough-In a Trim-Out y después de Limpiar)
+  const CS_LEAD_KEY = () => ghLK('gh-cs-leadman');
+  function csUltimoLeadman() { try { return localStorage.getItem(CS_LEAD_KEY()) || ''; } catch (e) { return ''; } }
+  window.GH_CS_ULTIMO_LEADMAN = csUltimoLeadman;
+  if ($('cs-leadman')) $('cs-leadman').addEventListener('input', (e) => {
+    const v = e.target.value.trim(); if (v) { try { localStorage.setItem(CS_LEAD_KEY(), v); } catch (err) {} }
+  });
+
   function csLeerGuardado(tipo) {
     try { return JSON.parse(localStorage.getItem(CS_KEY(tipo)) || '{}') || {}; } catch (e) { return {}; }
   }
@@ -6504,7 +6513,7 @@
     document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', b.dataset.cstipo === csTipo));
     // Nada se llena solo: cada hoja se escribe a mano, con clic.
     $('cs-fecha').value = d.fecha || '';
-    $('cs-leadman').value = d.leadman || '';
+    $('cs-leadman').value = d.leadman || csUltimoLeadman();
     $('cs-builder').value = d.builder || '';
     $('cs-lote').value = d.lote || '';
     $('cs-completo').checked = d.estado === 'completo';
@@ -7463,7 +7472,6 @@
     if (sec) sec.style.display = csActivo ? '' : 'none';
     document.querySelectorAll('.inv-mini[title*="Completion"]').forEach((b) => { b.style.display = csActivo ? '' : 'none'; });
     const t = $('aj-cs-toggle'); if (t) t.checked = csActivo;
-    const op = $('inv-cs-op'); if (op) op.style.display = csActivo ? '' : 'none';
   }
   async function csCargarActivo() {
     try { const r = await window.storage.get(CS_ACTIVO_KEY); if (r && r.value != null) csActivo = JSON.parse(r.value) !== false; } catch (e) {}
@@ -7600,6 +7608,7 @@
     return m[2].split(/\s*(?:,|&|\by\b|\band\b)\s*/i).filter(Boolean).map((n) => `${m[1].trim()} ${n}`);
   }
   function cslUltimoLeadman() {
+    if (window.GH_CS_ULTIMO_LEADMAN && window.GH_CS_ULTIMO_LEADMAN()) return window.GH_CS_ULTIMO_LEADMAN();
     const e = Object.values(cslDatos).filter(Boolean).sort((a, b) => String(b.en || '').localeCompare(String(a.en || '')));
     for (const x of e) { const l = (x.rough && x.rough.leadman) || (x.trim && x.trim.leadman); if (l) return l; }
     try { return (JSON.parse(localStorage.getItem(CS_KEY('rough')) || '{}') || {}).leadman || ''; } catch (err) { return ''; }
@@ -7639,19 +7648,10 @@
   }
   window.GH_CSL_DESDE_LINEAS = cslDesdeLineas;
 
-  // Casilla en la factura: "Pasar a Completion Sheets" (se recuerda)
-  const CSL_AUTO_KEY = () => ghLK('gh-inv-cs-auto');
-  function cslAutoActivo() {
-    try { return localStorage.getItem(CSL_AUTO_KEY()) !== '0'; } catch (e) { return true; }
-  }
-  if ($('inv-cs-auto')) {
-    $('inv-cs-auto').checked = cslAutoActivo();
-    $('inv-cs-auto').addEventListener('change', (ev) => { try { localStorage.setItem(CSL_AUTO_KEY(), ev.target.checked ? '1' : '0'); } catch (e) {} });
-  }
+  // Al guardar la factura, Rough-In / Trim-Out pasan solos a las hojas
   // Se llama al guardar la factura
   window.GH_CSL_FACTURA_GUARDADA = async (inv) => {
     if (typeof csActivo !== 'undefined' && !csActivo) return;
-    if (!$('inv-cs-auto') || !$('inv-cs-auto').checked) return;
     try {
       const hechos = await cslDesdeLineas(inv.items || []);
       if (hechos.length) toast(`📋 Completion Sheets: ${hechos.slice(0, 3).join(', ')}${hechos.length > 3 ? ` y ${hechos.length - 3} más` : ''}`, 'success', 4500);
@@ -8484,7 +8484,6 @@
           <button class="gc-action-btn" data-i18n="ver" style="padding:4px 10px;font-size:11.5px;" data-a="ver" data-id="${inv.id}">Ver</button>
           <button class="gc-action-btn" data-i18n="editar" style="padding:4px 10px;font-size:11.5px;margin-left:4px;" data-a="editar" data-id="${inv.id}">Editar</button>
           <button class="gc-action-btn" style="padding:4px 10px;font-size:11.5px;margin-left:4px;" data-a="duplicar" data-id="${inv.id}" title="Hacer una factura nueva igual a esta">Duplicar</button>
-          ${csActivo ? `<button class="gc-action-btn" style="padding:4px 10px;font-size:11.5px;margin-left:4px;" data-a="conhojas" data-id="${inv.id}" title="Imprimir esta factura con las completion sheets de sus lotes">🖨 + Hojas</button>` : ''}
           <button class="gc-del" style="margin-left:4px;" data-a="borrar" data-id="${inv.id}">✕</button>
         </td>`;
       tbody.appendChild(tr);
@@ -8507,7 +8506,6 @@
         if (btn.dataset.a==='ver') invMostrarVista(inv);
         if (btn.dataset.a==='editar') invEditar(inv);
         if (btn.dataset.a==='duplicar') invDuplicar(inv);
-        if (btn.dataset.a==='conhojas') cslImprimirFacturaConHojas(inv);
         if (btn.dataset.a==='borrar') {
           if (!await gcConfirm(`¿Eliminar ${inv.numero}?`, { okText: 'Eliminar', danger: true })) return;
           invDocs = invDocs.filter(i=>i.id!==inv.id);

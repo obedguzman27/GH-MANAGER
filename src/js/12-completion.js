@@ -127,6 +127,15 @@
     };
   }
 
+  // Leadman: siempre se queda el último que se escribió (en hojas nuevas,
+  // al cambiar de Rough-In a Trim-Out y después de Limpiar)
+  const CS_LEAD_KEY = () => ghLK('gh-cs-leadman');
+  function csUltimoLeadman() { try { return localStorage.getItem(CS_LEAD_KEY()) || ''; } catch (e) { return ''; } }
+  window.GH_CS_ULTIMO_LEADMAN = csUltimoLeadman;
+  if ($('cs-leadman')) $('cs-leadman').addEventListener('input', (e) => {
+    const v = e.target.value.trim(); if (v) { try { localStorage.setItem(CS_LEAD_KEY(), v); } catch (err) {} }
+  });
+
   function csLeerGuardado(tipo) {
     try { return JSON.parse(localStorage.getItem(CS_KEY(tipo)) || '{}') || {}; } catch (e) { return {}; }
   }
@@ -137,7 +146,7 @@
     document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', b.dataset.cstipo === csTipo));
     // Nada se llena solo: cada hoja se escribe a mano, con clic.
     $('cs-fecha').value = d.fecha || '';
-    $('cs-leadman').value = d.leadman || '';
+    $('cs-leadman').value = d.leadman || csUltimoLeadman();
     $('cs-builder').value = d.builder || '';
     $('cs-lote').value = d.lote || '';
     $('cs-completo').checked = d.estado === 'completo';
