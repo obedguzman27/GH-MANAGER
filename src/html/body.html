@@ -1156,7 +1156,6 @@
 <div class="gc-panel" id="panel-facturas">
   <div class="inv-subnav">
     <button class="inv-subtab active" data-i18n="nueva_factura" data-sub="nueva">+ Nueva Factura</button>
-    <button class="inv-subtab" data-sub="completion">Completion Sheets</button>
     <button class="inv-subtab" data-i18n="guardadas" data-sub="guardadas">Guardadas</button>
     <button class="inv-subtab" data-sub="clientes">Clientes</button>
     <button class="inv-subtab" data-sub="trabajos">Trabajos</button>
@@ -1229,44 +1228,14 @@
       <button class="gc-save-btn" data-i18n="guardar_factura" id="inv-btn-guardar">Guardar Factura</button>
     </div>
     <input type="hidden" id="inv-editando" value="">
-  </div>
-  <!-- Guardadas -->
-  <div class="inv-subpanel" id="inv-sub-guardadas">
-    <div class="gc-card">
-      <p class="gc-card-title" data-i18n="facturas_guardadas">Facturas Guardadas</p>
-      <div style="margin-bottom:16px;">
-        <input type="text" id="inv-buscar" placeholder="Buscar por Job #, colonia, lote, cliente o # de factura…"
-          style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
-        <div class="inv-filtros">
-          <div class="gc-field"><label>Lote #</label><input type="text" id="inv-f-lote" placeholder="Ej. 12" autocomplete="off" inputmode="text"></div>
-          <div class="gc-field"><label>Subdivisión</label><input type="text" id="inv-f-sub" list="dl-colonias" placeholder="Todas" autocomplete="off"></div>
-        </div>
-        <div class="inv-estados" role="tablist">
-          <button type="button" class="on" data-est="todas">Todas</button>
-          <button type="button" data-est="pendientes">Pendientes</button>
-          <button type="button" data-est="pagadas">Pagadas</button>
-          <button type="button" class="inv-f-limpiar" id="inv-f-limpiar" style="display:none;">✕ Limpiar filtros</button>
-        </div>
-        <p id="inv-buscar-info" class="inv-resumen"></p>
-      </div>
-      <div id="inv-sel-host"></div>
-      <div class="gc-empty" id="inv-list-empty" style="display:none;">No hay facturas guardadas aún.</div>
-      <div style="overflow-x:auto;">
-        <table class="inv-list-t" id="inv-list-tbl" style="display:none;">
-          <thead><tr><th data-i18n="invoice">Invoice #</th><th data-i18n="fecha">Fecha</th><th data-i18n="h_cliente">Cliente</th><th class="r" data-i18n="h_total">Total</th><th data-i18n="estado">Estado</th><th></th></tr></thead>
-          <tbody id="inv-list-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 
   <!-- Hoja de terminación (Trim-Out) de American Heating & Cooling -->
-  <div class="inv-subpanel" id="inv-sub-completion">
+  <div class="inv-cs-seccion" id="inv-sub-completion">
+    <p class="inv-cs-cab">📋 Completion Sheets</p>
     <div class="gc-card">
       <div class="cs-tipos">
         <button type="button" class="cs-tipo-btn active" data-cstipo="rough">Rough-In</button>
         <button type="button" class="cs-tipo-btn" data-cstipo="trim">Trim-Out</button>
-        <button type="button" class="cs-tipo-btn" data-cstipo="pull">Pull Sheet</button>
       </div>
       <div class="cs-lote-guardado" id="cs-lote-guardado"></div>
       <div id="cs-form-hojas">
@@ -1354,6 +1323,42 @@
       </div>
       </div><!-- /cs-form-hojas -->
 
+      <div class="csl-guardadas">
+        <p class="gc-card-title" style="margin:0 0 4px;">Hojas guardadas</p>
+        <p class="gh-ayuda" style="font-size:12px;color:var(--muted);margin:0 0 10px;">Se guardan solas por lote y colonia, cada base con las suyas. Toca Abrir para seguir llenándolas o 🖨 para imprimirlas (Rough-In al frente, Trim-Out atrás).</p>
+        <input type="search" id="csl-buscar" placeholder="Buscar lote o colonia (ej. Greystone 165)" autocomplete="off" style="width:100%;margin-bottom:10px;">
+        <div id="csl-lista" class="csl-lista"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- Guardadas -->
+  <div class="inv-subpanel" id="inv-sub-guardadas">
+    <div class="gc-card">
+      <p class="gc-card-title" data-i18n="facturas_guardadas">Facturas Guardadas</p>
+      <div style="margin-bottom:16px;">
+        <input type="text" id="inv-buscar" placeholder="Buscar por Job #, colonia, lote, cliente o # de factura…"
+          style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
+        <div class="inv-filtros">
+          <div class="gc-field"><label>Lote #</label><input type="text" id="inv-f-lote" placeholder="Ej. 12" autocomplete="off" inputmode="text"></div>
+          <div class="gc-field"><label>Subdivisión</label><input type="text" id="inv-f-sub" list="dl-colonias" placeholder="Todas" autocomplete="off"></div>
+        </div>
+        <div class="inv-estados" role="tablist">
+          <button type="button" class="on" data-est="todas">Todas</button>
+          <button type="button" data-est="pendientes">Pendientes</button>
+          <button type="button" data-est="pagadas">Pagadas</button>
+          <button type="button" class="inv-f-limpiar" id="inv-f-limpiar" style="display:none;">✕ Limpiar filtros</button>
+        </div>
+        <p id="inv-buscar-info" class="inv-resumen"></p>
+      </div>
+      <div id="inv-sel-host"></div>
+      <div class="gc-empty" id="inv-list-empty" style="display:none;">No hay facturas guardadas aún.</div>
+      <div style="overflow-x:auto;">
+        <table class="inv-list-t" id="inv-list-tbl" style="display:none;">
+          <thead><tr><th data-i18n="invoice">Invoice #</th><th data-i18n="fecha">Fecha</th><th data-i18n="h_cliente">Cliente</th><th class="r" data-i18n="h_total">Total</th><th data-i18n="estado">Estado</th><th></th></tr></thead>
+          <tbody id="inv-list-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 

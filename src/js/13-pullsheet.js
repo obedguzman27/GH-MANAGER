@@ -673,9 +673,9 @@
   const CS_ACTIVO_KEY = 'gh-cfg-completion';
   let csActivo = true;   // encendido de fábrica: así nadie pierde lo que ya usa
   function csAplicarActivo() {
-    const tab = document.querySelector('.inv-subtab[data-sub="completion"]');
-    if (tab) tab.style.display = csActivo ? '' : 'none';
-    if (!csActivo && tab && tab.classList.contains('active')) document.querySelector('.inv-subtab[data-sub="nueva"]').click();
+    // Completion Sheets va abajo de la factura (+ Nueva Factura)
+    const sec = $('inv-sub-completion');
+    if (sec) sec.style.display = csActivo ? '' : 'none';
     document.querySelectorAll('.inv-mini[title*="Completion"]').forEach((b) => { b.style.display = csActivo ? '' : 'none'; });
     const t = $('aj-cs-toggle'); if (t) t.checked = csActivo;
     const op = $('inv-cs-op'); if (op) op.style.display = csActivo ? '' : 'none';

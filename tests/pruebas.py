@@ -383,7 +383,10 @@ def completion_por_lote_e_imprimir(p, c):
     pg = c.pagina()
     pg.add_init_script("window.print = () => {};")
     pg.evaluate("() => { HTMLIFrameElement.prototype.focus = function(){}; }")
-    tab(pg, 'facturas', 'completion')
+    tab(pg, 'facturas')
+    # Completion Sheets está abajo de la factura; sin Pull Sheet ni pestaña aparte
+    assert pg.is_visible('#inv-sub-completion') and pg.query_selector('.inv-subtab[data-sub="completion"]') is None
+    assert pg.query_selector('.cs-tipo-btn[data-cstipo="pull"]') is None
     # Rough-In de Greystone 165
     pg.fill('#cs-lote', 'Greystone 165'); pg.fill('#cs-leadman', 'Pedro'); pg.check('#cs-completo')
     pg.wait_for_timeout(1800)
@@ -391,19 +394,24 @@ def completion_por_lote_e_imprimir(p, c):
     pg.click('.cs-tipo-btn[data-cstipo="trim"]'); pg.wait_for_timeout(200)
     pg.fill('#cs-lote', 'Lot 165 Greystone'); pg.fill('#cs-leadman', 'Juan')
     pg.wait_for_timeout(1800)
-    # Pull Sheet
-    pg.click('.cs-tipo-btn[data-cstipo="pull"]'); pg.wait_for_timeout(400)
-    pg.fill('#ps-hoja input[data-h="job"]', 'J-77'); pg.wait_for_timeout(1800)
     datos = valor(None, 'c:prueba::gh-completion')
     assert list(datos.keys()) == ['165-greystone'], datos.keys()
     e = datos['165-greystone']
-    assert e['rough']['leadman'] == 'Pedro' and e['trim']['leadman'] == 'Juan' and e['pull']['job'] == 'J-77', e
+    assert e['rough']['leadman'] == 'Pedro' and e['trim']['leadman'] == 'Juan' , e
     # otro lote, escrito con letras a medias: no deja basura
     pg.click('.cs-tipo-btn[data-cstipo="rough"]'); pg.wait_for_timeout(200)
     pg.fill('#cs-lote', 'Oak 1'); pg.wait_for_timeout(1500); pg.fill('#cs-lote', 'Oak 12'); pg.wait_for_timeout(1800)
     assert sorted(valor(None, 'c:prueba::gh-completion').keys()) == ['12-oak', '165-greystone'], valor(None, 'c:prueba::gh-completion').keys()
     # Ya no hay pestaña 🖨 Imprimir en Completion Sheets
     assert pg.query_selector('.cs-tipo-btn[data-cstipo="imprimir"]') is None
+    # Lista de hojas guardadas: Abrir y 🖨
+    pg.wait_for_selector('.csl-fila[data-k="165-greystone"]')
+    pg.click('.csl-fila[data-k="165-greystone"] .csl-imp'); pg.wait_for_timeout(800)
+    html = _imprimir_capturado(pg)
+    assert html.count('class="pag"') == 2 and 'ps-pag' not in html.split('<body')[1] and 'Pedro' in html and 'Juan' in html
+    pg.fill('#cs-lote', 'Otro 9'); pg.wait_for_timeout(1600)
+    pg.click('.csl-fila[data-k="165-greystone"] .csl-abrir'); pg.wait_for_timeout(500)
+    assert pg.input_value('#cs-leadman') == 'Pedro' and pg.input_value('#cs-lote') == 'Greystone 165'
 
 @prueba
 def imprimir_trae_factura_sin_tocar_nada(p, c):
@@ -422,11 +430,12 @@ def imprimir_trae_factura_sin_tocar_nada(p, c):
     html = _imprimir_capturado(pg)
     assert 'INVOICE' in html and 'Mario' in html, html[:300]
     # Solo había Rough-In: el Trim-Out y el Pull Sheet salen en blanco, en orden
-    assert html.count('class="pag"') == 2 and html.count('class="ps-pag"') == 2, (html.count('class="pag"'), html.count('class="ps-pag"'))
-    i_inv, i_rough, i_trim, i_pull = html.find('INVOICE'), html.find('ROUGH-IN'), html.find('TRIM-OUT'), html.find('class="ps-pag"')
-    assert -1 < i_inv < i_rough < i_trim < i_pull, (i_inv, i_rough, i_trim, i_pull)
+    # Solo había Rough-In: el Trim-Out sale en blanco; ya no hay Pull Sheet
+    assert html.count('class="pag"') == 2 and 'class="ps-pag"' not in html, html.count('class="pag"')
+    i_inv, i_rough, i_trim = html.find('INVOICE'), html.find('ROUGH-IN'), html.find('TRIM-OUT')
+    assert -1 < i_inv < i_rough < i_trim, (i_inv, i_rough, i_trim)
     # En Rough-In ya no está "Imprimir esta"
-    pg.click('#panel-facturas [data-sub="completion"]'); pg.wait_for_timeout(300)
+    pg.click('#panel-facturas [data-sub="nueva"]'); pg.wait_for_timeout(300)
     assert not pg.is_visible('#cs-btn-imprimir') and pg.is_visible('#cs-btn-imprimir-ambas'), (pg.is_visible('#cs-btn-imprimir'), pg.is_visible('#cs-btn-imprimir-ambas'), pg.is_visible('#cs-form-hojas'))
 
 @prueba
@@ -439,8 +448,10 @@ def factura_pasa_a_completion(p, c):
     pg = c.pagina()
     tab(pg, 'facturas')
     # Completion Sheets queda justo después de + Nueva Factura
-    subs = pg.eval_on_selector_all('.inv-subtab', 'els => els.map(e => e.dataset.sub)')
-    assert subs[:2] == ['nueva', 'completion'], subs
+    # Completion Sheets queda abajo de la factura
+    caja_f = pg.eval_on_selector('#inv-btn-guardar', 'e => e.getBoundingClientRect().top')
+    caja_c = pg.eval_on_selector('#inv-sub-completion', 'e => e.getBoundingClientRect().top')
+    assert caja_c > caja_f, (caja_f, caja_c)
     assert pg.is_visible('#inv-cs-auto') and pg.is_checked('#inv-cs-auto')
     def linea(i, dia, loc, work):
         while len(pg.query_selector_all('#inv-tbody tr')) <= i: pg.click('#inv-btn-add')
@@ -455,7 +466,7 @@ def factura_pasa_a_completion(p, c):
     g = cs['180-greystone']
     assert g['rough']['fecha'] == '2026-10-10' and g['rough']['leadman'] == 'Juan' and g['rough']['builder'] == 'Ryan Homes', g['rough']
     assert g['trim']['trabajo'] == 'falta rejilla' and g['trim']['checks'] == {'L1': True} and not g['trim'].get('fecha'), g['trim']   # lo escrito no se toca
-    assert g['pull']['lote'] == 'GREYSTONE 180' and not g['pull'].get('fecha'), g['pull']
+    assert 'pull' not in g, g
     for k in ('118-bradshaw-farms', '119-bradshaw-farms'):
         assert cs[k]['trim']['fecha'] == '2026-10-12' and cs[k]['trim']['leadman'] == 'Juan' and 'rough' not in cs[k], cs[k]
     assert not any('fox' in k for k in cs), cs.keys()
@@ -478,9 +489,14 @@ def visor_imprime_hojas_y_factura(p, c):
     pg.wait_for_selector('.chk-fila')
     pg.click('.vz-vista [data-vista="imprimir"]'); pg.wait_for_selector('.vz-imp-btn')
     assert 'Factura #1007' in pg.inner_text('.vz-imp-lista') or 'Factura #' in pg.inner_text('.vz-imp-lista'), pg.inner_text('.vz-imp-lista')
-    pg.click('.vz-imp-btn'); pg.wait_for_timeout(800)
+    # Factura sola
+    pg.click('.vz-imp-fac'); pg.wait_for_timeout(800)
     html = _imprimir_capturado(pg)
-    assert 'INVOICE' in html and 'GUZMAN HVAC' in html and html.count('class="pag"') == 2, html[:300]
+    assert 'INVOICE' in html and 'GUZMAN HVAC' in html and html.count('class="pag"') == 0 and 'hoja blanca' not in html, html[:300]
+    # Hojas solas
+    pg.click('.vz-imp-hojas'); pg.wait_for_timeout(800)
+    html = _imprimir_capturado(pg)
+    assert 'INVOICE' not in html and html.count('class="pag"') == 2 and 'Mario' in html and 'Luis' in html and 'class="ps-pag"' not in html, html[:300]
 
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

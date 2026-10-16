@@ -629,27 +629,36 @@
       }
       return `<div class="vz-imp-lista">${filas.slice(0, 40).map(([k, e]) => {
         const facts = imp.facturas.filter((inv) => (inv.items || []).some((it) => window.GH_CSL_COINCIDE(k, it.location)));
-        const hojas = [['rough', 'Rough-In'], ['trim', 'Trim-Out'], ['pull', 'Pull Sheet']].filter(([t]) => e[t]).map(([, n]) => n);
+        const hojas = [['rough', 'Rough-In'], ['trim', 'Trim-Out']].filter(([t]) => e[t]).map(([, n]) => n);
         return `<div class="vz-imp-fila"><div style="min-width:0;"><b>${escapeHtmlVisor(e.lote || k)}</b>
           <small>${escapeHtmlVisor(hojas.join(' · ') || 'Sin hojas')}${facts.length ? ' · Factura ' + facts.map((f) => '#' + escapeHtmlVisor(f.numero || '')).join(', ') : ''}</small></div>
-          <button type="button" class="vz-imp-btn" data-k="${escapeHtmlVisor(k)}">🖨 Imprimir</button></div>`;
+          <div class="vz-imp-acc">
+            <button type="button" class="vz-imp-btn vz-imp-fac" data-k="${escapeHtmlVisor(k)}" ${facts.length ? '' : 'disabled title="Este lote no tiene factura"'}>🧾 Factura</button>
+            <button type="button" class="vz-imp-btn vz-imp-hojas" data-k="${escapeHtmlVisor(k)}">📋 Hojas</button>
+          </div></div>`;
       }).join('')}</div>`;
     }
     function renderImprimir() {
       const nn = trabajadores(), vv = marcadosDe(fecha);
       return htmlHero(nn.filter((x) => vv[x] === 1).length, nn.length) + `
         <div class="vz-dia-head"><div style="min-width:0;"><div class="vz-fecha">Imprimir hojas</div>
-          <div class="chk-estado vz-estado ${estadoTipo}">${estado || 'Busca el lote y toca Imprimir: salen sus completion sheets y su factura.'}</div></div></div>
+          <div class="chk-estado vz-estado ${estadoTipo}">${estado || 'Busca el lote: 🧾 imprime su factura y 📋 sus completion sheets (Rough-In al frente, Trim-Out atrás).'}</div></div></div>
         <div class="vz-card">
           <input type="search" class="vz-imp-buscar" placeholder="Buscar lote o colonia (ej. Greystone 165)" value="${escapeHtmlVisor(impFiltro)}" autocomplete="off" enterkeyhint="search">
           ${htmlImpLista()}
         </div>`;
     }
     function conectarImp() {
+      // Factura y hojas se imprimen por separado
       cont.querySelectorAll('.vz-imp-btn').forEach((b) => b.addEventListener('click', () => {
         const e = imp && imp.hojas[b.dataset.k]; if (!e || !window.GH_IMPRIMIR_HOJAS) return;
-        const facts = imp.facturas.filter((inv) => (inv.items || []).some((it) => window.GH_CSL_COINCIDE(b.dataset.k, it.location)));
-        window.GH_IMPRIMIR_HOJAS({ entradas: [e], facturas: facts, doble: true, cfg: imp.cfg, layout: imp.layout, titulo: 'Hojas ' + (e.lote || '') });
+        if (b.classList.contains('vz-imp-fac')) {
+          const facts = imp.facturas.filter((inv) => (inv.items || []).some((it) => window.GH_CSL_COINCIDE(b.dataset.k, it.location)));
+          if (!facts.length) return;
+          window.GH_IMPRIMIR_HOJAS({ facturas: facts, doble: false, cfg: imp.cfg, titulo: 'Invoice ' + facts.map((f) => f.numero || '').join(', ') });
+        } else {
+          window.GH_IMPRIMIR_HOJAS({ entradas: [e], doble: true, cfg: imp.cfg, titulo: 'Completion ' + (e.lote || '') });
+        }
       }));
     }
 

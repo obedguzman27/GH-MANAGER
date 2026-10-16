@@ -111,7 +111,7 @@
     const amtTd=mkTd(); amtTd.className='r'; const amtIn=mkIn('inv-amt','0.00',item.amount||''); amtIn.inputMode='decimal'; amtTd.appendChild(amtIn); tr.appendChild(amtTd);
     const delTd=mkTd(); delTd.className='inv-acc';
     const dupBtn=document.createElement('button'); dupBtn.type='button'; dupBtn.className='inv-mini'; dupBtn.title='Duplicar fecha y subdivisión en una línea nueva'; dupBtn.textContent='⧉';
-    const csBtn=document.createElement('button'); csBtn.type='button'; csBtn.className='inv-mini'; csBtn.title='Usar esta subdivisión en Completion Sheets (Rough-In y Pull Sheet)'; csBtn.textContent='📋';
+    const csBtn=document.createElement('button'); csBtn.type='button'; csBtn.className='inv-mini'; csBtn.title='Pasar fecha y subdivisión de esta línea a Completion Sheets'; csBtn.textContent='📋';
     const delBtn=document.createElement('button'); delBtn.className='gc-del'; delBtn.type='button'; delBtn.textContent='✕';
     try { if (!csActivo) csBtn.style.display = 'none'; } catch (e) {}
     delTd.appendChild(dupBtn); delTd.appendChild(csBtn); delTd.appendChild(delBtn); tr.appendChild(delTd);
@@ -333,7 +333,8 @@
     return true;
   }
   const invForm = document.getElementById('inv-sub-nueva');
-  if (invForm) { invForm.addEventListener('input', invBorradorGuardar); invForm.addEventListener('change', invBorradorGuardar); invForm.addEventListener('click', (e) => { if (e.target.closest('.gc-del, .inv-mini')) invBorradorGuardar(); }); }
+  const invBorradorSiFactura = (e) => { if (!e.target.closest('#inv-sub-completion')) invBorradorGuardar(); };
+  if (invForm) { invForm.addEventListener('input', invBorradorSiFactura); invForm.addEventListener('change', invBorradorSiFactura); invForm.addEventListener('click', (e) => { if (e.target.closest('.gc-del, .inv-mini')) invBorradorGuardar(); }); }
 
   $('inv-btn-guardar').addEventListener('click', async () => {
     const num = $('inv-num').value.trim();

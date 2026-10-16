@@ -900,8 +900,8 @@
       fn: () => { ghIrA('movimientos', '.mov-subtab[data-msub="movs"]'); $('btn-guardar-invoice-top').click(); } },
     { id: 'nomina', txt: 'Pagar nómina', ic: '$', cls: 'i', tab: 'nomina', ok: () => true,
       fn: () => { ghIrA('nomina', '.nom-subtab[data-nsub="registro"]'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
-    { id: 'completion', txt: 'Completion sheet', ic: QA_SVG_CHECK, cls: '', tab: 'facturas', ok: () => ghVisible('.inv-subtab[data-sub="completion"]'),
-      fn: () => { ghIrA('facturas', '.inv-subtab[data-sub="completion"]'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+    { id: 'completion', txt: 'Completion sheet', ic: QA_SVG_CHECK, cls: '', tab: 'facturas', ok: () => { const s = document.getElementById('inv-sub-completion'); return !!s && s.style.display !== 'none'; },
+      fn: () => { ghIrA('facturas', '.inv-subtab[data-sub="nueva"]'); setTimeout(() => ghBajarA(document.getElementById('inv-sub-completion')), 250); } },
     { id: 'buscar', txt: 'Buscar', ic: QA_SVG_LUPA, cls: '', tab: 'buscar', ok: () => true,
       fn: () => { ghIrA('buscar'); const q = $('b-texto'); if (q) { try { q.focus({ preventScroll: true }); } catch (e) {} } window.scrollTo({ top: 0, behavior: 'smooth' }); } },
   ];

@@ -2619,3 +2619,13 @@ body.nom-pend:has(#panel-nomina.active) .gh-fab { display: none !important; }
 .inv-cs-op input { width: 18px; height: 18px; margin-top: 1px; flex: none; accent-color: var(--accent); }
 .inv-cs-op span { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
 .inv-cs-op small { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+.vz-imp-acc { display: flex; gap: 6px; flex-shrink: 0; }
+.vz-imp-fila button.vz-imp-fac { background: var(--surface); color: var(--accent-dk, var(--accent)); border: 1.5px solid var(--accent); }
+.vz-imp-fila button:disabled { opacity: .4; cursor: default; }
+@media (max-width: 420px) { .vz-imp-fila { flex-wrap: wrap; } .vz-imp-acc { width: 100%; } .vz-imp-acc button { flex: 1; } }
+
+/* Completion Sheets abajo de la factura */
+.inv-cs-seccion { margin-top: 26px; padding-top: 18px; border-top: 2px solid var(--border-soft, var(--border)); }
+.inv-cs-cab { font-size: 17px; font-weight: 800; margin: 0 0 12px; }
+.csl-guardadas { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border-soft, var(--border)); }
+.csl-acc .csl-imp { padding: 6px 10px; }

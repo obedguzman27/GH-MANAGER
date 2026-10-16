@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v212 · prueba';
+  window.GH_APP_VERSION = 'v213 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -1898,8 +1898,8 @@
       fn: () => { ghIrA('movimientos', '.mov-subtab[data-msub="movs"]'); $('btn-guardar-invoice-top').click(); } },
     { id: 'nomina', txt: 'Pagar nómina', ic: '$', cls: 'i', tab: 'nomina', ok: () => true,
       fn: () => { ghIrA('nomina', '.nom-subtab[data-nsub="registro"]'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
-    { id: 'completion', txt: 'Completion sheet', ic: QA_SVG_CHECK, cls: '', tab: 'facturas', ok: () => ghVisible('.inv-subtab[data-sub="completion"]'),
-      fn: () => { ghIrA('facturas', '.inv-subtab[data-sub="completion"]'); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
+    { id: 'completion', txt: 'Completion sheet', ic: QA_SVG_CHECK, cls: '', tab: 'facturas', ok: () => { const s = document.getElementById('inv-sub-completion'); return !!s && s.style.display !== 'none'; },
+      fn: () => { ghIrA('facturas', '.inv-subtab[data-sub="nueva"]'); setTimeout(() => ghBajarA(document.getElementById('inv-sub-completion')), 250); } },
     { id: 'buscar', txt: 'Buscar', ic: QA_SVG_LUPA, cls: '', tab: 'buscar', ok: () => true,
       fn: () => { ghIrA('buscar'); const q = $('b-texto'); if (q) { try { q.focus({ preventScroll: true }); } catch (e) {} } window.scrollTo({ top: 0, behavior: 'smooth' }); } },
   ];
@@ -6532,7 +6532,7 @@
   // Lot# / Subdivision es el mismo en Rough-In y Pull Sheet: si cambia en una,
   // se actualiza en la otra. La hoja Trim-Out NO se llena sola nunca: se
   // escribe a mano y nada de otras hojas ni de las facturas la toca.
-  const CS_HOJAS_LIGADAS = ['rough', 'pull'];
+  const CS_HOJAS_LIGADAS = ['rough'];   // (el Pull Sheet ya no se usa)
   function csCompartirLote(lote, origen) {
     lote = lote || '';
     CS_HOJAS_LIGADAS.forEach((t) => {
@@ -6682,11 +6682,7 @@
   }
 
   function csCambiarTipo(tipo) {
-    if (tipo === 'imprimir') {
-      if (csTipo === 'pull') { if (psModo === 'editar') psCambiarModo('llenar'); psGuardarBorrador(); } else if (csTipo) csGuardarBorrador();
-      cslMostrar(true); return;
-    }
-    if (cslVisible) { cslMostrar(false); if (tipo === csTipo) return; }
+    if (tipo !== 'rough' && tipo !== 'trim') tipo = 'rough';   // el Pull Sheet ya no se usa
     if (tipo === csTipo) return;
     if (csTipo === 'pull') { if (psModo === 'editar') psCambiarModo('llenar'); psGuardarBorrador(); } else if (csTipo) csGuardarBorrador();   // guarda la hoja que estaba en pantalla
     csTipo = tipo;
@@ -7462,9 +7458,9 @@
   const CS_ACTIVO_KEY = 'gh-cfg-completion';
   let csActivo = true;   // encendido de fábrica: así nadie pierde lo que ya usa
   function csAplicarActivo() {
-    const tab = document.querySelector('.inv-subtab[data-sub="completion"]');
-    if (tab) tab.style.display = csActivo ? '' : 'none';
-    if (!csActivo && tab && tab.classList.contains('active')) document.querySelector('.inv-subtab[data-sub="nueva"]').click();
+    // Completion Sheets va abajo de la factura (+ Nueva Factura)
+    const sec = $('inv-sub-completion');
+    if (sec) sec.style.display = csActivo ? '' : 'none';
     document.querySelectorAll('.inv-mini[title*="Completion"]').forEach((b) => { b.style.display = csActivo ? '' : 'none'; });
     const t = $('aj-cs-toggle'); if (t) t.checked = csActivo;
     const op = $('inv-cs-op'); if (op) op.style.display = csActivo ? '' : 'none';
@@ -7555,6 +7551,7 @@
     try {
       await window.storage.set(CSL_KEY, JSON.stringify(cslDatos));
       cslBanner(d.lote);
+      cslRender();
     } catch (err) { toast('No se pudo guardar la hoja en la nube: ' + ((err && err.message) || err), 'error', 5000); }
   }
   function cslBanner(lote) {
@@ -7573,7 +7570,8 @@
     ['rough', 'trim', 'pull'].forEach((t) => { cslUltima[t] = clave; });
     cslMostrar(false);
     csTipo = '';            // fuerza que se vuelva a pintar
-    csCambiarTipo(e.rough || !e.pull ? 'rough' : 'pull');
+    csCambiarTipo(e.rough || !e.trim ? 'rough' : 'trim');
+    const sec = $('inv-sub-completion'); if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
     cslBanner(e.lote);
     toast(`Abierto: ${e.lote}`, 'success', 1800);
   }
@@ -7629,17 +7627,14 @@
           } else if (!d.builder && compartido.builder) d.builder = compartido.builder;
           e[t] = d;
         };
-        tipos.forEach((t) => {
-          poner(t, true);
-          if (t === 'rough') poner('pull', false);
-        });
+        tipos.forEach((t) => poner(t, true));
         e.lote = e.lote || lote; e.en = new Date().toISOString(); e.por = window.GH_NOMBRE || '';
         hechos.push(`${e.lote} (${tipos.map((t) => (t === 'rough' ? 'Rough-In' : 'Trim-Out')).join(' + ')})`);
       });
     });
     if (!hechos.length) return [];
     await window.storage.set(CSL_KEY, JSON.stringify(cslDatos));
-    if (cslVisible) cslRender();
+    cslRender();
     return [...new Set(hechos)];
   }
   window.GH_CSL_DESDE_LINEAS = cslDesdeLineas;
@@ -7669,7 +7664,7 @@
   // Sheet en otra hoja (sus dos páginas, frente y vuelta). Siempre salen las
   // tres aunque alguna no se haya llenado (sale en blanco con el lote).
   function ghDocumentoHojas(o) {
-    const incluir = Object.assign({ rough: true, trim: true, pull: true }, o.incluir || {});
+    const incluir = Object.assign({ rough: true, trim: true }, o.incluir || {}, { pull: false });   // el Pull Sheet ya no se imprime
     const paginas = [];
     const blanca = '<div class="hoja blanca"></div>';
     const layoutAntes = psLayout;
@@ -7729,63 +7724,51 @@
     return (docs || []).filter((inv) => (inv.items || []).some((it) => cslCoincide(clave, it.location)));
   }
 
-  // ---------- Pestaña 🖨 Imprimir ----------
-  let cslVisible = false;
-  const cslMarcados = new Set();
-  function cslMostrar(si) {
-    cslVisible = !!si;
-    const f = $('cs-form-imprimir'), h = $('cs-form-hojas');
-    if (f) f.style.display = si ? '' : 'none';
-    if (h) h.style.display = si ? 'none' : '';
-    document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', si ? b.dataset.cstipo === 'imprimir' : b.dataset.cstipo === csTipo));
-    if (si) { Promise.all([cslCargar(true), cslCargarFacturas()]).then(cslRender); cslRender(); }
+  // ---------- Hojas guardadas (abajo de la factura) ----------
+  // Cada base tiene las suyas (gh-completion se guarda por base).
+  function cslMostrar() {
+    const h = $('cs-form-hojas'); if (h) h.style.display = '';
+    document.querySelectorAll('.cs-tipo-btn').forEach((b) => b.classList.toggle('active', b.dataset.cstipo === csTipo));
   }
   window.GH_CSL_MOSTRAR = cslMostrar;
   function cslRender() {
     const cont = $('csl-lista'); if (!cont) return;
     const q = cslClave(($('csl-buscar') || {}).value || '');
-    const filas = Object.entries(cslDatos).filter(([k, e]) => e && (!q || q.split('-').every((w) => k.split('-').some((x) => x.startsWith(w)))))
+    const filas = Object.entries(cslDatos).filter(([k, e]) => e && (e.rough || e.trim) && (!q || q.split('-').every((w) => k.split('-').some((x) => x.startsWith(w)))))
       .sort((a, b) => String(b[1].en || '').localeCompare(String(a[1].en || '')));
     const docs = cslDocs();
-    cont.innerHTML = filas.length ? filas.map(([k, e]) => {
+    const total = filas.length;
+    cont.innerHTML = total ? filas.slice(0, 60).map(([k, e]) => {
       const facts = cslFacturasDe(k, docs);
-      const tags = [['rough', 'Rough-In'], ['trim', 'Trim-Out'], ['pull', 'Pull Sheet']].map(([t, n]) => `<span class="csl-tag${e[t] ? ' si' : ''}">${n}</span>`).join('');
-      return `<div class="csl-fila${cslMarcados.has(k) ? ' on' : ''}" data-k="${escapeHtml(k)}">
-        <label class="csl-sel"><input type="checkbox" ${cslMarcados.has(k) ? 'checked' : ''}><span><b>${escapeHtml(e.lote || k)}</b>
-          <small>${tags}${facts.length ? ` <span class="csl-tag si">Factura ${facts.map((f) => '#' + escapeHtml(f.numero || '')).join(', ')}</span>` : ''}</small></span></label>
-        <div class="csl-acc"><button type="button" class="gc-action-btn csl-abrir">Abrir</button><button type="button" class="gc-del csl-borrar" aria-label="Borrar">✕</button></div>
+      const fecha = (e.rough && e.rough.fecha) || (e.trim && e.trim.fecha) || '';
+      const tags = [['rough', 'Rough-In'], ['trim', 'Trim-Out']].map(([t, n]) => `<span class="csl-tag${e[t] ? ' si' : ''}">${n}${e[t] && e[t].fecha ? ' ' + escapeHtml(csFechaUS(e[t].fecha).slice(0, 5)) : ''}</span>`).join('');
+      return `<div class="csl-fila" data-k="${escapeHtml(k)}">
+        <div class="csl-sel"><span><b>${escapeHtml(e.lote || k)}</b>
+          <small>${tags}${facts.length ? ` <span class="csl-tag si">Factura ${facts.map((f) => '#' + escapeHtml(f.numero || '')).join(', ')}</span>` : ''}</small></span></div>
+        <div class="csl-acc"><button type="button" class="gc-action-btn csl-abrir">Abrir</button><button type="button" class="gc-action-btn csl-imp" title="Imprimir Rough-In y Trim-Out">🖨</button><button type="button" class="gc-del csl-borrar" aria-label="Borrar">✕</button></div>
       </div>`;
-    }).join('') : `<div class="gc-empty" style="display:block;">${Object.keys(cslDatos).length ? 'Ningún lote coincide.' : 'Todavía no hay hojas guardadas. Llena una hoja con su LOT#/SUBDIVISION y se guarda sola aquí.'}</div>`;
+    }).join('') + (total > 60 ? `<div class="gc-empty" style="display:block;">Y ${total - 60} más… usa el buscador.</div>` : '')
+      : `<div class="gc-empty" style="display:block;">${Object.keys(cslDatos).length && q ? 'Ningún lote coincide.' : 'Todavía no hay hojas guardadas. Llena una hoja con su LOT#/SUBDIVISION o guarda una factura con Rough-In / Trim-Out.'}</div>`;
     cont.querySelectorAll('.csl-fila').forEach((f) => {
       const k = f.dataset.k;
-      f.querySelector('input').addEventListener('change', (ev) => { if (ev.target.checked) cslMarcados.add(k); else cslMarcados.delete(k); f.classList.toggle('on', ev.target.checked); cslCuenta(); });
       f.querySelector('.csl-abrir').addEventListener('click', () => cslAbrir(k));
+      f.querySelector('.csl-imp').addEventListener('click', () => {
+        const e = cslDatos[k]; if (!e) return;
+        window.GH_IMPRIMIR_HOJAS({ entradas: [e], doble: true, titulo: `Completion ${e.lote || ''}`.trim() });
+      });
       f.querySelector('.csl-borrar').addEventListener('click', async () => {
         if (!await gcConfirm(`¿Borrar las hojas guardadas de "${cslDatos[k].lote}"?`, { okText: 'Borrar', danger: true })) return;
-        delete cslDatos[k]; cslMarcados.delete(k);
+        delete cslDatos[k];
         try { await window.storage.set(CSL_KEY, JSON.stringify(cslDatos)); toast('Hojas borradas', 'info'); } catch (e) { toast('No se pudo borrar', 'error'); }
         cslRender();
       });
     });
-    cslCuenta();
-  }
-  function cslCuenta() {
-    const n = [...cslMarcados].filter((k) => cslDatos[k]).length;
-    if ($('csl-cuenta')) $('csl-cuenta').textContent = n ? `${n} lote${n === 1 ? '' : 's'} marcado${n === 1 ? '' : 's'}` : 'Marca uno o más lotes';
-    if ($('csl-imprimir')) $('csl-imprimir').disabled = !n;
   }
   if ($('csl-buscar')) $('csl-buscar').addEventListener('input', debounce(cslRender, 150));
-  if ($('csl-imprimir')) $('csl-imprimir').addEventListener('click', async () => {
-    const claves = [...cslMarcados].filter((k) => cslDatos[k]);
-    const docs = $('csl-op-factura').checked ? await cslCargarFacturas() : [];
-    const facturas = $('csl-op-factura').checked ? [...new Set(claves.flatMap((k) => cslFacturasDe(k, docs)))] : [];
-    window.GH_IMPRIMIR_HOJAS({
-      entradas: claves.map((k) => cslDatos[k]), facturas,
-      incluir: { rough: $('csl-op-rough').checked, trim: $('csl-op-trim').checked, pull: $('csl-op-pull').checked },
-      doble: $('csl-op-doble').checked,
-      titulo: claves.length === 1 ? `Hojas ${cslDatos[claves[0]].lote}` : `Hojas (${claves.length} lotes)`
-    });
-  });
+  // Cargar la lista al abrir Facturas
+  document.querySelectorAll('.gc-tab[data-tab="facturas"], .inv-subtab[data-sub="nueva"]').forEach((b) => b.addEventListener('click', () => {
+    Promise.all([cslCargar(true), cslCargarFacturas()]).then(cslRender).catch(() => {});
+  }));
 
   // Factura guardada → imprimir la factura con las hojas de sus lotes
   async function cslImprimirFacturaConHojas(inv) {
@@ -7922,7 +7905,7 @@
     const amtTd=mkTd(); amtTd.className='r'; const amtIn=mkIn('inv-amt','0.00',item.amount||''); amtIn.inputMode='decimal'; amtTd.appendChild(amtIn); tr.appendChild(amtTd);
     const delTd=mkTd(); delTd.className='inv-acc';
     const dupBtn=document.createElement('button'); dupBtn.type='button'; dupBtn.className='inv-mini'; dupBtn.title='Duplicar fecha y subdivisión en una línea nueva'; dupBtn.textContent='⧉';
-    const csBtn=document.createElement('button'); csBtn.type='button'; csBtn.className='inv-mini'; csBtn.title='Usar esta subdivisión en Completion Sheets (Rough-In y Pull Sheet)'; csBtn.textContent='📋';
+    const csBtn=document.createElement('button'); csBtn.type='button'; csBtn.className='inv-mini'; csBtn.title='Pasar fecha y subdivisión de esta línea a Completion Sheets'; csBtn.textContent='📋';
     const delBtn=document.createElement('button'); delBtn.className='gc-del'; delBtn.type='button'; delBtn.textContent='✕';
     try { if (!csActivo) csBtn.style.display = 'none'; } catch (e) {}
     delTd.appendChild(dupBtn); delTd.appendChild(csBtn); delTd.appendChild(delBtn); tr.appendChild(delTd);
@@ -8144,7 +8127,8 @@
     return true;
   }
   const invForm = document.getElementById('inv-sub-nueva');
-  if (invForm) { invForm.addEventListener('input', invBorradorGuardar); invForm.addEventListener('change', invBorradorGuardar); invForm.addEventListener('click', (e) => { if (e.target.closest('.gc-del, .inv-mini')) invBorradorGuardar(); }); }
+  const invBorradorSiFactura = (e) => { if (!e.target.closest('#inv-sub-completion')) invBorradorGuardar(); };
+  if (invForm) { invForm.addEventListener('input', invBorradorSiFactura); invForm.addEventListener('change', invBorradorSiFactura); invForm.addEventListener('click', (e) => { if (e.target.closest('.gc-del, .inv-mini')) invBorradorGuardar(); }); }
 
   $('inv-btn-guardar').addEventListener('click', async () => {
     const num = $('inv-num').value.trim();
@@ -12235,27 +12219,36 @@
       }
       return `<div class="vz-imp-lista">${filas.slice(0, 40).map(([k, e]) => {
         const facts = imp.facturas.filter((inv) => (inv.items || []).some((it) => window.GH_CSL_COINCIDE(k, it.location)));
-        const hojas = [['rough', 'Rough-In'], ['trim', 'Trim-Out'], ['pull', 'Pull Sheet']].filter(([t]) => e[t]).map(([, n]) => n);
+        const hojas = [['rough', 'Rough-In'], ['trim', 'Trim-Out']].filter(([t]) => e[t]).map(([, n]) => n);
         return `<div class="vz-imp-fila"><div style="min-width:0;"><b>${escapeHtmlVisor(e.lote || k)}</b>
           <small>${escapeHtmlVisor(hojas.join(' · ') || 'Sin hojas')}${facts.length ? ' · Factura ' + facts.map((f) => '#' + escapeHtmlVisor(f.numero || '')).join(', ') : ''}</small></div>
-          <button type="button" class="vz-imp-btn" data-k="${escapeHtmlVisor(k)}">🖨 Imprimir</button></div>`;
+          <div class="vz-imp-acc">
+            <button type="button" class="vz-imp-btn vz-imp-fac" data-k="${escapeHtmlVisor(k)}" ${facts.length ? '' : 'disabled title="Este lote no tiene factura"'}>🧾 Factura</button>
+            <button type="button" class="vz-imp-btn vz-imp-hojas" data-k="${escapeHtmlVisor(k)}">📋 Hojas</button>
+          </div></div>`;
       }).join('')}</div>`;
     }
     function renderImprimir() {
       const nn = trabajadores(), vv = marcadosDe(fecha);
       return htmlHero(nn.filter((x) => vv[x] === 1).length, nn.length) + `
         <div class="vz-dia-head"><div style="min-width:0;"><div class="vz-fecha">Imprimir hojas</div>
-          <div class="chk-estado vz-estado ${estadoTipo}">${estado || 'Busca el lote y toca Imprimir: salen sus completion sheets y su factura.'}</div></div></div>
+          <div class="chk-estado vz-estado ${estadoTipo}">${estado || 'Busca el lote: 🧾 imprime su factura y 📋 sus completion sheets (Rough-In al frente, Trim-Out atrás).'}</div></div></div>
         <div class="vz-card">
           <input type="search" class="vz-imp-buscar" placeholder="Buscar lote o colonia (ej. Greystone 165)" value="${escapeHtmlVisor(impFiltro)}" autocomplete="off" enterkeyhint="search">
           ${htmlImpLista()}
         </div>`;
     }
     function conectarImp() {
+      // Factura y hojas se imprimen por separado
       cont.querySelectorAll('.vz-imp-btn').forEach((b) => b.addEventListener('click', () => {
         const e = imp && imp.hojas[b.dataset.k]; if (!e || !window.GH_IMPRIMIR_HOJAS) return;
-        const facts = imp.facturas.filter((inv) => (inv.items || []).some((it) => window.GH_CSL_COINCIDE(b.dataset.k, it.location)));
-        window.GH_IMPRIMIR_HOJAS({ entradas: [e], facturas: facts, doble: true, cfg: imp.cfg, layout: imp.layout, titulo: 'Hojas ' + (e.lote || '') });
+        if (b.classList.contains('vz-imp-fac')) {
+          const facts = imp.facturas.filter((inv) => (inv.items || []).some((it) => window.GH_CSL_COINCIDE(b.dataset.k, it.location)));
+          if (!facts.length) return;
+          window.GH_IMPRIMIR_HOJAS({ facturas: facts, doble: false, cfg: imp.cfg, titulo: 'Invoice ' + facts.map((f) => f.numero || '').join(', ') });
+        } else {
+          window.GH_IMPRIMIR_HOJAS({ entradas: [e], doble: true, cfg: imp.cfg, titulo: 'Completion ' + (e.lote || '') });
+        }
       }));
     }
 
