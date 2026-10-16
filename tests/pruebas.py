@@ -479,6 +479,32 @@ def factura_pasa_a_completion(p, c):
     assert not any('fox' in k for k in cs), cs.keys()
 
 @prueba
+def ingreso_fecha_del_dia_semana_elegida(p, c):
+    pg = c.pagina()
+    pg.click('.gc-type-btn[data-type="ingreso"]'); pg.wait_for_timeout(200)
+    loc = "(d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')"
+    hoy = pg.evaluate(f"() => ({loc})(new Date())")
+    pg.click('#ingreso-semana-prev'); pg.wait_for_timeout(200)
+    etiqueta = pg.inner_text('#ingreso-semana-label')
+    assert pg.input_value('#m-fecha') == hoy, (pg.input_value('#m-fecha'), hoy)   # la fecha no se atrasa
+    pg.wait_for_function("() => [...document.querySelectorAll('#m-cat option')].some(o => o.value && o.value !== '__nueva__')")
+    pg.fill('#m-monto', '9000'); pg.fill('#m-desc', 'Cobro semana pasada')
+    pg.click('#btn-guardar-mov'); pg.wait_for_timeout(700)
+    m = [x for x in valor(None, 'c:prueba::movimientos') if x.get('desc') == 'Cobro semana pasada'][0]
+    lunes_pasado = pg.evaluate(f"() => {{ const d = new Date(); d.setHours(12); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 7); return ({loc})(d); }}")
+    assert m['fecha'] == hoy and m['semana'] == lunes_pasado, m
+    # En el Registro sale dentro de la semana elegida, con la fecha de hoy
+    grupo = pg.evaluate("""() => { let g = ''; for (const tr of document.querySelectorAll('#mov-tbody tr, .gc-week-row, tr.sel-item')) { if (tr.classList.contains('gc-week-row')) g = tr.textContent.trim(); else if (tr.textContent.includes('Cobro semana pasada')) return [g, tr.cells[0].textContent.trim()]; } return null; }""")
+    assert grupo and grupo[1] == hoy and grupo[0].lower() == etiqueta.lower().replace('semana del', 'semana del'), (grupo, etiqueta)
+    # Editar: conserva su semana
+    pg.evaluate("""() => [...document.querySelectorAll('tr.sel-item')].find(t => t.textContent.includes('Cobro semana pasada')).querySelector('.gc-edit-mov').click()""")
+    pg.wait_for_timeout(300)
+    assert pg.inner_text('#ingreso-semana-label') == etiqueta
+    pg.fill('#m-monto', '9100'); pg.click('#btn-guardar-mov'); pg.wait_for_timeout(700)
+    m = [x for x in valor(None, 'c:prueba::movimientos') if x.get('desc') == 'Cobro semana pasada'][0]
+    assert m['monto'] == 9100 and m['semana'] == lunes_pasado and m['fecha'] == hoy, m
+
+@prueba
 def visor_imprime_hojas_y_factura(p, c):
     d = db()
     d['datos_app']['c:prueba::gh-completion'] = {'clave': 'c:prueba::gh-completion', 'actualizado_en': '2026-10-01T12:00:00.000+00:00',

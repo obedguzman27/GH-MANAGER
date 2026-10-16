@@ -699,7 +699,7 @@
     const sorted = [...movimientos].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '') || String(a.id).localeCompare(String(b.id)));
     const grupos = new Map();
     sorted.forEach((m) => {
-      const { key, label } = weekInfo(m.fecha || today());
+      const { key, label } = weekInfo(movRefSemana(m));
       if (!grupos.has(key)) grupos.set(key, { label, items: [] });
       grupos.get(key).items.push(m);
     });

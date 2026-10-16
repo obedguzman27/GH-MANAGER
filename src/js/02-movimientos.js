@@ -170,11 +170,8 @@
 
   // ---- Guardar movimiento ----
   function limpiarFormularioMov(avisar) {
-    if (tipoActual === 'ingreso') {
-      actualizarSemanaIngreso(); // mantiene la semana seleccionada, no la resetea a hoy
-    } else {
-      $('m-fecha').value = today();
-    }
+    if (tipoActual === 'ingreso') actualizarSemanaIngreso(); // mantiene la semana seleccionada
+    $('m-fecha').value = today();   // la fecha siempre es el día en que se mete
     $('m-monto').value = '';
     $('m-desc').value = '';
     $('m-deducible').checked = false;
@@ -216,7 +213,8 @@
       if (idx >= 0) {
         const orig = movimientos[idx];
         const fechaCambio = !esAjuste && tipoActual === 'gasto' && orig.tipo === 'gasto' && orig.fecha !== fecha;
-        movimientos[idx] = { id: movEditandoId, fecha, tipo: tipoActual, cat, monto, desc, deducible };
+        movimientos[idx] = { ...orig, id: movEditandoId, fecha, tipo: tipoActual, cat, monto, desc, deducible };
+        if (tipoActual === 'ingreso' && ingresoSemanaKey) movimientos[idx].semana = ingresoSemanaKey; else delete movimientos[idx].semana;
         // Preservar datos de ajuste para movimientos tipo ajuste
         if (esAjuste) {
           movimientos[idx].ajusteDir = ajusteDir;
@@ -254,6 +252,7 @@
     }
 
     const nuevo = { id: Date.now(), fecha, tipo: tipoActual, cat, monto, desc, deducible };
+    if (tipoActual === 'ingreso' && ingresoSemanaKey) nuevo.semana = ingresoSemanaKey;
     if (esAjuste) {
       nuevo.ajusteDir = ajusteDir;
       nuevo.ajusteSocioId = ajusteSocioSel;
@@ -360,8 +359,8 @@
     const fechaSemPasada = new Date(hoy + 'T00:00:00'); fechaSemPasada.setDate(fechaSemPasada.getDate() - 7);
     const semAnt = weekInfo(ghFechaLocal(fechaSemPasada)).key;
 
-    const movSem = movimientos.filter(m => weekInfo(m.fecha || hoy).key === semAct);
-    const movAnt = movimientos.filter(m => weekInfo(m.fecha || hoy).key === semAnt);
+    const movSem = movimientos.filter(m => weekInfo(movRefSemana(m)).key === semAct);
+    const movAnt = movimientos.filter(m => weekInfo(movRefSemana(m)).key === semAnt);
     const ing = movSem.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + (Number(m.monto)||0), 0);
     const gas = movSem.filter(m => m.tipo === 'gasto').reduce((s,m) => s + (Number(m.monto)||0), 0);
     const ingAnt = movAnt.filter(m => m.tipo === 'ingreso').reduce((s,m) => s + (Number(m.monto)||0), 0);
@@ -453,7 +452,7 @@
 
     const grupos = new Map();
     sorted.forEach((m) => {
-      const { key, label } = weekInfo(m.fecha || today());
+      const { key, label } = weekInfo(movRefSemana(m));
       if (!grupos.has(key)) grupos.set(key, { label, items: [] });
       grupos.get(key).items.push(m);
     });
@@ -965,7 +964,7 @@
       toast('No se pudo guardar el invoice, la semana sigue en la hoja: ' + ((e && e.message) || e), 'error', 6000);
       return;
     }
-    movimientos = movimientos.filter((m) => weekInfo(m.fecha || today()).key !== s.key);
+    movimientos = movimientos.filter((m) => weekInfo(movRefSemana(m)).key !== s.key);
     await saveMov();
 
     renderMovimientos();
@@ -1044,12 +1043,13 @@
     if (esIngreso) {
       // Calcular a cuántas semanas de diferencia está la fecha guardada, para que
       // el selector de semana (‹ ›) quede sincronizado con lo que se está editando.
-      const mondayEntrada = mondayOf(m.fecha || today());
+      const mondayEntrada = mondayOf(movRefSemana(m));
       const mondayHoy = mondayOf(today());
       ingresoSemanaOffset = Math.round((mondayEntrada - mondayHoy) / (7 * 24 * 60 * 60 * 1000));
       const friday = new Date(mondayEntrada);
       friday.setDate(mondayEntrada.getDate() + 4);
       $('ingreso-semana-label').textContent = labelSemanaLunesAViernes(mondayEntrada, friday);
+      ingresoSemanaKey = ghFechaLocal(mondayEntrada);
     }
     if (!esAjuste) $('m-cat').value = m.cat || '';
     $('m-monto').value = m.monto != null ? String(m.monto) : '';
@@ -1086,7 +1086,7 @@
     }
     renderCatSelect();
     if (esIngreso) { ingresoSemanaOffset = 0; actualizarSemanaIngreso(); } // semana actual, no la del original
-    else { $('m-fecha').value = today(); }
+    $('m-fecha').value = today();
     if (!esAjuste) $('m-cat').value = m.cat || '';
     $('m-monto').value = m.monto != null ? String(m.monto) : '';
     $('m-desc').value = m.desc || '';
@@ -1115,7 +1115,7 @@
   function calcularSemanas() {
     const grupos = new Map();
     movimientos.forEach((m) => {
-      const { key, label } = weekInfo(m.fecha || today());
+      const { key, label } = weekInfo(movRefSemana(m));
       if (!grupos.has(key)) {
         grupos.set(key, { label, ingresos: 0, gastos: 0, gastoItems: [], ajustesPorSocio: {}, ajusteItems: [], ingresoItems: [] });
       }

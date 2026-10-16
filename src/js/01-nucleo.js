@@ -513,6 +513,10 @@
   // ---- Tabs ----
   // ---- Selector de semana para ingresos: flechas ‹ › + "Semana del lunes D al viernes D de mes" ----
   let ingresoSemanaOffset = 0; // 0 = semana actual; -1 = semana pasada; +1 = próxima semana
+  // La semana elegida decide en qué semana (invoice) cuenta el ingreso; la
+  // FECHA es el día en que se metió el cobro (antes se ponía el viernes de esa
+  // semana y el cobro quedaba con fecha atrasada).
+  let ingresoSemanaKey = '';
   function actualizarSemanaIngreso() {
     const base = new Date();
     base.setDate(base.getDate() + ingresoSemanaOffset * 7);
@@ -520,9 +524,12 @@
     const monday = mondayOf(baseIso);
     const friday = new Date(monday);
     friday.setDate(monday.getDate() + 4);
-    $('m-fecha').value = ghFechaLocal(friday);
+    ingresoSemanaKey = ghFechaLocal(monday);
     $('ingreso-semana-label').textContent = labelSemanaLunesAViernes(monday, friday);
   }
+  // Fecha con la que se agrupa un movimiento por semana: la semana elegida
+  // (ingresos) o su fecha
+  function movRefSemana(m) { return (m && m.semana) || (m && m.fecha) || today(); }
 
   document.querySelectorAll('.gc-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
