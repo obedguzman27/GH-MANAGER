@@ -1267,7 +1267,6 @@
         <button type="button" class="cs-tipo-btn active" data-cstipo="rough">Rough-In</button>
         <button type="button" class="cs-tipo-btn" data-cstipo="trim">Trim-Out</button>
         <button type="button" class="cs-tipo-btn" data-cstipo="pull">Pull Sheet</button>
-        <button type="button" class="cs-tipo-btn" data-cstipo="imprimir">🖨 Imprimir</button>
       </div>
       <div class="cs-lote-guardado" id="cs-lote-guardado"></div>
       <div id="cs-form-hojas">
@@ -1355,24 +1354,6 @@
       </div>
       </div><!-- /cs-form-hojas -->
 
-      <!-- Imprimir: hojas guardadas por lote / colonia -->
-      <div id="cs-form-imprimir" style="display:none;">
-        <p class="gc-card-title" style="margin:0 0 4px;">Imprimir hojas por lote</p>
-        <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cada hoja se guarda sola por <b>lote y colonia</b> (lo que escribes en LOT#/SUBDIVISION). Marca los lotes y toca Imprimir: sale Rough-In al frente y Trim-Out atrás, y el Pull Sheet en otra hoja, frente y vuelta.</p>
-        <input type="search" id="csl-buscar" placeholder="Buscar lote o colonia (ej. Greystone 165)" autocomplete="off" style="width:100%;margin-bottom:10px;">
-        <div class="csl-opciones">
-          <label><input type="checkbox" id="csl-op-rough" checked> Rough-In</label>
-          <label><input type="checkbox" id="csl-op-trim" checked> Trim-Out</label>
-          <label><input type="checkbox" id="csl-op-pull" checked> Pull Sheet</label>
-          <label><input type="checkbox" id="csl-op-factura" checked> Factura del lote</label>
-          <label><input type="checkbox" id="csl-op-doble" checked> Doble cara</label>
-        </div>
-        <div id="csl-lista" class="csl-lista"></div>
-        <div class="csl-barra">
-          <span id="csl-cuenta"></span>
-          <button type="button" class="gc-save-btn" id="csl-imprimir" disabled>🖨 Imprimir</button>
-        </div>
-      </div>
     </div>
   </div>
 

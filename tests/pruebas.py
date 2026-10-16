@@ -402,17 +402,8 @@ def completion_por_lote_e_imprimir(p, c):
     pg.click('.cs-tipo-btn[data-cstipo="rough"]'); pg.wait_for_timeout(200)
     pg.fill('#cs-lote', 'Oak 1'); pg.wait_for_timeout(1500); pg.fill('#cs-lote', 'Oak 12'); pg.wait_for_timeout(1800)
     assert sorted(valor(None, 'c:prueba::gh-completion').keys()) == ['12-oak', '165-greystone'], valor(None, 'c:prueba::gh-completion').keys()
-    # Imprimir: marcar Greystone, con factura
-    pg.click('.cs-tipo-btn[data-cstipo="imprimir"]'); pg.wait_for_timeout(600)
-    pg.check('.csl-fila[data-k="165-greystone"] input'); pg.check('#csl-op-factura')
-    pg.click('#csl-imprimir'); pg.wait_for_timeout(800)
-    html = _imprimir_capturado(pg)
-    assert html.count('class="pag"') == 2 and html.count('class="ps-pag"') == 2, (html.count('class="pag"'), html.count('class="ps-pag"'))
-    assert 'Pedro' in html and 'Juan' in html
-    # Abrir lote: vuelve a la pantalla de hojas con sus datos
-    pg.click('.cs-tipo-btn[data-cstipo="imprimir"]'); pg.wait_for_timeout(400)
-    pg.click('.csl-fila[data-k="165-greystone"] .csl-abrir'); pg.wait_for_timeout(500)
-    assert pg.input_value('#cs-leadman') == 'Pedro'
+    # Ya no hay pestaña 🖨 Imprimir en Completion Sheets
+    assert pg.query_selector('.cs-tipo-btn[data-cstipo="imprimir"]') is None
 
 @prueba
 def imprimir_trae_factura_sin_tocar_nada(p, c):
@@ -424,11 +415,10 @@ def imprimir_trae_factura_sin_tocar_nada(p, c):
     pg = c.pagina()
     pg.add_init_script("window.print = () => {};")
     pg.evaluate("() => { HTMLIFrameElement.prototype.focus = function(){}; }")
-    pg.click('.gc-tab[data-tab="facturas"]'); pg.click('#panel-facturas [data-sub="completion"]')
-    pg.click('.cs-tipo-btn[data-cstipo="imprimir"]')
-    pg.wait_for_function("() => /Factura #.*1007/.test((document.querySelector('.csl-fila[data-k=\"12-hills-oak\"]') || {}).textContent || '')", timeout=5000)
-    pg.check('.csl-fila[data-k="12-hills-oak"] input')
-    pg.click('#csl-imprimir'); pg.wait_for_timeout(800)
+    # Se imprime desde la factura guardada: 🖨 + Hojas
+    tab(pg, 'facturas', 'guardadas')
+    pg.evaluate("""() => [...document.querySelectorAll('#inv-list-tbody [data-a="conhojas"]')].find(x => x.closest('tr').textContent.includes('1007')).click()""")
+    pg.wait_for_timeout(1200)
     html = _imprimir_capturado(pg)
     assert 'INVOICE' in html and 'Mario' in html, html[:300]
     # Solo había Rough-In: el Trim-Out y el Pull Sheet salen en blanco, en orden
@@ -436,7 +426,7 @@ def imprimir_trae_factura_sin_tocar_nada(p, c):
     i_inv, i_rough, i_trim, i_pull = html.find('INVOICE'), html.find('ROUGH-IN'), html.find('TRIM-OUT'), html.find('class="ps-pag"')
     assert -1 < i_inv < i_rough < i_trim < i_pull, (i_inv, i_rough, i_trim, i_pull)
     # En Rough-In ya no está "Imprimir esta"
-    pg.click('.cs-tipo-btn[data-cstipo="rough"]'); pg.wait_for_timeout(300)
+    pg.click('#panel-facturas [data-sub="completion"]'); pg.wait_for_timeout(300)
     assert not pg.is_visible('#cs-btn-imprimir') and pg.is_visible('#cs-btn-imprimir-ambas'), (pg.is_visible('#cs-btn-imprimir'), pg.is_visible('#cs-btn-imprimir-ambas'), pg.is_visible('#cs-form-hojas'))
 
 @prueba
@@ -469,10 +459,6 @@ def factura_pasa_a_completion(p, c):
     for k in ('118-bradshaw-farms', '119-bradshaw-farms'):
         assert cs[k]['trim']['fecha'] == '2026-10-12' and cs[k]['trim']['leadman'] == 'Juan' and 'rough' not in cs[k], cs[k]
     assert not any('fox' in k for k in cs), cs.keys()
-    # En Imprimir ya salen con su factura
-    pg.click('#panel-facturas [data-sub="completion"]'); pg.wait_for_timeout(300)
-    pg.click('.cs-tipo-btn[data-cstipo="imprimir"]')
-    pg.wait_for_function("() => /Factura #/.test((document.querySelector('.csl-fila[data-k=\"118-bradshaw-farms\"]') || {}).textContent || '')", timeout=5000)
     # Sin la casilla no pasa nada
     pg.click('#panel-facturas [data-sub="nueva"]'); pg.wait_for_timeout(300)
     pg.uncheck('#inv-cs-auto')
