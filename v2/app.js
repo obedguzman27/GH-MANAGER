@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v210 · prueba';
+  window.GH_APP_VERSION = 'v211 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -7467,6 +7467,7 @@
     if (!csActivo && tab && tab.classList.contains('active')) document.querySelector('.inv-subtab[data-sub="nueva"]').click();
     document.querySelectorAll('.inv-mini[title*="Completion"]').forEach((b) => { b.style.display = csActivo ? '' : 'none'; });
     const t = $('aj-cs-toggle'); if (t) t.checked = csActivo;
+    const op = $('inv-cs-op'); if (op) op.style.display = csActivo ? '' : 'none';
   }
   async function csCargarActivo() {
     try { const r = await window.storage.get(CS_ACTIVO_KEY); if (r && r.value != null) csActivo = JSON.parse(r.value) !== false; } catch (e) {}
@@ -7576,6 +7577,91 @@
     cslBanner(e.lote);
     toast(`Abierto: ${e.lote}`, 'success', 1800);
   }
+
+  // ---------- De la factura a las Completion Sheets ----------
+  // Cada línea de la factura con ROUGH / TRIM pasa sola su fecha y su
+  // SUBDIVISION al lote (mismas reglas que las hojas):
+  //  - Rough-In: lote + fecha. El Pull Sheet va ligado al Rough-In: recibe el
+  //    lote, pero nunca la fecha sola.
+  //  - Trim-Out: lote + fecha.
+  //  - Leadman y builder se comparten entre las hojas del mismo lote; si el
+  //    lote es nuevo se usa el último leadman que se escribió.
+  //  - "Bradshaw Farms 118,119,128" = tres lotes.
+  //  - Lo que ya está escrito en la hoja no se borra (solo se pone la fecha).
+  function cslTiposDeTrabajo(work) {
+    const w = glNorm(work || '');
+    const t = [];
+    if (/\brough|\br\s*\/\s*i\b/.test(w)) t.push('rough');
+    if (/\btrim|\bt\s*\/\s*o\b/.test(w)) t.push('trim');
+    return t;
+  }
+  function cslDividirLotes(loc) {
+    const txt = String(loc || '').trim();
+    const m = txt.match(/^(.*?[a-z].*?)\s+(\d+[a-z]?(?:\s*(?:,|&|\by\b|\band\b)\s*\d+[a-z]?)+)\s*$/i);
+    if (!m) return txt ? [txt] : [];
+    return m[2].split(/\s*(?:,|&|\by\b|\band\b)\s*/i).filter(Boolean).map((n) => `${m[1].trim()} ${n}`);
+  }
+  function cslUltimoLeadman() {
+    const e = Object.values(cslDatos).filter(Boolean).sort((a, b) => String(b.en || '').localeCompare(String(a.en || '')));
+    for (const x of e) { const l = (x.rough && x.rough.leadman) || (x.trim && x.trim.leadman); if (l) return l; }
+    try { return (JSON.parse(localStorage.getItem(CS_KEY('rough')) || '{}') || {}).leadman || ''; } catch (err) { return ''; }
+  }
+  // lineas: [{ location, work, dia }]; tipos forzados (botón 📋 de la línea) opcional
+  async function cslDesdeLineas(lineas, forzar) {
+    await cslCargar(true);
+    const lead = cslUltimoLeadman();
+    const hechos = [];
+    lineas.forEach((it) => {
+      const tipos = forzar || cslTiposDeTrabajo(it.work);
+      if (!tipos.length) return;
+      cslDividirLotes(it.location).forEach((lote) => {
+        const k = cslClave(lote); if (!k) return;
+        const e = cslDatos[k] || (cslDatos[k] = { lote });
+        const comp = e.rough || e.trim || {};
+        const compartido = { leadman: comp.leadman || lead || '', builder: comp.builder || '' };
+        const poner = (t, conFecha) => {
+          const d = e[t] ? { ...e[t] } : { checks: {} };
+          d.lote = d.lote || e.lote || lote;
+          if (t !== 'pull') {
+            if (!d.leadman && compartido.leadman) d.leadman = compartido.leadman;
+            if (!d.builder && compartido.builder) d.builder = compartido.builder;
+            if (conFecha && it.dia) d.fecha = it.dia;
+          } else if (!d.builder && compartido.builder) d.builder = compartido.builder;
+          e[t] = d;
+        };
+        tipos.forEach((t) => {
+          poner(t, true);
+          if (t === 'rough') poner('pull', false);
+        });
+        e.lote = e.lote || lote; e.en = new Date().toISOString(); e.por = window.GH_NOMBRE || '';
+        hechos.push(`${e.lote} (${tipos.map((t) => (t === 'rough' ? 'Rough-In' : 'Trim-Out')).join(' + ')})`);
+      });
+    });
+    if (!hechos.length) return [];
+    await window.storage.set(CSL_KEY, JSON.stringify(cslDatos));
+    if (cslVisible) cslRender();
+    return [...new Set(hechos)];
+  }
+  window.GH_CSL_DESDE_LINEAS = cslDesdeLineas;
+
+  // Casilla en la factura: "Pasar a Completion Sheets" (se recuerda)
+  const CSL_AUTO_KEY = () => ghLK('gh-inv-cs-auto');
+  function cslAutoActivo() {
+    try { return localStorage.getItem(CSL_AUTO_KEY()) !== '0'; } catch (e) { return true; }
+  }
+  if ($('inv-cs-auto')) {
+    $('inv-cs-auto').checked = cslAutoActivo();
+    $('inv-cs-auto').addEventListener('change', (ev) => { try { localStorage.setItem(CSL_AUTO_KEY(), ev.target.checked ? '1' : '0'); } catch (e) {} });
+  }
+  // Se llama al guardar la factura
+  window.GH_CSL_FACTURA_GUARDADA = async (inv) => {
+    if (typeof csActivo !== 'undefined' && !csActivo) return;
+    if (!$('inv-cs-auto') || !$('inv-cs-auto').checked) return;
+    try {
+      const hechos = await cslDesdeLineas(inv.items || []);
+      if (hechos.length) toast(`📋 Completion Sheets: ${hechos.slice(0, 3).join(', ')}${hechos.length > 3 ? ` y ${hechos.length - 3} más` : ''}`, 'success', 4500);
+    } catch (e) { toast('La factura se guardó, pero no se pudieron pasar las Completion Sheets: ' + ((e && e.message) || e), 'error', 5000); }
+  };
 
   // ---------- Armar el documento para imprimir ----------
   // Orden (para doble cara): facturas primero (cada una con su vuelta en
@@ -7851,6 +7937,12 @@
       const lote = locIn.value.trim();
       if (!lote) { toast('Esta línea no tiene subdivisión todavía', 'error'); return; }
       if (typeof csAplicarDesdeFactura === 'function') csAplicarDesdeFactura(lote, diaSel.value);
+      // y queda guardado en su lote (si el trabajo no dice Rough/Trim, va como Rough-In)
+      if (window.GH_CSL_DESDE_LINEAS) {
+        const it = { location: lote, work: wrkIn.value, dia: diaSel.value };
+        const tipos = /rough|trim|r\s*\/\s*i|t\s*\/\s*o/i.test(wrkIn.value) ? null : ['rough'];
+        window.GH_CSL_DESDE_LINEAS([it], tipos).catch(() => {});
+      }
     });
 
     // Cálculo automático del monto según el trabajo elegido:
@@ -8104,6 +8196,7 @@
     btnG.disabled = false;
     invBorradorBorrar();
     toast(idx>=0 ? 'Factura actualizada ✓' : 'Factura guardada ✓');
+    if (window.GH_CSL_FACTURA_GUARDADA) window.GH_CSL_FACTURA_GUARDADA(inv);
     invLimpiar();
     if (document.getElementById('cobros-tbody')) invRenderCobros();
   });

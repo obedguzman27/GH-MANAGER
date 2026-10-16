@@ -440,6 +440,47 @@ def imprimir_trae_factura_sin_tocar_nada(p, c):
     assert not pg.is_visible('#cs-btn-imprimir') and pg.is_visible('#cs-btn-imprimir-ambas'), (pg.is_visible('#cs-btn-imprimir'), pg.is_visible('#cs-btn-imprimir-ambas'), pg.is_visible('#cs-form-hojas'))
 
 @prueba
+def factura_pasa_a_completion(p, c):
+    d = db()
+    d['datos_app']['c:prueba::gh-completion'] = {'clave': 'c:prueba::gh-completion', 'actualizado_en': '2026-10-01T12:00:00.000+00:00',
+      'valor': json.dumps({'180-greystone': {'lote': 'GREYSTONE 180', 'en': '2026-10-01T00:00:00Z',
+         'trim': {'lote': 'GREYSTONE 180', 'leadman': 'Juan', 'builder': 'Ryan Homes', 'trabajo': 'falta rejilla', 'checks': {'L1': True}}}})}
+    poner_db(d)
+    pg = c.pagina()
+    tab(pg, 'facturas')
+    # Completion Sheets queda justo después de + Nueva Factura
+    subs = pg.eval_on_selector_all('.inv-subtab', 'els => els.map(e => e.dataset.sub)')
+    assert subs[:2] == ['nueva', 'completion'], subs
+    assert pg.is_visible('#inv-cs-auto') and pg.is_checked('#inv-cs-auto')
+    def linea(i, dia, loc, work):
+        while len(pg.query_selector_all('#inv-tbody tr')) <= i: pg.click('#inv-btn-add')
+        f = pg.query_selector_all('#inv-tbody tr')[i]
+        f.query_selector('.inv-dia').fill(dia); f.query_selector('.inv-loc').fill(loc)
+        f.query_selector('.inv-work').fill(work); f.query_selector('.inv-amt').fill('100')
+    linea(0, '2026-10-10', 'GREYSTONE 180', 'ROUGH-IN 3 TONS')
+    linea(1, '2026-10-12', 'Bradshaw Farms 118,119', 'TRIM OUT')
+    linea(2, '2026-10-12', 'FOX VALLEY 95', 'FILTER')
+    pg.click('#inv-btn-guardar'); pg.wait_for_timeout(1500)
+    cs = valor(None, 'c:prueba::gh-completion')
+    g = cs['180-greystone']
+    assert g['rough']['fecha'] == '2026-10-10' and g['rough']['leadman'] == 'Juan' and g['rough']['builder'] == 'Ryan Homes', g['rough']
+    assert g['trim']['trabajo'] == 'falta rejilla' and g['trim']['checks'] == {'L1': True} and not g['trim'].get('fecha'), g['trim']   # lo escrito no se toca
+    assert g['pull']['lote'] == 'GREYSTONE 180' and not g['pull'].get('fecha'), g['pull']
+    for k in ('118-bradshaw-farms', '119-bradshaw-farms'):
+        assert cs[k]['trim']['fecha'] == '2026-10-12' and cs[k]['trim']['leadman'] == 'Juan' and 'rough' not in cs[k], cs[k]
+    assert not any('fox' in k for k in cs), cs.keys()
+    # En Imprimir ya salen con su factura
+    pg.click('#panel-facturas [data-sub="completion"]'); pg.wait_for_timeout(300)
+    pg.click('.cs-tipo-btn[data-cstipo="imprimir"]')
+    pg.wait_for_function("() => /Factura #/.test((document.querySelector('.csl-fila[data-k=\"118-bradshaw-farms\"]') || {}).textContent || '')", timeout=5000)
+    # Sin la casilla no pasa nada
+    pg.click('#panel-facturas [data-sub="nueva"]'); pg.wait_for_timeout(300)
+    pg.uncheck('#inv-cs-auto')
+    linea(0, '2026-10-14', 'GREYSTONE 190', 'ROUGH-IN')
+    pg.click('#inv-btn-guardar'); pg.wait_for_timeout(1200)
+    assert '190-greystone' not in valor(None, 'c:prueba::gh-completion')
+
+@prueba
 def visor_imprime_hojas_y_factura(p, c):
     d = db()
     d['datos_app']['c:prueba::gh-completion'] = {'clave': 'c:prueba::gh-completion', 'actualizado_en': '2026-10-01T12:00:00.000+00:00',

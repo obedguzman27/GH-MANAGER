@@ -678,6 +678,7 @@
     if (!csActivo && tab && tab.classList.contains('active')) document.querySelector('.inv-subtab[data-sub="nueva"]').click();
     document.querySelectorAll('.inv-mini[title*="Completion"]').forEach((b) => { b.style.display = csActivo ? '' : 'none'; });
     const t = $('aj-cs-toggle'); if (t) t.checked = csActivo;
+    const op = $('inv-cs-op'); if (op) op.style.display = csActivo ? '' : 'none';
   }
   async function csCargarActivo() {
     try { const r = await window.storage.get(CS_ACTIVO_KEY); if (r && r.value != null) csActivo = JSON.parse(r.value) !== false; } catch (e) {}

@@ -126,6 +126,12 @@
       const lote = locIn.value.trim();
       if (!lote) { toast('Esta línea no tiene subdivisión todavía', 'error'); return; }
       if (typeof csAplicarDesdeFactura === 'function') csAplicarDesdeFactura(lote, diaSel.value);
+      // y queda guardado en su lote (si el trabajo no dice Rough/Trim, va como Rough-In)
+      if (window.GH_CSL_DESDE_LINEAS) {
+        const it = { location: lote, work: wrkIn.value, dia: diaSel.value };
+        const tipos = /rough|trim|r\s*\/\s*i|t\s*\/\s*o/i.test(wrkIn.value) ? null : ['rough'];
+        window.GH_CSL_DESDE_LINEAS([it], tipos).catch(() => {});
+      }
     });
 
     // Cálculo automático del monto según el trabajo elegido:
@@ -379,6 +385,7 @@
     btnG.disabled = false;
     invBorradorBorrar();
     toast(idx>=0 ? 'Factura actualizada ✓' : 'Factura guardada ✓');
+    if (window.GH_CSL_FACTURA_GUARDADA) window.GH_CSL_FACTURA_GUARDADA(inv);
     invLimpiar();
     if (document.getElementById('cobros-tbody')) invRenderCobros();
   });
