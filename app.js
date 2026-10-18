@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v215';
+  window.GH_APP_VERSION = 'v216';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -2141,9 +2141,13 @@
     const resultado = [];
     [...grupos.keys()].sort().forEach((key) => {
       const g = grupos.get(key);
-      const taxas = g.ingresos * TASA_TAXAS;
-      const gastosTotales = g.gastos + taxas;
-      const neto = g.ingresos - gastosTotales;
+      // Todo se calcula en centavos exactos: así el reparto siempre suma
+      // igual al neto (antes podía salir 1 centavo de más o de menos).
+      const c2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+      g.ingresos = c2(g.ingresos); g.gastos = c2(g.gastos);
+      const taxas = c2(g.ingresos * TASA_TAXAS);
+      const gastosTotales = c2(g.gastos + taxas);
+      const neto = c2(g.ingresos - gastosTotales);
 
       // Reparto en partes iguales entre TODOS los socios de la lista (1, 2 o
       // más). Si solo hay uno, "su parte" es el 100% — sale solo, sin caso
@@ -2161,16 +2165,22 @@
         // en el reparto del invoice.
         ...((cfgSocios || []).filter((x) => x && x.nombre && x.nombre.trim().toLowerCase() !== claveEmpresa))
       ];
-      const base = neto / lista.length;
+      // Parte igual para cada uno; los centavos que sobran al dividir van a
+      // la empresa (la primera), para que las partes sumen exacto el neto.
+      const netoCent = Math.round(neto * 100);
+      const parteCent = Math.trunc(netoCent / lista.length);
+      const sobraCent = netoCent - parteCent * lista.length;
+      const base = parteCent / 100;
       const pagos = lista.map((s, i) => {
-        const ajusteSocio = (g.ajustesPorSocio[s.id] || 0) + (i === 1 ? (g.ajustesPorSocio['__legacy__'] || 0) : 0);
-        const baseConAjuste = base + ajusteSocio;
+        const suBase = i === 0 ? (parteCent + sobraCent) / 100 : base;
+        const ajusteSocio = c2((g.ajustesPorSocio[s.id] || 0) + (i === 1 ? (g.ajustesPorSocio['__legacy__'] || 0) : 0));
+        const baseConAjuste = c2(suBase + ajusteSocio);
         const pct = Number(s.bonoPct) || 0;
-        const bono = baseConAjuste > 0 ? baseConAjuste * (pct / 100) : 0;
-        return { id: s.id, nombre: s.nombre, bonoPct: pct, base, ajuste: ajusteSocio, bono, total: baseConAjuste + bono, esEmpresa: !!s.esEmpresa };
+        const bono = baseConAjuste > 0 ? c2(baseConAjuste * (pct / 100)) : 0;
+        return { id: s.id, nombre: s.nombre, bonoPct: pct, base: suBase, ajuste: ajusteSocio, bono, total: c2(baseConAjuste + bono), esEmpresa: !!s.esEmpresa };
       });
-      const bonoCra = pagos.reduce((sum, p) => sum + p.bono, 0); // bono total que sale de las taxas
-      const taxGuzman = taxas - bonoCra;
+      const bonoCra = c2(pagos.reduce((sum, p) => sum + p.bono, 0)); // bono total que sale de las taxas
+      const taxGuzman = c2(taxas - bonoCra);
 
       // Alias de compatibilidad con el resto de la app (1° y 2° socio):
       const mitad = base;
@@ -2178,9 +2188,10 @@
       const pagoGuzman = pagos[1] ? pagos[1].total : 0;
       // Desglose del bono del segundo socio en "de su mitad" vs "de su ajuste" (solo para mostrarlo detallado en la factura/recibo)
       const pct1 = pagos[1] ? pagos[1].bonoPct : 0;
-      const bonoBase = base > 0 ? base * (pct1 / 100) : 0;
       const ajusteGuzman = pagos[1] ? pagos[1].ajuste : 0;
-      const bonoAjuste = ajusteGuzman * (pct1 / 100);
+      const bonoTotal1 = pagos[1] ? pagos[1].bono : 0;
+      const bonoBase = base > 0 ? c2(base * (pct1 / 100)) : 0;
+      const bonoAjuste = c2(bonoTotal1 - bonoBase);   // así las dos partes suman el bono exacto
 
       const gastoItems = [...g.gastoItems].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
       resultado.push({ key, label: g.label, ingresos: g.ingresos, gastos: g.gastos, gastoItems, ajusteGuzman: ajusteGuzman, ajusteItems: g.ajusteItems, ingresoItems: g.ingresoItems, taxas, gastosTotales, neto, mitad, bonoBase, bonoAjuste, bonoCra, pagoCra, pagoGuzman, taxGuzman, pagos });

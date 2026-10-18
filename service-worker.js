@@ -1,7 +1,7 @@
 // Service worker de GH Manager — guarda el "cascarón" de la app (HTML, JS,
 // CSS, íconos) para que abra rápido y funcione sin señal. Los datos NO se
 // guardan aquí: viven en la nube (Supabase).
-const CACHE_NAME = 'gh-manager-v215';
+const CACHE_NAME = 'gh-manager-v216';
 const PREFIJO = CACHE_NAME.replace(/-v\d+.*$/, '');      // "gh-manager"
 const CANAL = CACHE_NAME.endsWith('-prueba') ? '-prueba' : '';
 const ARCHIVOS_CACHE = [

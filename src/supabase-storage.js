@@ -519,7 +519,14 @@
 
     // ---- API para window.storage ----
     function registrarLeido(clave, existe, valor, version) {
-      if (cola.has(clave)) return;   // lo de este teléfono manda hasta que se suba
+      if (cola.has(clave) || enVuelo.has(clave)) return;   // lo de este teléfono manda hasta que se suba
+      // Una lectura vieja (p. ej. de la precarga) no pisa una versión más nueva
+      // que este teléfono ya conoce (porque la acaba de subir).
+      const previa = base.get(clave);
+      if (previa && previa.conocido && previa.version) {
+        const mP = Date.parse(previa.version), mL = existe ? Date.parse(version || '') : NaN;
+        if (!existe || (!isNaN(mP) && !isNaN(mL) && mL < mP)) return;
+      }
       base.set(clave, { valor: existe ? valor : null, version: existe ? version : null, conocido: true });
     }
     function guardar(clave, valor) {
@@ -551,6 +558,13 @@
     async function revisarRemotos() {
       if (!sesionActiva || document.hidden || !navigator.onLine || window.GH_ROL === 'visor') return;
       const pfx = prefijoActual();
+      // Foto de cómo estaba todo ANTES de preguntar a la nube: si mientras
+      // llega la respuesta este mismo teléfono sube algo, esa clave no cuenta
+      // como "cambio de otro teléfono" (antes salía el aviso en falso).
+      const antes = new Map();
+      base.forEach((b, k) => antes.set(k, b.version));
+      const ocupadas = new Set([...cola.keys(), ...enVuelo.keys()]);
+      const ms = (v) => { const n = Date.parse(v || ''); return isNaN(n) ? null : n; };
       try {
         let q = client.from('datos_app').select('clave, actualizado_en').not('clave', 'like', '%fotos%');
         q = pfx ? q.like('clave', pfx + '%') : q.not('clave', 'like', 'c:%');
@@ -559,7 +573,10 @@
         const cambiadas = [];
         data.forEach((f) => {
           const b = base.get(f.clave);
-          if (!b || !b.conocido || cola.has(f.clave) || enVuelo.has(f.clave)) return;
+          if (!b || !b.conocido || cola.has(f.clave) || enVuelo.has(f.clave) || ocupadas.has(f.clave)) return;
+          if (antes.get(f.clave) !== b.version) return;   // se subió desde aquí mientras tanto
+          const mB = ms(b.version), mR = ms(f.actualizado_en);
+          if (mB != null && mR != null && mR <= mB) return;   // lo de la nube no es más nuevo
           if (b.version !== f.actualizado_en && remotosAvisados.get(f.clave) !== f.actualizado_en) {
             remotosAvisados.set(f.clave, f.actualizado_en);
             cambiadas.push(f.clave.slice(pfx.length));
@@ -791,6 +808,7 @@
       await sesionLista;
       if (window.GH_ROL === 'visor') return { key, value, shared: false };
       if (typeof value !== 'string') value = JSON.stringify(value);
+      precargaUsadas.add(claveConCuenta(key));   // la precarga ya no sirve para esta clave
       await Sync.guardar(claveConCuenta(key), value);
       return { key, value, shared: false };
     },
@@ -798,6 +816,7 @@
       await sesionLista;
       if (window.GH_ROL === 'visor') return { key, deleted: false, shared: false };
       const clave = claveConCuenta(key);
+      precargaUsadas.add(clave);
       Sync.olvidar(clave);
       const { error } = await client.from('datos_app').delete().eq('clave', clave);
       if (error) throw error;

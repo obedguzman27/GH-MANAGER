@@ -525,5 +525,48 @@ def visor_imprime_hojas_y_factura(p, c):
     html = _imprimir_capturado(pg)
     assert 'INVOICE' not in html and html.count('class="pag"') == 2 and 'Mario' in html and 'Luis' in html and 'class="ps-pag"' not in html, html[:300]
 
+@prueba
+def guardar_luego_leer_no_avisa_otro_telefono(p, c):
+    a = c.pagina()
+    avisos = "() => { window.__avisos = []; window.addEventListener('gh-datos-remotos', e => window.__avisos.push(e.detail)); }"
+    a.evaluate(avisos)
+    # Clave nueva que no existía al abrir (como gh-factura-pub): se guarda y luego se lee
+    a.evaluate(GUARDAR, ['gh-prueba-nueva', {'x': 1}])
+    a.wait_for_timeout(300)
+    assert a.evaluate(LEER, 'gh-prueba-nueva') == {'x': 1}, 'la precarga vieja dijo que no existía'
+    a.evaluate('() => window.GH_SYNC.revisarRemotos()'); a.wait_for_timeout(300)
+    assert a.evaluate('() => window.__avisos') == [], a.evaluate('() => window.__avisos')
+    # Guardar mientras se revisa: tampoco avisa en falso
+    cats = a.evaluate(LEER, 'catGastos')
+    a.evaluate("async (v) => { const p = window.storage.set('catGastos', JSON.stringify(v)); window.GH_SYNC.revisarRemotos(); await p; await window.GH_SYNC.revisarRemotos(); }", cats + ['Al mismo tiempo'])
+    a.wait_for_timeout(300)
+    assert a.evaluate('() => window.__avisos') == [], a.evaluate('() => window.__avisos')
+    # Un cambio de verdad desde otro teléfono SÍ avisa
+    b = c.otro(p).pagina()
+    b.evaluate(GUARDAR, ['catGastos', cats + ['Al mismo tiempo', 'Desde B']])
+    b.wait_for_timeout(200)
+    a.evaluate('() => window.GH_SYNC.revisarRemotos()'); a.wait_for_timeout(300)
+    assert any('catGastos' in x['claves'] for x in a.evaluate('() => window.__avisos')), 'no avisó del cambio real'
+
+@prueba
+def reparto_cuadra_al_centavo(p, c):
+    d = db()
+    d['datos_app']['c:prueba::movimientos'] = {'clave': 'c:prueba::movimientos', 'actualizado_en': '2026-10-01T12:00:00.000+00:00',
+      'valor': json.dumps([{'id': 1, 'tipo': 'ingreso', 'fecha': '2026-10-06', 'monto': 1000.01, 'cat': 'Trim', 'desc': 'a'},
+                           {'id': 2, 'tipo': 'gasto', 'fecha': '2026-10-07', 'monto': 0.1, 'cat': 'Gas', 'desc': 'b'},
+                           {'id': 3, 'tipo': 'gasto', 'fecha': '2026-10-07', 'monto': 0.2, 'cat': 'Gas', 'desc': 'c'}])}
+    poner_db(d)
+    pg = c.pagina()
+    pg.click('#btn-guardar-invoice-top'); pg.wait_for_selector('.gc-confirm-overlay')
+    pg.click('.gc-confirm-overlay [data-r="1"]'); pg.wait_for_timeout(900)
+    inv = valor(None, 'c:prueba::gh-invoices-guardados') or valor(None, 'c:prueba::invoicesGuardados')
+    assert inv, [k for k in db()['datos_app'] if 'nv' in k]
+    s = inv[-1]
+    assert s['taxas'] == 100.0 and s['neto'] == 899.71, (s['taxas'], s['neto'])
+    partes = sum(x['base'] for x in s['pagos'])
+    assert round(partes, 2) == s['neto'], (partes, s['neto'], s['pagos'])
+    for x in s['pagos']: assert x['total'] == round(x['total'], 2), x
+    assert round(sum(x['bono'] for x in s['pagos']) + s['taxGuzman'], 2) == s['taxas'], s
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)
