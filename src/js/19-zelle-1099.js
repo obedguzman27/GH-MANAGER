@@ -51,7 +51,7 @@
     $('zc-tbl').style.display = lista.length ? 'block' : 'none';
     $('zc-tbody').innerHTML = payListaPorMes(lista, (c) => payFilaHTML(c, `
       <button type="button" class="pay-act zc-ed" data-id="${escapeHtml(c.id)}">${PAY_SVG.ed} Editar</button>
-      <button type="button" class="pay-act peligro zc-del" data-id="${escapeHtml(c.id)}">${PAY_SVG.del} Borrar</button>`));
+      <button type="button" class="pay-act peligro zc-del" data-id="${escapeHtml(c.id)}">${PAY_SVG.del} Borrar</button>`), { id: 'zc', todosAbiertos: !!$('zc-buscar').value.trim() || lista.length <= 12 });
     payActivarFilas($('zc-tbody'));
     $('zc-tbody').querySelectorAll('.zc-ed').forEach((b) => b.addEventListener('click', () => zcAbrir(chqLista.find((x) => x.id === b.dataset.id))));
     $('zc-tbody').querySelectorAll('.zc-del').forEach((b) => b.addEventListener('click', async () => {
@@ -298,11 +298,25 @@
       if (prev) $('r99-anio').value = prev;
     } catch (e) {}
     $('pay-res-anio').textContent = anio;
+    const total = tCh + tZ + tCa;
+    const pct = (v) => (total > 0 ? Math.max(v > 0 ? 1.5 : 0, v / total * 100) : 0);
+    const ley = [['ch', 'Cheques', tCh], ['ze', 'Zelle', tZ], ['ca', 'Cash', tCa]];
+    const hoyMes = new Date().getMonth();
+    const meses = new Array(12).fill(0);
+    del.forEach((c) => { const m = Number(String(c.fecha || '').slice(5, 7)) - 1; if (m >= 0 && m < 12) meses[m] += Number(c.monto) || 0; });
+    const esteMes = meses[hoyMes], mesPasado = hoyMes > 0 ? meses[hoyMes - 1] : 0;
     $('pay-kpis').innerHTML = `
-      <div class="pay-kpi"><div class="l">Pagado en ${anio}</div><div class="v">${nomFmt(tCh + tZ + tCa)}</div><div class="s">Cheques ${nomFmt(tCh)} · Zelle ${nomFmt(tZ)}${tCa ? ' · Cash ' + nomFmt(tCa) : ''}</div></div>
-      <div class="pay-kpi click" data-ir="guardados"><div class="l">Cheques</div><div class="v">${nCh}</div><div class="s">Próximo: #${chqSiguienteNumero()}</div></div>
-      <div class="pay-kpi click ${sinNombre ? 'alerta' : ''}" data-ir="sin-nombre"><div class="l">Sin nombre</div><div class="v">${sinNombre}</div><div class="s">${sinNombre ? 'Toca para ponérselo' : 'Todo con nombre ✓'}</div></div>
-      <div class="pay-kpi click ${faltaW9 ? 'alerta' : ''}" data-ir="r1099"><div class="l">Llevan 1099</div><div class="v">${llevan}</div><div class="s">${faltaW9 ? faltaW9 + ' sin W-9' : (llevan ? 'Con W-9 ✓' : 'Ninguno todavía')}</div></div>`;
+      <div class="pay-hero-main">
+        <div class="pay-hero-lbl">Pagado en ${anio}</div>
+        <div class="pay-hero-total">${nomFmt(total)}</div>
+        <div class="pay-mix" role="img" aria-label="Cheques ${nomFmt(tCh)}, Zelle ${nomFmt(tZ)}, Cash ${nomFmt(tCa)}">${total > 0 ? ley.map(([k, , v]) => v > 0 ? `<i class="${k}" style="width:${pct(v).toFixed(2)}%"></i>` : '').join('') : '<i class="vacio"></i>'}</div>
+        <div class="pay-mix-ley">${ley.map(([k, n, v]) => `<span><b class="pay-dot ${k}"></b>${n}<em>${nomFmt(v)}</em></span>`).join('')}</div>
+      </div>
+      <div class="pay-hero-tiles">
+        <button type="button" class="pay-kpi click" data-ir="guardados"><span class="l">Cheques</span><span class="v">${nCh}</span><span class="s">Próximo #${chqSiguienteNumero()}</span></button>
+        <button type="button" class="pay-kpi click ${sinNombre ? 'alerta' : 'ok'}" data-ir="sin-nombre"><span class="l">Sin nombre</span><span class="v">${sinNombre}</span><span class="s">${sinNombre ? 'Toca para arreglar' : 'Todos ✓'}</span></button>
+        <button type="button" class="pay-kpi click ${faltaW9 ? 'alerta' : (llevan ? 'ok' : '')}" data-ir="r1099"><span class="l">Llevan 1099</span><span class="v">${llevan}</span><span class="s">${faltaW9 ? faltaW9 + ' sin W-9' : (llevan ? 'Con W-9 ✓' : 'Ninguno todavía')}</span></button>
+      </div>`;
     $('pay-kpis').querySelectorAll('.pay-kpi.click').forEach((k) => k.addEventListener('click', () => {
       const ir = k.dataset.ir;
       if (ir === 'sin-nombre') {
@@ -311,11 +325,9 @@
         payMostrar(sub); payAbrir(sub).then(() => { if (sub === 'guardados') { $('chq-sin-nombre').checked = true; chqRenderLista(); $('chq-tbl').scrollIntoView({ behavior: 'smooth' }); } });
       } else { payMostrar(ir); payAbrir(ir); }
     }));
-    const meses = new Array(12).fill(0);
-    del.forEach((c) => { const m = Number(String(c.fecha || '').slice(5, 7)) - 1; if (m >= 0 && m < 12) meses[m] += Number(c.monto) || 0; });
     const max = Math.max(1, ...meses);
-    $('pay-meses').innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Pagado por mes</div>
-      <div class="pay-meses">${meses.map((v, i) => `<div class="pay-mes${i === new Date().getMonth() ? ' hoy' : ''}" title="${MESES_CORTOS[i]}: ${nomFmt(v)}"><div class="b" style="height:${Math.round(v / max * 72)}px;${v ? '' : 'opacity:.25;'}"></div><div class="m">${MESES_CORTOS[i]}</div></div>`).join('')}</div>`;
+    $('pay-meses').innerHTML = `<div class="pay-hero-meses-hd"><span>Por mes</span><span>Este mes <b>${nomFmt(esteMes)}</b>${hoyMes > 0 ? ` · ${MESES_CORTOS[hoyMes - 1]} <b>${nomFmt(mesPasado)}</b>` : ''}</span></div>
+      <div class="pay-meses">${meses.map((v, i) => `<div class="pay-mes${i === hoyMes ? ' hoy' : ''}${i > hoyMes ? ' futuro' : ''}" title="${MESES_CORTOS[i]}: ${nomFmt(v)}"><div class="bw"><div class="b" style="height:${v ? Math.max(4, Math.round(v / max * 100)) : 0}%"></div></div><div class="m">${MESES_CORTOS[i].slice(0, 1)}<span>${MESES_CORTOS[i].slice(1)}</span></div></div>`).join('')}</div>`;
   }
 
   // ===================== UNIR NOMBRES =====================

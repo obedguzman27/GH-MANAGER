@@ -1,0 +1,252 @@
+/* =====================================================================
+   PAYROLL — diseño profesional (v217)
+   Encabezado oscuro como en Principal, pestañas segmentadas, cheque
+   realista y lista tipo libro contable. Va después de 50-diseno.css.
+   ===================================================================== */
+
+/* ---------- Encabezado oscuro ---------- */
+#panel-payroll .pay-hero {
+  background: var(--navy) !important; color: #fff; border: 0 !important;
+  border-radius: var(--r-lg); padding: 22px 22px 20px; box-shadow: var(--shadow-sm);
+  position: relative; overflow: hidden;
+}
+#panel-payroll .pay-hero::before, #panel-payroll .pay-hero::after { display: none !important; }
+.pay-hero-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.pay-hero-eyebrow { margin: 0; font: 700 22px var(--font-num); letter-spacing: .01em; color: #fff; display: flex; align-items: center; gap: 10px; }
+.pay-hero-anio { font: 600 12.5px var(--font-ui); letter-spacing: .02em; color: rgba(255,255,255,.75); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); padding: 3px 10px; border-radius: 999px; }
+.pay-hero-sub { margin: 4px 0 0; font: 500 13px var(--font-ui); color: rgba(255,255,255,.55); }
+.pay-hero-btn {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 8px 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.06); color: #fff; font: 600 13px var(--font-ui);
+  transition: background .15s var(--ease), border-color .15s var(--ease);
+}
+.pay-hero-btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.28); }
+.pay-hero-btn svg { width: 15px; height: 15px; }
+
+.pay-hero-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "tiles" "meses"; }
+.pay-hero-grid .pay-kpis { display: contents; }
+.pay-hero-main { grid-area: main; min-width: 0; }
+.pay-hero-tiles { grid-area: tiles; }
+.pay-hero-meses { grid-area: meses; min-width: 0; margin: 0 !important; }
+
+.pay-hero-lbl { font: 600 12.5px var(--font-ui); color: rgba(255,255,255,.6); letter-spacing: .02em; }
+.pay-hero-total { font: 700 40px/1.05 var(--font-num); letter-spacing: .005em; margin-top: 4px; font-variant-numeric: tabular-nums; color: #fff; }
+
+/* Barra con la mezcla Cheques / Zelle / Cash */
+.pay-mix { display: flex; gap: 3px; height: 8px; margin-top: 14px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.08); }
+.pay-mix i { display: block; height: 100%; border-radius: 2px; }
+.pay-mix i.vacio { width: 100%; background: transparent; }
+.pay-mix .ch, .pay-dot.ch { background: #F0915A; }
+.pay-mix .ze, .pay-dot.ze { background: #8FB8F2; }
+.pay-mix .ca, .pay-dot.ca { background: #5FD0B4; }
+.pay-mix-ley { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; }
+.pay-mix-ley span { display: inline-flex; align-items: center; gap: 7px; font: 500 12.5px var(--font-ui); color: rgba(255,255,255,.62); }
+.pay-mix-ley em { font-style: normal; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.pay-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* Tres indicadores */
+.pay-hero-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+#panel-payroll .pay-hero .pay-kpi {
+  all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  padding: 11px 12px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+  transition: background .15s var(--ease), border-color .15s var(--ease);
+}
+#panel-payroll .pay-hero .pay-kpi:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.22); }
+#panel-payroll .pay-hero .pay-kpi:focus-visible { outline: 2px solid #F0915A; outline-offset: 2px; }
+#panel-payroll .pay-hero .pay-kpi .l { font: 600 12px var(--font-ui); color: rgba(255,255,255,.6); text-transform: none; letter-spacing: .01em; }
+#panel-payroll .pay-hero .pay-kpi .v { font: 700 26px/1.1 var(--font-num); color: #fff; margin: 2px 0 0; font-variant-numeric: tabular-nums; }
+#panel-payroll .pay-hero .pay-kpi .s { font: 500 11.5px var(--font-ui); color: rgba(255,255,255,.5); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#panel-payroll .pay-hero .pay-kpi.alerta { border-color: rgba(255,178,122,.5); background: rgba(240,145,90,.1); }
+#panel-payroll .pay-hero .pay-kpi.alerta .v, #panel-payroll .pay-hero .pay-kpi.alerta .s { color: #FFB27A; }
+#panel-payroll .pay-hero .pay-kpi.ok .s { color: #7FDCC4; }
+
+/* Gráfica por mes */
+.pay-hero-meses-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; font: 600 12.5px var(--font-ui); color: rgba(255,255,255,.6); }
+.pay-hero-meses-hd b { color: #fff; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pay-hero-meses-hd em { font-style: normal; font-weight: 700; font-size: 11.5px; margin-left: 4px; }
+.pay-hero-meses-hd em.sube { color: #FFB27A; }
+.pay-hero-meses-hd em.baja { color: #7FDCC4; }
+.pay-hero .pay-meses { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px; height: 96px; align-items: stretch; position: relative; }
+.pay-hero .pay-mes { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 5px; height: 100%; min-width: 0; }
+.pay-hero .pay-mes .bw { display: flex; align-items: flex-end; justify-content: center; height: 100%; border-bottom: 1px solid rgba(255,255,255,.12); }
+.pay-hero .pay-mes .b { width: 100%; max-width: 34px; border-radius: 5px 5px 2px 2px; background: rgba(255,255,255,.22); opacity: 1 !important; min-height: 0; transition: background .15s var(--ease); }
+.pay-hero .pay-mes:hover .b { background: rgba(255,255,255,.38); }
+.pay-hero .pay-mes.hoy .b { background: linear-gradient(180deg, #F6A06C, #E06E2C); }
+.pay-hero .pay-mes.futuro .bw { border-bottom-style: dashed; }
+.pay-hero .pay-mes .m { text-align: center; font: 600 10.5px var(--font-ui); color: rgba(255,255,255,.45); }
+.pay-hero .pay-mes.hoy .m { color: #fff; }
+
+/* Unir nombres (panel claro dentro del encabezado) */
+.pay-unir { margin-top: 18px; border-radius: 14px; padding: 14px; background: var(--card); color: var(--ink); }
+
+@media (min-width: 1000px) {
+  #panel-payroll .pay-hero { padding: 26px 28px 24px; }
+  .pay-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); grid-template-areas: "main meses" "tiles meses"; column-gap: 36px; row-gap: 18px; }
+  .pay-hero-total { font-size: 46px; }
+  .pay-hero .pay-meses { height: 132px; }
+}
+@media (max-width: 560px) {
+  #panel-payroll .pay-hero { padding: 18px 16px 16px; border-radius: 22px; }
+  .pay-hero-top { margin-bottom: 14px; }
+  .pay-hero-sub { display: none; }
+  .pay-hero-btn { padding: 7px 10px; font-size: 12.5px; }
+  .pay-hero-total { font-size: 36px; }
+  .pay-hero-grid { gap: 14px; }
+  .pay-mix-ley { gap: 4px 12px; }
+  .pay-mix-ley span { font-size: 12px; }
+  #panel-payroll .pay-hero .pay-kpi { padding: 9px 10px; }
+  #panel-payroll .pay-hero .pay-kpi .v { font-size: 22px; }
+  #panel-payroll .pay-hero .pay-kpi .l { font-size: 11.5px; }
+  #panel-payroll .pay-hero .pay-kpi .s { font-size: 11px; }
+  .pay-hero .pay-meses { height: 74px; gap: 4px; }
+  .pay-hero .pay-mes .m span { display: none; }
+}
+
+/* ---------- Pestañas segmentadas ---------- */
+.pay-seg {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px;
+  margin: 4px 0 14px; padding: 4px; border-radius: 14px;
+  background: var(--track, var(--surface-2)); border: 1px solid var(--border-soft);
+}
+.pay-seg .pay-subtab {
+  display: inline-flex !important; align-items: center; justify-content: center; gap: 7px; min-width: 0;
+  border: 0 !important; border-radius: 10px !important; background: transparent !important; box-shadow: none !important;
+  color: var(--muted) !important; padding: 9px 8px !important; margin: 0 !important;
+  font: 600 13.5px var(--font-ui) !important; white-space: nowrap; cursor: pointer;
+  transition: background .15s var(--ease), color .15s var(--ease);
+}
+.pay-seg .pay-subtab:hover { color: var(--ink) !important; }
+.pay-seg .pay-subtab.active { background: var(--card) !important; color: var(--ink) !important; box-shadow: 0 1px 2px rgba(14,24,48,.08), 0 2px 8px rgba(14,24,48,.06) !important; }
+.pay-seg .pay-subtab.active svg { color: var(--accent); }
+.pay-seg .pay-subtab svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.pay-seg .pay-subtab::after { display: none !important; }
+.pay-seg .l-corto { display: none; }
+@media (max-width: 760px) { .pay-seg .l-largo { display: none; } .pay-seg .l-corto { display: inline; } }
+@media (max-width: 560px) {
+  .pay-seg .pay-subtab { flex-direction: column; gap: 3px; padding: 7px 2px !important; font-size: 11.5px !important; }
+  .pay-seg .pay-subtab svg { width: 17px; height: 17px; }
+}
+
+/* ---------- Hacer cheque ---------- */
+.pay-hc { display: grid; grid-template-columns: minmax(0, 1fr); }
+.pay-hc-izq > .pay-step:first-child { border-top: 0; padding-top: 2px; }
+.pay-step-b { max-width: none; }
+@media (min-width: 1100px) {
+  .pay-hc { grid-template-columns: minmax(0, 1fr) minmax(400px, 0.95fr); gap: 32px; align-items: start; }
+  .pay-hc-der { position: sticky; top: 78px; }
+  .pay-hc-der .pay-step-rev { border: 1px solid var(--border-soft); border-radius: 18px; background: var(--surface-2); padding: 18px 18px 16px; }
+  .pay-hc-der .pay-plegable { margin-top: 14px; border-top: 0; padding: 0 4px; }
+}
+
+/* Lista de pagos de la semana */
+#panel-payroll .pay-quien { border: 1px solid var(--border); border-radius: 14px; padding: 2px 0; background: var(--card); overflow: hidden; }
+#panel-payroll .pay-quien > label { padding: 11px 14px !important; }
+#panel-payroll .pay-quien > div { padding-left: 42px !important; padding-right: 14px !important; }
+#panel-payroll .pay-quien > label > strong { font: 700 15.5px var(--font-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#panel-payroll .pay-quien input[type=checkbox] { accent-color: var(--accent); }
+#panel-payroll .pay-quien label { transition: background .12s var(--ease); }
+#panel-payroll .pay-quien label:hover { background: var(--surface-2); }
+#panel-payroll .pay-quien label:has(input:checked) { background: var(--accent-bg); }
+
+/* Resumen debajo del cheque */
+.pay-chk-total { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--border-soft); font: 500 13px var(--font-ui); color: var(--muted); }
+.pay-chk-total b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.pay-chk-total > b { font: 700 18px var(--font-num); }
+
+#panel-payroll .pay-btns .gc-save-btn, #panel-payroll .pay-btns .gc-action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+#panel-payroll .pay-btns svg { width: 16px; height: 16px; flex: 0 0 auto; }
+
+/* ---------- Cheque (vista previa realista) ---------- */
+#panel-payroll .pay-chk {
+  position: relative; border-radius: 6px; padding: 16px 18px 12px; color: #1A2B3C;
+  border: 1px solid #C5D5CE;
+  background:
+    repeating-linear-gradient(45deg, rgba(36,92,80,.04) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-45deg, rgba(36,92,80,.04) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, #F5F9F7 0%, #E8F0EC 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 2px 4px rgba(14,24,48,.06), 0 10px 26px rgba(14,24,48,.10);
+  font-family: var(--font-ui);
+}
+#panel-payroll .pay-chk::before { content: ''; position: absolute; inset: 5px; border: 1px solid rgba(36,92,80,.14); border-radius: 3px; pointer-events: none; }
+#panel-payroll .pay-chk .lbl { font: 600 8.5px/1.15 var(--font-ui); text-transform: uppercase; letter-spacing: .08em; color: #5A7068; flex: 0 0 auto; }
+#panel-payroll .pay-chk-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin: 0; }
+#panel-payroll .pay-chk-co { font: 800 14.5px var(--font-ui); letter-spacing: .06em; color: #13233A; }
+#panel-payroll .pay-chk-dir { font: 500 10.5px/1.35 var(--font-ui); color: #4E6360; margin-top: 2px; max-width: 240px; }
+#panel-payroll .pay-chk-no { font: 700 17px var(--font-num); color: #13233A; letter-spacing: .02em; }
+#panel-payroll .pay-chk-fecha { display: flex; align-items: flex-end; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+#panel-payroll .pay-chk-fecha .ln { flex: 0 0 120px; text-align: center; }
+#panel-payroll .pay-chk-row { display: flex; align-items: flex-end; gap: 8px; margin-top: 12px; }
+#panel-payroll .pay-chk .ln { flex: 1; min-width: 0; border-bottom: 1px solid #8DA39B; min-height: 19px; padding: 0 4px 1px; font: 600 13.5px var(--font-ui); color: #13233A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#panel-payroll .pay-chk .ln.nom { font-size: 14.5px; }
+#panel-payroll .pay-chk .ln.words { white-space: normal; font-size: 11.5px; line-height: 1.35; font-weight: 600; }
+#panel-payroll .pay-chk .ln.memo { flex: 0 1 42%; }
+#panel-payroll .pay-chk-amt { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid #6F877F; border-radius: 3px; padding: 3px 9px; font: 700 15px var(--font-num); color: #13233A; background: rgba(255,255,255,.7); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#panel-payroll .pay-chk-amt i { font-style: normal; color: #5A7068; }
+#panel-payroll .pay-chk-firma { flex: 1; display: flex; flex-direction: column; gap: 2px; margin-left: 10px; min-width: 0; }
+#panel-payroll .pay-chk-firma .ln { flex: 0 0 auto; min-height: 18px; }
+#panel-payroll .pay-chk-firma .lbl { text-align: center; }
+#panel-payroll .pay-chk-pie { align-items: flex-start; }
+#panel-payroll .pay-chk-pie > .lbl { padding-top: 10px; }
+#panel-payroll .pay-chk-pie > .ln.memo { align-self: flex-start; margin-top: 2px; }
+#panel-payroll .pay-chk-micr { margin-top: 12px; font: 500 13px 'Courier New', ui-monospace, monospace; letter-spacing: .18em; color: #3E5148; opacity: .75; }
+@media (max-width: 560px) {
+  #panel-payroll .pay-chk { padding: 13px 13px 10px; }
+  #panel-payroll .pay-chk-co { font-size: 13px; }
+  #panel-payroll .pay-chk-dir { display: none; }
+  #panel-payroll .pay-chk-fecha .ln { flex-basis: 96px; }
+  #panel-payroll .pay-chk-amt { font-size: 14px; padding: 2px 7px; }
+}
+
+/* ---------- Listas (cheques guardados, Zelle y Cash) ---------- */
+#panel-payroll .pay-mesg { margin: 0; }
+#panel-payroll .pay-mesg + .pay-mesg { margin-top: 2px; }
+#panel-payroll summary.pay-mes-hd {
+  list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 10px;
+  padding: 14px 6px 8px; font: 700 12px var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+}
+#panel-payroll summary.pay-mes-hd::-webkit-details-marker { display: none; }
+#panel-payroll summary.pay-mes-hd::before {
+  content: ''; width: 7px; height: 7px; flex: 0 0 auto; border-right: 2px solid var(--muted-soft); border-bottom: 2px solid var(--muted-soft);
+  transform: rotate(-45deg); transition: transform .15s var(--ease); margin-right: 2px;
+}
+#panel-payroll .pay-mesg[open] > summary.pay-mes-hd::before { transform: rotate(45deg); }
+#panel-payroll summary.pay-mes-hd > span { flex: 1; }
+#panel-payroll summary.pay-mes-hd b { font: 700 14px var(--font-num); letter-spacing: .01em; text-transform: none; color: var(--ink); display: inline-flex; align-items: baseline; gap: 10px; }
+#panel-payroll summary.pay-mes-hd b small { font: 600 11.5px var(--font-ui); color: var(--muted); letter-spacing: 0; margin: 0; }
+#panel-payroll .pay-mesg:not([open]) > summary.pay-mes-hd { padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); }
+#panel-payroll summary.pay-mes-hd:hover { color: var(--ink); }
+
+#panel-payroll .pay-grupo { border: 1px solid var(--border-soft); border-radius: 14px; box-shadow: none; }
+#panel-payroll .pay-row-main { padding: 10px 14px; gap: 12px; }
+#panel-payroll .pay-ico { width: 40px; height: 40px; border-radius: 10px; font: 700 13.5px var(--font-num); background: var(--surface-2); color: var(--ink); border: 1px solid var(--border-soft); }
+#panel-payroll .pay-ico small { font: 700 9px var(--font-ui); color: var(--muted); opacity: 1; }
+#panel-payroll .pay-ico.zel { background: var(--blue-bg); color: var(--blue); border-color: transparent; font: 700 11px var(--font-ui); }
+#panel-payroll .pay-ico.cash { background: var(--teal-bg); color: var(--teal-dk); border-color: transparent; font: 700 11px var(--font-ui); }
+#panel-payroll .pay-ico.per { background: var(--accent-bg); color: var(--accent-dk); border-color: transparent; font: 700 13.5px var(--font-ui); }
+#panel-payroll .pay-row-nom { font: 600 14.5px var(--font-ui); }
+#panel-payroll .pay-row-amt { font: 700 16.5px var(--font-num); letter-spacing: .01em; }
+#panel-payroll .pay-row.open { background: var(--surface-2); }
+#panel-payroll .pay-row-acts { padding-left: 66px; }
+
+/* Totales por persona */
+#panel-payroll .pay-personas { border-radius: 14px; margin-bottom: 6px; }
+#panel-payroll .pay-per-top strong { font: 700 15px var(--font-num); }
+
+/* Herramientas (buscar, año, filtros) */
+#panel-payroll .pay-search input, #panel-payroll .pay-tools select { border-width: 1px; height: 42px; }
+#panel-payroll .pay-chip { border-width: 1px; }
+#panel-payroll .pay-stat { border: 1px solid var(--border-soft); }
+#panel-payroll .pay-stat .v { font: 700 21px var(--font-num); }
+
+@media (max-width: 560px) {
+  #panel-payroll .pay-row-main { padding: 10px 12px; gap: 10px; }
+  #panel-payroll .pay-ico { width: 36px; height: 36px; font-size: 12.5px; }
+  #panel-payroll .pay-row-nom { font-size: 14px; }
+  #panel-payroll .pay-row-amt { font-size: 15.5px; }
+  #panel-payroll .pay-row-acts { padding-left: 12px; }
+}
+
+/* Modo oscuro: el cheque sigue siendo "papel" claro; lo demás usa los colores del tema */
+:root[data-tema="oscuro"] #panel-payroll .pay-hero { background: #1B1D23 !important; border: 1px solid #262931 !important; }
+:root[data-tema="oscuro"] .pay-seg .pay-subtab.active { box-shadow: none !important; }

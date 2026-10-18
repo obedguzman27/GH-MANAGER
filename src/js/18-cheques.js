@@ -311,6 +311,17 @@
     $('chq-pv-a').textContent = $('chq-a').value.trim();
     $('chq-pv-monto').textContent = m > 0 ? m.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
     $('chq-pv-memo').textContent = $('chq-memo').value.trim();
+    const dir = $('chq-pv-dir'); if (dir) dir.textContent = (typeof cfgFacturaDireccion !== 'undefined' && cfgFacturaDireccion) || '';
+    const micr = $('chq-pv-micr'); if (micr) micr.textContent = String($('chq-numero').value || '').padStart(6, '0');
+    // Resumen de lo que cubre el cheque (pagos de nómina marcados)
+    const tot = $('chq-pv-total');
+    if (tot) {
+      let marcados = []; try { marcados = chqPagosMarcados(); } catch (e) {}
+      const nGan = (() => { try { return chqGananciasMarcadas().length; } catch (e) { return 0; } })();
+      const n = marcados.length + nGan;
+      tot.hidden = !n;
+      if (n) tot.innerHTML = `<span>Cubre <b>${n}</b> pago${n === 1 ? '' : 's'} de nómina</span><b>${nomFmt(m > 0 ? m : 0)}</b>`;
+    }
   }
   ['chq-a', 'chq-fecha', 'chq-memo', 'chq-numero'].forEach((id) => { $(id).addEventListener('input', () => chqActualizarLetras()); $(id).addEventListener('change', () => chqActualizarLetras()); });
 
@@ -368,7 +379,11 @@
     </div>`;
   }
   // Agrupa por mes (la lista ya viene ordenada, más nuevo primero)
-  function payListaPorMes(lista, filaFn) {
+  // Meses que el usuario abrió o cerró a mano (se respeta al volver a dibujar)
+  const payMesesEstado = {};
+  function payListaPorMes(lista, filaFn, op) {
+    op = op || {};
+    const id = op.id || 'x', todos = !!op.todosAbiertos;
     const meses = [];
     lista.forEach((c) => {
       const k = String(c.fecha || '').slice(0, 7) || 'sin';
@@ -376,18 +391,26 @@
       if (!g || g.k !== k) { g = { k, items: [] }; meses.push(g); }
       g.items.push(c);
     });
-    return meses.map((g) => {
+    return meses.map((g, i) => {
       const m = Number(g.k.slice(5, 7)) - 1;
       const tit = g.k === 'sin' ? 'Sin fecha' : `${PAY_MESES_LARGOS[m] || ''} ${g.k.slice(0, 4)}`;
       const tot = g.items.filter((c) => !c.anulado).reduce((t, c) => t + (Number(c.monto) || 0), 0);
-      return `<div class="pay-mes-hd"><span>${tit}</span><b><small>${g.items.length}</small>${nomFmt(tot)}</b></div>
-        <div class="pay-grupo">${g.items.map(filaFn).join('')}</div>`;
+      const k = id + ':' + g.k;
+      const abierto = k in payMesesEstado ? payMesesEstado[k] : (todos || i < 2);
+      return `<details class="pay-mesg" data-k="${escapeHtml(k)}"${abierto ? ' open' : ''}>
+        <summary class="pay-mes-hd"><span>${tit}</span><b><small>${g.items.length} pago${g.items.length === 1 ? '' : 's'}</small>${nomFmt(tot)}</b></summary>
+        <div class="pay-grupo">${g.items.map(filaFn).join('')}</div></details>`;
     }).join('');
   }
   // Tocar una fila abre sus botones (y cierra las demás)
   function payActivarFilas(cont) {
     if (cont.dataset.filas) return;
     cont.dataset.filas = '1';
+    cont.addEventListener('click', (e) => {
+      const sm = e.target.closest('summary.pay-mes-hd');
+      if (!sm || !cont.contains(sm)) return;
+      const d = sm.parentElement; payMesesEstado[d.dataset.k] = !d.open;   // se toca antes de abrir/cerrar
+    });
     cont.addEventListener('click', (e) => {
       const main = e.target.closest('.pay-row-main');
       if (!main || !cont.contains(main) || main.classList.contains('r99-f')) return;
@@ -463,12 +486,13 @@
     $('chq-empty').style.display = lista.length ? 'none' : 'block';
     $('chq-empty').textContent = chqLista.length ? 'No hay cheques con esa búsqueda.' : 'Todavía no hay cheques.';
     $('chq-tbl').style.display = lista.length ? 'block' : 'none';
+    const filtrando = !!q || $('chq-sin-nombre').checked || ver !== 'vigentes' || lista.length <= 12;
     tbody.innerHTML = payListaPorMes(lista, (c) => payFilaHTML(c, `
       ${esZelle(c) ? '' : `<button type="button" class="pay-act chq-reimp" data-id="${escapeHtml(c.id)}">${PAY_SVG.imp} Reimprimir</button>`}
       <button type="button" class="pay-act chq-editar" data-id="${escapeHtml(c.id)}">${PAY_SVG.ed} Editar</button>
       ${c.anulado ? `<button type="button" class="pay-act chq-reactivar" data-id="${escapeHtml(c.id)}">${PAY_SVG.si} Quitar anulado</button>`
                   : `<button type="button" class="pay-act chq-anular" data-id="${escapeHtml(c.id)}">${PAY_SVG.no} Anular</button>`}
-      <button type="button" class="pay-act peligro chq-borrar" data-id="${escapeHtml(c.id)}">${PAY_SVG.del} Borrar</button>`));
+      <button type="button" class="pay-act peligro chq-borrar" data-id="${escapeHtml(c.id)}">${PAY_SVG.del} Borrar</button>`), { id: 'chq', todosAbiertos: filtrando });
     payActivarFilas(tbody);
     const buscar = (id) => chqLista.find((x) => x.id === id);
     tbody.querySelectorAll('.chq-reimp').forEach((b) => b.addEventListener('click', () => {
