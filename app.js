@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v223';
+  window.GH_APP_VERSION = 'v224';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -10344,6 +10344,8 @@
       },
       // talones: debajo del nombre que ya viene impreso arriba de cada uno
       talones: [{ top: 0.55, alto: 2.75 }, { top: 7.45, alto: 3.0 }],
+      // espacio del papel que le toca a cada talón (nunca se pasa de ahí)
+      zonas: [{ ini: 0.3, fin: 3.38 }, { ini: 7.12, fin: 10.5 }],
       guias: [{ top: 0, alto: 3.5, txt: 'Stub 1' }, { top: 3.5, alto: 3.5, txt: 'Check 8½" x 3½" — TEST PRINT, NOT A CHECK' }, { top: 7, alto: 4, txt: 'Stub 2' }]
     },
     // Cheque arriba (el formato que usaba la app antes)
@@ -10357,6 +10359,7 @@
         memo:   { x: 0.80, y: 2.82 }
       },
       talones: [{ top: 3.85, alto: 3.15 }, { top: 7.6, alto: 3.15 }],
+      zonas: [{ ini: 3.62, fin: 7.15 }, { ini: 7.37, fin: 10.85 }],
       guias: [{ top: 0, alto: 3.5, txt: 'Check 8½" x 3½" — TEST PRINT, NOT A CHECK' }, { top: 3.5, alto: 3.75, txt: 'Stub 1' }, { top: 7.25, alto: 3.75, txt: 'Stub 2' }]
     }
   };
@@ -11025,6 +11028,17 @@
     const letras = chqEnLetras(c.monto);
     const relleno = '*'.repeat(Math.max(3, 78 - letras.length));
     const talones = chqCfg.talones !== 'no';
+    // Cada talón se queda dentro de su espacio del papel, aunque se mueva con
+    // el ajuste: si se pasaría, se recorta su alto (y la letra se achica sola).
+    // "Mover todo" corrige la impresora, así que el espacio se mueve con él.
+    const T = [0, 1].map((i) => {
+      const z = F.zonas[i], aj = chqAj('talon' + (i + 1));
+      let top = F.talones[i].top + aj.y, alto = F.talones[i].alto;
+      top = Math.min(Math.max(top, z.ini), z.fin - 1);           // al menos 1" de alto
+      alto = Math.min(alto, z.fin - top);
+      const x = Math.min(Math.max(aj.x, -0.3), 0.3);             // de 0.2" a 8.3" de ancho
+      return { top: top + dy, alto, x: x + dx };
+    });
     const guia = prueba ? `
       ${F.guias.map((g) => `<div class="guia" style="top:${g.top}in;height:${g.alto}in;"><span>${g.txt}</span></div>`).join('')}
       <div class="lbl" style="left:${(P('fecha').x - 0.05).toFixed(2)}in;top:${(P('fecha').y - 0.2).toFixed(2)}in;">DATE</div>
@@ -11055,6 +11069,9 @@
   .t-det .dias { font-size: .88em; color: #333; padding-left: 1.2em; margin-top: .1em; }
   .t-det .src { font-size: .88em; color: #555; font-weight: normal; }
   .t-total { margin-top: .6em; font-weight: bold; font-size: 1.2em; text-align: right; }
+  .talon.compacto .dias, .talon.compacto td.dia { display: none; }
+  .talon.compacto tr:has(td.dia) { display: none; }
+  .t-mas { font-size: .9em; color: #444; margin-top: .3em; }
 </style></head><body><div class="pg">
   ${guia}
   <div class="f" style="${pos('fecha')}">${escapeHtml(chqFechaUS(c.fecha))}</div>
@@ -11062,19 +11079,32 @@
   <div class="f letras" style="${pos('letras')}">${escapeHtml(letras)} ${relleno}</div>
   <div class="f" style="${pos('a')}">${escapeHtml(c.a)}</div>
   ${c.memo ? `<div class="f memo" style="${pos('memo')}">${escapeHtml(c.memo)}</div>` : ''}
-  ${talones ? chqTalonHTML(c, F.talones[0].top + dy + chqAj('talon1').y, (chqPagosDeCheque(c).length > 1 || (c.ganancias && c.ganancias.length)) ? 'Payee copy' : 'Employee copy', F.talones[0].alto, dx + chqAj('talon1').x) + chqTalonHTML(c, F.talones[1].top + dy + chqAj('talon2').y, 'Company copy', F.talones[1].alto, dx + chqAj('talon2').x) : ''}
+  ${talones ? chqTalonHTML(c, T[0].top, (chqPagosDeCheque(c).length > 1 || (c.ganancias && c.ganancias.length)) ? 'Payee copy' : 'Employee copy', T[0].alto, T[0].x) + chqTalonHTML(c, T[1].top, 'Company copy', T[1].alto, T[1].x) : ''}
 </div>
 <script>
   // Si el talón no cabe en su espacio, se achica la letra poco a poco hasta que quepa
   (function () {
+    var noCabe = function (t) { return t.scrollHeight > t.clientHeight + 1; };
     document.querySelectorAll('.talon').forEach(function (t) {
       var fs = 10;
       t.style.fontSize = fs + 'pt';
-      while (t.scrollHeight > t.clientHeight + 1 && fs > 5) { fs -= 0.25; t.style.fontSize = fs + 'pt'; }
+      while (noCabe(t) && fs > 6.5) { fs -= 0.25; t.style.fontSize = fs + 'pt'; }
+      // Todavía no cabe: se quitan las líneas de los días (el total y cada pago se quedan)
+      if (noCabe(t)) t.classList.add('compacto');
+      while (noCabe(t) && fs > 4.5) { fs -= 0.25; t.style.fontSize = fs + 'pt'; }
+      // Último recurso: se dejan solo los pagos que caben y se avisa cuántos faltan
+      var filas = t.querySelectorAll('.t-det tr');
+      var quitadas = 0;
+      for (var i = filas.length - 1; i > 0 && noCabe(t); i--) { filas[i].style.display = 'none'; quitadas++; }
+      if (quitadas) { var n = document.createElement('div'); n.className = 't-mas'; n.textContent = '+ ' + quitadas + ' more line(s) — see payroll records'; t.querySelector('.t-total').before(n);
+        for (var j = filas.length - quitadas - 1; j > 0 && noCabe(t); j--) { filas[j].style.display = 'none'; quitadas++; n.textContent = '+ ' + quitadas + ' more line(s) — see payroll records'; } }
     });
   })();
 <\/script></body></html>`;
   }
+
+  // Solo para las pruebas automáticas (servidor local)
+  if (location.hostname === '127.0.0.1') window.__GH_TEST_CHQ_DOC = (pagos) => chqDocumento({ numero: 2004, fecha: '2026-10-19', a: 'CRA HVAC', monto: 16000, memo: 'WORK', pagosSnap: pagos }, false);
 
   function chqValidar(c) {
     if (!c.a) { toast('Escribe a quién se le paga', 'error'); $('chq-a').focus(); return false; }
@@ -11178,6 +11208,11 @@
     const repetido = chqLista.find((x) => x.metodo !== 'zelle' && Number(x.numero) === c.numero && !x.anulado);
     if (repetido) {
       toast(`El cheque #${c.numero} ya se usó (${repetido.a}). Reimprímelo desde Cheques guardados o cambia el número.`, 'error', 5000);
+      return;
+    }
+    // El número del registro tiene que ser el mismo que trae impreso la hoja
+    if (!await gcConfirm(`¿La hoja de cheque en la impresora es la #${c.numero}?\n\nEl número viene impreso arriba a la derecha de la hoja.`, { okText: `Sí, es la #${c.numero}`, cancelText: 'No, cambiar número' })) {
+      $('chq-numero').focus(); $('chq-numero').select && $('chq-numero').select();
       return;
     }
     c.id = Date.now().toString() + '-' + Math.random().toString(36).slice(2, 7);

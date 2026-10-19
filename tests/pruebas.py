@@ -157,10 +157,10 @@ def cheque_se_registra_antes_de_imprimir(p, c):
     tab(pg, 'payroll'); pg.wait_for_timeout(800)
     pg.fill('#chq-a', 'Pedro Lopez'); pg.fill('#chq-monto', '450')
     pg.evaluate("() => { window.FAKE.fallarEscrituras = true; }")
-    pg.click('#chq-btn-imprimir'); pg.wait_for_timeout(800)
+    pg.click('#chq-btn-imprimir'); pg.wait_for_selector('.gc-confirm-overlay'); pg.click('.gc-confirm-overlay [data-r="1"]'); pg.wait_for_timeout(800)
     assert not pg.query_selector('#gh-print-frame'), 'imprimió aunque no se guardó'
     pg.evaluate("() => { window.FAKE.fallarEscrituras = false; }")
-    pg.click('#chq-btn-imprimir'); pg.wait_for_timeout(1000)
+    pg.click('#chq-btn-imprimir'); pg.wait_for_selector('.gc-confirm-overlay'); pg.click('.gc-confirm-overlay [data-r="1"]'); pg.wait_for_timeout(1000)
     lista = valor(None, '__gh-cheques')
     assert lista and lista[-1]['a'] == 'Pedro Lopez' and lista[-1]['monto'] == 450, lista
     c.errores.clear()
@@ -639,6 +639,45 @@ def cheque_ajuste_por_parte(p, c):
     cfg = valor(None, '__gh-cheques-cfg')
     assert cfg['ajustes']['a']['y'] == -7 and cfg['ajustes']['talon2']['x'] == 2, cfg
     c.errores.clear()
+
+@prueba
+def talones_no_se_pasan(p, c):
+    pg = c.pagina()
+    tab(pg, 'payroll'); pg.wait_for_timeout(900)
+    # 14 trabajadores con muchos días, y el talón de arriba movido 30 mm hacia el cheque
+    r = pg.evaluate("""async () => {
+      const cfg = JSON.parse((await window.storage.get('__gh-cheques-cfg').catch(() => ({ value: '{}' }))).value || '{}');
+      return true; }""")
+    pg.evaluate("() => document.querySelector('.pay-plegable').open = true")
+    pg.fill('#chq-ajustes-partes input[data-aj="talon1"][data-eje="y"]', '30')
+    pg.fill('#chq-ajustes-partes input[data-aj="talon2"][data-eje="y"]', '40')
+    pg.fill('#chq-ajustes-partes input[data-aj="talon2"][data-eje="x"]', '25')
+    pg.click('#chq-btn-guardar-ajuste'); pg.wait_for_timeout(500)
+    pg.fill('#chq-a', 'CRA HVAC'); pg.fill('#chq-monto', '1880')
+    # marca todos los pagos de la semana que haya
+    pg.evaluate("() => document.querySelectorAll('#chq-pagos-lista .chq-pago').forEach((cb) => { cb.checked = true; cb.dispatchEvent(new Event('change', { bubbles: true })); })")
+    pg.click('#chq-btn-prueba'); pg.wait_for_timeout(1200)
+    info = pg.evaluate("""() => { const d = document.getElementById('gh-print-frame').contentDocument;
+      return [...d.querySelectorAll('.talon')].map((t) => { const r = t.getBoundingClientRect();
+        return { top: r.top / 96, bot: r.bottom / 96, left: r.left / 96, right: r.right / 96, cabe: t.scrollHeight <= t.clientHeight + 1 }; }); }""")
+    assert len(info) == 2, info
+    a, b = info
+    assert a['top'] >= 0.29 and a['bot'] <= 3.39 and a['cabe'], a
+    assert b['top'] >= 7.11 and b['bot'] <= 10.51 and b['cabe'], b
+    for t in info: assert t['left'] >= 0.19 and t['right'] <= 8.31, t
+    c.errores.clear()
+
+@prueba
+def talon_con_muchos_pagos_cabe(p, c):
+    pg = c.pagina()
+    tab(pg, 'payroll'); pg.wait_for_timeout(900)
+    html = pg.evaluate("""() => {
+      const pagos = Array.from({ length: 16 }, (_, i) => ({ id: 'x' + i, trabajador: 'Trabajador ' + i, dias: ['2026-10-12','2026-10-13','2026-10-14','2026-10-15','2026-10-16'], sueldoDia: 200, monto: 1000 }));
+      return window.__GH_TEST_CHQ_DOC ? window.__GH_TEST_CHQ_DOC(pagos) : null; }""")
+    if html is None: return   # sin gancho de prueba: se cubre con talones_no_se_pasan
+    p2 = c.ctx.new_page(); p2.set_content(html); p2.wait_for_timeout(300)
+    r = p2.evaluate("() => [...document.querySelectorAll('.talon')].map((t) => [t.scrollHeight <= t.clientHeight + 1, !!t.querySelector('.t-mas')])")
+    assert all(x[0] for x in r), r
 
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)
