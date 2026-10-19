@@ -1,6 +1,7 @@
 // Construye GH Manager a partir de src/.
 //   node build.mjs           -> versión de prueba en ./v2/
 //   node build.mjs --raiz    -> versión principal en la raíz del repo
+//   node build.mjs --app     -> app de iPhone (Capacitor) en ./app-iphone/www
 //   node build.mjs --verificar -> rearma el index.html original (comprobación)
 import fs from 'fs';
 import path from 'path';
@@ -24,7 +25,8 @@ if (args.has('--verificar')) {
   process.exit(html === orig ? 0 : 1);
 }
 
-const destino = args.has('--raiz') ? '.' : 'v2';
+const esApp = args.has('--app');
+const destino = esApp ? 'app-iphone/www' : (args.has('--raiz') ? '.' : 'v2');
 fs.mkdirSync(path.join(destino, 'vendor'), { recursive: true });
 
 const version = JSON.parse(leer('src/version.json'));
@@ -57,6 +59,10 @@ fs.writeFileSync(path.join(destino, 'app.js'), sub(js));
 fs.writeFileSync(path.join(destino, 'app.css'), css);
 for (const f of ['supabase-storage.js', 'browser-storage.js', 'service-worker.js', 'manifest.json']) {
   fs.writeFileSync(path.join(destino, f), sub(leer(path.join('src', f))));
+}
+if (esApp) {
+  for (const f of ['icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'apple-touch-icon.png']) fs.copyFileSync(f, path.join(destino, f));
+  for (const f of fs.readdirSync('vendor')) fs.copyFileSync(path.join('vendor', f), path.join(destino, 'vendor', f));
 }
 if (destino === 'v2') {
   const man = JSON.parse(fs.readFileSync(path.join(destino, 'manifest.json'), 'utf8'));

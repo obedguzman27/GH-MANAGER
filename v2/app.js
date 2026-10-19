@@ -7,7 +7,9 @@
   // La versión nueva NO se instala sola a media tarea (antes la app se
   // recargaba sin avisar y se perdía lo que estabas escribiendo): se descarga
   // en segundo plano y aparece un aviso; se aplica cuando tocas "Actualizar".
-  if ('serviceWorker' in navigator) {
+  // En la app del App Store (Capacitor) los archivos ya vienen dentro: sin service worker.
+  window.GH_ES_APP_NATIVA = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  if ('serviceWorker' in navigator && !window.GH_ES_APP_NATIVA) {
     window.addEventListener('load', () => {
       let pedidaPorUsuario = false;
       navigator.serviceWorker.register('service-worker.js').then((reg) => {
