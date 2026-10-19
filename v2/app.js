@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v221 · prueba';
+  window.GH_APP_VERSION = 'v222 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -10317,9 +10317,13 @@
 
 // ---- 18-cheques.js ----
   // ===================== CHEQUES =====================
-  // Imprime en cheques láser de hoja carta con el cheque arriba (8½" x 3½")
-  // y dos talones abajo. Las posiciones están en pulgadas desde la esquina
-  // de arriba a la izquierda de la hoja; el ajuste en mm mueve todo junto.
+  // Imprime en cheques láser de hoja carta (cheque de 8½" x 3½" + 2 talones).
+  // Dos formatos: cheque EN MEDIO (talón arriba y abajo, como el papel
+  // "M/P CHECK" de Bank of America) o cheque ARRIBA (dos talones abajo).
+  // Solo se imprime lo que falta (fecha, cantidad, a quién, letras, memo):
+  // el banco, la cuenta y el número ya vienen impresos en el papel.
+  // Las posiciones son en pulgadas desde la esquina de arriba a la izquierda
+  // del cheque; el ajuste en mm mueve todo junto.
   // Registro de cheques/Zelle/cash: UNO SOLO para todas las bases de datos.
   // Las claves que empiezan con "__" no llevan el prefijo de la base y en la
   // nube solo el admin las puede leer o escribir.
@@ -10327,15 +10331,38 @@
   const CHQ_CFG_KEY = '__gh-cheques-cfg';
   const CHQ_KEY_VIEJO = 'gh-cheques';         // antes: un registro por base
   const CHQ_CFG_KEY_VIEJO = 'gh-cheques-cfg';
-  const CHQ_POS = {
-    fecha:  { x: 5.95, y: 1.30 },
-    monto:  { x: 7.30, y: 1.30 },
-    letras: { x: 0.80, y: 1.50 },
-    a:      { x: 1.00, y: 1.98 },
-    memo:   { x: 0.80, y: 2.82 }
+  const CHQ_FORMATOS = {
+    // Cheque en medio (papel M/P CHECK): el cheque empieza a 3½" del borde de arriba
+    medio: {
+      cheque: 3.5,
+      pos: {
+        fecha:  { x: 5.95, y: 0.85 },
+        monto:  { x: 7.25, y: 0.85 },
+        letras: { x: 0.80, y: 1.32 },
+        a:      { x: 1.05, y: 1.95 },
+        memo:   { x: 0.80, y: 2.55 }
+      },
+      // talones: debajo del nombre que ya viene impreso arriba de cada uno
+      talones: [{ top: 0.55, alto: 2.75 }, { top: 7.45, alto: 3.0 }],
+      guias: [{ top: 0, alto: 3.5, txt: 'Stub 1' }, { top: 3.5, alto: 3.5, txt: 'Check 8½" x 3½" — TEST PRINT, NOT A CHECK' }, { top: 7, alto: 4, txt: 'Stub 2' }]
+    },
+    // Cheque arriba (el formato que usaba la app antes)
+    arriba: {
+      cheque: 0,
+      pos: {
+        fecha:  { x: 5.95, y: 1.30 },
+        monto:  { x: 7.30, y: 1.30 },
+        letras: { x: 0.80, y: 1.50 },
+        a:      { x: 1.00, y: 1.98 },
+        memo:   { x: 0.80, y: 2.82 }
+      },
+      talones: [{ top: 3.85, alto: 3.15 }, { top: 7.6, alto: 3.15 }],
+      guias: [{ top: 0, alto: 3.5, txt: 'Check 8½" x 3½" — TEST PRINT, NOT A CHECK' }, { top: 3.5, alto: 3.75, txt: 'Stub 1' }, { top: 7.25, alto: 3.75, txt: 'Stub 2' }]
+    }
   };
+  const chqFormato = () => CHQ_FORMATOS[chqCfg.posicion] || CHQ_FORMATOS.medio;
   let chqLista = [];
-  let chqCfg = { siguiente: 2000, offX: 0, offY: 0, talones: 'si' };
+  let chqCfg = { siguiente: 2000, offX: 0, offY: 0, talones: 'si', posicion: 'medio' };
   let chqCargado = false;
 
   const CHQ_UNOS = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
@@ -10655,6 +10682,7 @@
     $('chq-off-x').value = chqCfg.offX || 0;
     $('chq-off-y').value = chqCfg.offY || 0;
     $('chq-talones').value = chqCfg.talones || 'si';
+    $('chq-posicion').value = CHQ_FORMATOS[chqCfg.posicion] ? chqCfg.posicion : 'medio';
     chqActualizarLetras();
     chqRenderLista();
   }
@@ -10915,7 +10943,7 @@
     const f = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     return `${f(r.inicio)} – ${f(r.fin)}`;
   }
-  function chqTalonHTML(c, top, titulo) {
+  function chqTalonHTML(c, top, titulo, alto) {
     const pagos = chqPagosDeCheque(c);
     const gan = Array.isArray(c.ganancias) ? c.ganancias : [];
     const baseDe = (n) => n.base || n._baseNombre || '';
@@ -10953,7 +10981,7 @@
       const titGan = gan.length ? `<tr><td><strong>Partnership profit (after expenses)</strong></td><td class="r"></td></tr>` : '';
       detalle = `<table class="t-det multi">${tit}${filas.join('')}${titGan}${filasGan.join('')}</table>`;
     }
-    return `<div class="talon" style="top:${top}in;">
+    return `<div class="talon" style="top:${top}in;height:${alto}in;">
       <div class="t-head"><span>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</span><span>${titulo} · Check #${escapeHtml(String(c.numero))}</span></div>
       <table class="t-main">
         <tr><td class="k">Date</td><td>${escapeHtml(chqFechaUS(c.fecha))}</td></tr>
@@ -10970,18 +10998,18 @@
   function chqDocumento(c, prueba) {
     const dx = (Number(chqCfg.offX) || 0) / 25.4;
     const dy = (Number(chqCfg.offY) || 0) / 25.4;
-    const pos = (k) => `left:${(CHQ_POS[k].x + dx).toFixed(3)}in;top:${(CHQ_POS[k].y + dy).toFixed(3)}in;`;
+    const F = chqFormato();
+    const P = (k) => ({ x: F.pos[k].x, y: F.pos[k].y + F.cheque });   // en la hoja
+    const pos = (k) => `left:${(P(k).x + dx).toFixed(3)}in;top:${(P(k).y + dy).toFixed(3)}in;`;
     const letras = chqEnLetras(c.monto);
     const relleno = '*'.repeat(Math.max(3, 78 - letras.length));
     const talones = chqCfg.talones !== 'no';
     const guia = prueba ? `
-      <div class="guia" style="top:0;height:3.5in;"><span>Check 8½" x 3½" — TEST PRINT, NOT A CHECK</span></div>
-      <div class="guia" style="top:3.5in;height:3.75in;"><span>Stub 1</span></div>
-      <div class="guia" style="top:7.25in;height:3.75in;"><span>Stub 2</span></div>
-      <div class="lbl" style="left:${(CHQ_POS.fecha.x - 0.05).toFixed(2)}in;top:${(CHQ_POS.fecha.y - 0.2).toFixed(2)}in;">DATE</div>
-      <div class="lbl" style="left:${(CHQ_POS.monto.x - 0.05).toFixed(2)}in;top:${(CHQ_POS.monto.y - 0.2).toFixed(2)}in;">AMOUNT</div>
-      <div class="lbl" style="left:0.3in;top:${(CHQ_POS.letras.y).toFixed(2)}in;">PAY</div>
-      <div class="lbl" style="left:0.3in;top:${(CHQ_POS.a.y - 0.2).toFixed(2)}in;">TO THE ORDER OF</div>` : '';
+      ${F.guias.map((g) => `<div class="guia" style="top:${g.top}in;height:${g.alto}in;"><span>${g.txt}</span></div>`).join('')}
+      <div class="lbl" style="left:${(P('fecha').x - 0.05).toFixed(2)}in;top:${(P('fecha').y - 0.2).toFixed(2)}in;">DATE</div>
+      <div class="lbl" style="left:${(P('monto').x - 0.05).toFixed(2)}in;top:${(P('monto').y - 0.2).toFixed(2)}in;">AMOUNT</div>
+      <div class="lbl" style="left:0.3in;top:${(P('letras').y).toFixed(2)}in;">PAY</div>
+      <div class="lbl" style="left:0.3in;top:${(P('a').y - 0.2).toFixed(2)}in;">TO THE ORDER OF</div>` : '';
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Check ${escapeHtml(String(c.numero))}</title>
 <style>
   @page { size: letter; margin: 0; }
@@ -10994,7 +11022,7 @@
   .guia span { position: absolute; left: 6px; bottom: 4px; font-size: 8pt; color: #777; }
   .lbl { position: absolute; font-size: 7pt; color: #888; }
   /* Talón: todo en "em", así se achica junto cuando no cabe (ver script al final) */
-  .talon { position: absolute; left: 0.5in; width: 7.5in; height: 3.15in; overflow: hidden; font-size: 10pt; }
+  .talon { position: absolute; left: 0.5in; width: 7.5in; overflow: hidden; font-size: 10pt; }
   .t-head { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: .35em; margin-bottom: .5em; }
   .t-main, .t-det { border-collapse: collapse; width: 100%; }
   .t-main td, .t-det td { padding: .15em 0; vertical-align: top; }
@@ -11013,7 +11041,7 @@
   <div class="f letras" style="${pos('letras')}">${escapeHtml(letras)} ${relleno}</div>
   <div class="f" style="${pos('a')}">${escapeHtml(c.a)}</div>
   ${c.memo ? `<div class="f memo" style="${pos('memo')}">${escapeHtml(c.memo)}</div>` : ''}
-  ${talones ? chqTalonHTML(c, 3.85 + dy, (chqPagosDeCheque(c).length > 1 || (c.ganancias && c.ganancias.length)) ? 'Payee copy' : 'Employee copy') + chqTalonHTML(c, 7.6 + dy, 'Company copy') : ''}
+  ${talones ? chqTalonHTML(c, F.talones[0].top + dy, (chqPagosDeCheque(c).length > 1 || (c.ganancias && c.ganancias.length)) ? 'Payee copy' : 'Employee copy', F.talones[0].alto) + chqTalonHTML(c, F.talones[1].top + dy, 'Company copy', F.talones[1].alto) : ''}
 </div>
 <script>
   // Si el talón no cabe en su espacio, se achica la letra poco a poco hasta que quepa
@@ -11161,12 +11189,14 @@
     chqCfg.offX = parseFloat($('chq-off-x').value) || 0;
     chqCfg.offY = parseFloat($('chq-off-y').value) || 0;
     chqCfg.talones = $('chq-talones').value;
+    chqCfg.posicion = $('chq-posicion').value;
     try { await chqGuardarCfg(); toast('Ajuste guardado'); } catch (e) { toast('No se pudo guardar', 'error'); }
   });
-  ['chq-off-x', 'chq-off-y', 'chq-talones'].forEach((id) => $(id).addEventListener('change', () => {
+  ['chq-off-x', 'chq-off-y', 'chq-talones', 'chq-posicion'].forEach((id) => $(id).addEventListener('change', () => {
     chqCfg.offX = parseFloat($('chq-off-x').value) || 0;
     chqCfg.offY = parseFloat($('chq-off-y').value) || 0;
     chqCfg.talones = $('chq-talones').value;
+    chqCfg.posicion = $('chq-posicion').value;
   }));
 
   // ---- Payroll: pestaña principal y sus sub-pestañas ----

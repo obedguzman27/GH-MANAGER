@@ -909,7 +909,7 @@
     <button class="pay-subtab" data-psub="zelle" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-4-4M17 17H6l4 4"/></svg><span class="l-largo">Zelle y Cash</span><span class="l-corto">Zelle/Cash</span></button>
     <button class="pay-subtab" data-psub="r1099" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h9l4 4v15H6z"/><path d="M14.5 2.5v4.5H19M9.5 12h6M9.5 16h6"/></svg>1099</button>
   </div>
-  <!-- Cheques: hacer e imprimir (cheques láser de 8½" x 3½", cheque arriba + 2 talones) -->
+  <!-- Cheques: hacer e imprimir (cheques láser de 8½" x 3½" + 2 talones; cheque en medio o arriba) -->
   <div class="pay-subpanel active" id="pay-sub-cheques">
     <div class="gc-card">
       <div class="pay-card-hd">
@@ -1010,6 +1010,9 @@
           <div class="pay-grid3">
             <div class="gc-field"><label>Mover → derecha (mm)</label><input type="number" id="chq-off-x" step="0.5" value="0"></div>
             <div class="gc-field"><label>Mover ↓ abajo (mm)</label><input type="number" id="chq-off-y" step="0.5" value="0"></div>
+            <div class="gc-field"><label>Papel de cheques</label>
+              <select id="chq-posicion"><option value="medio">Cheque en medio (M/P CHECK)</option><option value="arriba">Cheque arriba</option></select>
+            </div>
             <div class="gc-field"><label>Talones</label>
               <select id="chq-talones"><option value="si">Imprimir los 2 talones</option><option value="no">Solo el cheque</option></select>
             </div>
