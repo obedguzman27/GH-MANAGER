@@ -568,5 +568,25 @@ def reparto_cuadra_al_centavo(p, c):
     for x in s['pagos']: assert x['total'] == round(x['total'], 2), x
     assert round(sum(x['bono'] for x in s['pagos']) + s['taxGuzman'], 2) == s['taxas'], s
 
+@prueba
+def lotes_cobrados_y_buscador(p, c):
+    pg = c.pagina()
+    tab(pg, 'facturas', 'cobros')
+    pg.wait_for_selector('#cobros-lista .lc-grupo')
+    subs = pg.eval_on_selector_all('#cobros-lista .lc-sub', 'es => es.map(e => e.textContent.trim())')
+    assert subs == ['Oak Hills', 'River Bend'], subs
+    info = pg.inner_text('#cobros-info')
+    assert '3 lote(s)' in info and '2 subdivisi' in info, info
+    pg.fill('#cobros-buscar', 'oak 14'); pg.wait_for_timeout(400)
+    filas = pg.eval_on_selector_all('#cobros-lista .lc-fila .lc-lote', 'es => es.map(e => e.textContent.trim())')
+    assert filas and set(filas) == {'Lot 14'}, filas
+    foto(pg, 'lotes-cobrados-busqueda')
+    pg.click('#cobros-limpiar'); pg.wait_for_timeout(300)
+    pg.click('#cobros-estados [data-est="pendientes"]'); pg.wait_for_timeout(300)
+    assert 'Pendiente' in pg.inner_text('#cobros-lista') and 'Pagado' not in pg.inner_text('#cobros-lista')
+    pg.click('#cobros-lista .lc-fact'); pg.wait_for_timeout(400)
+    assert pg.is_visible('#inv-ov')
+    foto(pg, 'lotes-cobrados')
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

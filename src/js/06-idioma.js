@@ -40,6 +40,7 @@
     clientes: {es:'Clientes',en:'Clients'},
     cobrado: {es:'Cobrado',en:'Collected'},
     cobros_por_casa: {es:'Cobros por casa',en:'Collections by house'},
+    lotes_cobrados: {es:'Lotes cobrados',en:'Billed lots'},
     colonias: {es:'Colonias',en:'Subdivisions'},
     colonias_subdivisions: {es:'Colonias / Subdivisions',en:'Subdivisions'},
     contacto_de_emergencia: {es:'Contacto de emergencia',en:'Emergency contact'},

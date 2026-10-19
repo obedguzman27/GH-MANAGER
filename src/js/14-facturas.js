@@ -388,7 +388,7 @@
     toast(idx>=0 ? 'Factura actualizada ✓' : 'Factura guardada ✓');
     if (window.GH_CSL_FACTURA_GUARDADA) window.GH_CSL_FACTURA_GUARDADA(inv);
     invLimpiar();
-    if (document.getElementById('cobros-tbody')) invRenderCobros();
+    if (document.getElementById('cobros-lista')) invRenderCobros();
   });
 
   function invEditar(inv) {
@@ -715,7 +715,7 @@
         if (btn.dataset.a==='borrar') {
           if (!await gcConfirm(`¿Eliminar ${inv.numero}?`, { okText: 'Eliminar', danger: true })) return;
           invDocs = invDocs.filter(i=>i.id!==inv.id);
-          await invSaveInv(); toast('Factura eliminada','info'); invRenderLista(); if (document.getElementById('cobros-tbody')) invRenderCobros();
+          await invSaveInv(); toast('Factura eliminada','info'); invRenderLista(); if (document.getElementById('cobros-lista')) invRenderCobros();
         }
       });
     });
@@ -768,68 +768,142 @@
           await invSaveInv();
           invSel.salir();
           invRenderLista();
-          if (document.getElementById('cobros-tbody')) invRenderCobros();
+          if (document.getElementById('cobros-lista')) invRenderCobros();
           toast(`${ids.length} factura(s) eliminada(s)`, 'info');
         } },
     ],
   });
 
   // ---- Cobros por casa: cada trabajo de cada factura como un cobro individual ----
-  function invRenderCobros() {
-    const buscar = $('cobros-buscar').value.trim().toLowerCase();
-    const tbody = $('cobros-tbody');
-    tbody.innerHTML = '';
-
-    // Aplanar: cada item de cada factura es un cobro
-    const cobros = [];
-    invDocs.forEach(inv => {
-      (inv.items || []).forEach(it => {
-        cobros.push({
-          tons: it.tons || '', location: it.location || '', work: it.work || '',
-          amount: it.amount || 0, numero: inv.numero || '', cliente: inv.cliente || '',
-          fecha: inv.fecha || '', creadoEn: inv.creadoEn || ''
+  // ---- LOTES COBRADOS: cada lote de cada factura, agrupado por subdivisión ----
+  // "Lot 45 Briley Downs", "Briley Downs 45" y "briley downs #45" son el mismo lote.
+  const LC_FUERA = /\b(lot|lote|lt|no|num|number|subdivision|sub)\b\.?/gi;
+  function lcSeparar(loc) {
+    const txt = String(loc || '').replace(/\s+/g, ' ').trim();
+    if (!txt) return { sub: 'Sin subdivisión', lote: '' };
+    const n = glNorm(txt);
+    // 1) La colonia de la lista que más se parezca (la más larga que aparezca)
+    let col = '';
+    invColonias.forEach((c) => { const k = glNorm(c); if (k && n.includes(k) && k.length > glNorm(col).length) col = c; });
+    let resto = txt;
+    if (col) {
+      const i = n.indexOf(glNorm(col));
+      resto = (txt.slice(0, i) + ' ' + txt.slice(i + col.length));
+    }
+    resto = resto.replace(LC_FUERA, ' ').replace(/([a-z])(\d)/gi, '$1 $2');
+    const num = resto.match(/#?\s*(\d+[a-z]?)\b/i);
+    const lote = num ? num[1].toUpperCase() : '';
+    if (col) return { sub: col, lote };
+    // 2) No está en la lista: la subdivisión es lo que queda sin el número
+    const sub = (num ? resto.replace(num[0], ' ') : resto).replace(/[#,\-–]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return { sub: sub || 'Sin subdivisión', lote };
+  }
+  function lcCobros() {
+    const out = [];
+    invDocs.forEach((inv) => (inv.items || []).forEach((it) => {
+      const partes = (typeof cslDividirLotes === 'function') ? cslDividirLotes(it.location) : [it.location];
+      const lotes = partes.length ? partes : [''];
+      lotes.forEach((loc, k) => {
+        const { sub, lote } = lcSeparar(loc);
+        out.push({
+          sub, subK: glNorm(sub), lote, work: it.work || '', tons: it.tons || '',
+          // si una línea trae varios lotes ("Greystone 12, 14"), el monto va en la primera
+          amount: k === 0 ? (Number(it.amount) || 0) : 0, compartido: lotes.length > 1,
+          fecha: (it.dia && /^\d{4}-\d{2}-\d{2}$/.test(it.dia)) ? it.dia : (inv.fecha || ''),
+          numero: inv.numero || '', cliente: inv.cliente || '', pagada: !!inv.pagada, id: inv.id
         });
       });
+    }));
+    return out;
+  }
+  let lcEstado = 'todas';
+  const lcNumOrd = (l) => { const m = String(l).match(/\d+/); return m ? Number(m[0]) : 1e9; };
+  function lcLlenarFiltros(cobros) {
+    const selS = $('cobros-f-sub'), selA = $('cobros-f-anio');
+    const vS = selS.value, vA = selA.value;
+    const subs = new Map();
+    cobros.forEach((c) => { if (!subs.has(c.subK)) subs.set(c.subK, c.sub); });
+    selS.innerHTML = '<option value="">Todas</option>' + [...subs.entries()].sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([k, v]) => `<option value="${escapeHtml(k)}">${escapeHtml(v)}</option>`).join('');
+    selS.value = subs.has(vS) ? vS : '';
+    const anios = [...new Set(cobros.map((c) => (c.fecha || '').slice(0, 4)).filter((y) => /^\d{4}$/.test(y)))].sort().reverse();
+    selA.innerHTML = '<option value="">Todos</option>' + anios.map((y) => `<option>${y}</option>`).join('');
+    selA.value = anios.includes(vA) ? vA : '';
+  }
+  function invRenderCobros() {
+    const buscar = $('cobros-buscar').value.trim();
+    const cobros = lcCobros();
+    lcLlenarFiltros(cobros);
+    const fSub = $('cobros-f-sub').value, fAnio = $('cobros-f-anio').value;
+    // Cada palabra tiene que aparecer; un número busca el lote exacto (o el # de factura)
+    const palabras = glNorm(buscar).split(/\s+/).filter(Boolean).map((w) => w.replace(/^#/, ''));
+    const coincide = (c) => palabras.every((w) => {
+      if (/^\d+[a-z]?$/.test(w)) return glNorm(c.lote) === w || glNorm(c.numero).includes(w);
+      return glNorm(`${c.sub} ${c.work} ${c.numero} ${c.cliente} ${c.lote}`).includes(w);
     });
+    const filtrados = cobros.filter((c) => (!fSub || c.subK === fSub) && (!fAnio || (c.fecha || '').startsWith(fAnio)) &&
+      (lcEstado === 'todas' || (lcEstado === 'pagadas' ? c.pagada : !c.pagada)) && coincide(c));
+    const hayFiltro = !!(buscar || fSub || fAnio || lcEstado !== 'todas');
+    $('cobros-limpiar').style.display = hayFiltro ? '' : 'none';
+    $('cobros-empty').style.display = filtrados.length ? 'none' : 'block';
+    $('cobros-empty').textContent = cobros.length ? 'No se encontró nada con esa búsqueda.' : 'No hay lotes cobrados todavía. Guarda una factura para verlos aquí.';
 
-    const filtrados = cobros.filter(c => !buscar ||
-      String(c.tons || '').toLowerCase().includes(buscar) ||
-      c.location.toLowerCase().includes(buscar) ||
-      c.work.toLowerCase().includes(buscar) ||
-      c.numero.toLowerCase().includes(buscar) ||
-      c.cliente.toLowerCase().includes(buscar)
-    ).sort((a,b) => (b.creadoEn||'').localeCompare(a.creadoEn||''));
+    // Agrupar por subdivisión
+    const grupos = new Map();
+    filtrados.forEach((c) => { if (!grupos.has(c.subK)) grupos.set(c.subK, { sub: c.sub, filas: [] }); grupos.get(c.subK).filas.push(c); });
+    const lista = [...grupos.values()].sort((a, b) => a.sub.localeCompare(b.sub));
+    const lotesUnicos = (fs) => new Set(fs.map((f) => f.lote || ('?' + f.numero + f.work))).size;
+    const tot = filtrados.reduce((t, c) => t + c.amount, 0);
+    const pend = filtrados.filter((c) => !c.pagada).reduce((t, c) => t + c.amount, 0);
+    const nLotes = lista.reduce((t, g) => t + lotesUnicos(g.filas), 0);
+    $('cobros-info').innerHTML = filtrados.length
+      ? `<b>${nLotes}</b> lote(s) en <b>${lista.length}</b> subdivisión(es) · Total <b>${invFmt(tot)}</b> · Por cobrar <b class="pend">${invFmt(pend)}</b>`
+      : '';
 
-    $('cobros-empty').style.display = filtrados.length===0 ? 'block' : 'none';
-    $('cobros-tbl').style.display = filtrados.length===0 ? 'none' : 'table';
-
-    if ($('cobros-info')) {
-      if (buscar) $('cobros-info').textContent = `${filtrados.length} cobro(s) encontrado(s) para "${buscar}"`;
-      else $('cobros-info').textContent = `${cobros.length} cobro(s) en total`;
-    }
-
-    const resalta = (txt) => {
-      if (!buscar || !txt) return escapeHtml(txt || '');
-      const t = String(txt);
-      const idx = t.toLowerCase().indexOf(buscar);
-      if (idx < 0) return escapeHtml(t);
-      return escapeHtml(t.slice(0,idx)) + '<mark style="background:#FBF0D4;color:var(--gold);padding:0 2px;border-radius:3px;">' + escapeHtml(t.slice(idx,idx+buscar.length)) + '</mark>' + escapeHtml(t.slice(idx+buscar.length));
+    const marca = (txt) => {
+      let h = escapeHtml(txt || '');
+      palabras.filter((w) => w.length > 1 && !/^\d/.test(w)).forEach((w) => {
+        const re = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+        h = h.replace(re, '<mark>$1</mark>');
+      });
+      return h;
     };
-
-    filtrados.forEach(c => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;">${escapeHtml(c.tons || '') || '—'}</td>
-        <td style="font-weight:500;">${resalta(c.location) || '—'}</td>
-        <td style="font-size:12.5px;">${resalta(c.work) || '—'}</td>
-        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);">${resalta(c.numero)}</td>
-        <td style="font-size:12.5px;">${escapeHtml(c.cliente || '—')}</td>
-        <td class="r" style="font-weight:700;color:var(--teal);font-family:'IBM Plex Mono',monospace;">${invFmt(c.amount)}</td>
-      `;
-      tbody.appendChild(tr);
-    });
+    const abrir = buscar || fSub || lista.length <= 3;
+    $('cobros-lista').innerHTML = lista.map((g) => {
+      g.filas.sort((a, b) => lcNumOrd(a.lote) - lcNumOrd(b.lote) || String(a.lote).localeCompare(String(b.lote)) || (a.fecha || '').localeCompare(b.fecha || ''));
+      const gTot = g.filas.reduce((t, c) => t + c.amount, 0);
+      const gPend = g.filas.filter((c) => !c.pagada).reduce((t, c) => t + c.amount, 0);
+      const filas = g.filas.map((c) => `
+        <div class="lc-fila${c.pagada ? '' : ' pend'}">
+          <span class="lc-lote">${c.lote ? 'Lot ' + escapeHtml(c.lote) : '—'}</span>
+          <span class="lc-trab">${marca(c.work) || '—'}${c.tons ? ` <small>· ${escapeHtml(c.tons)} ton</small>` : ''}</span>
+          <span class="lc-fecha">${invFechaNum(c.fecha) || '—'}</span>
+          <button type="button" class="lc-fact" data-id="${escapeHtml(c.id)}" title="Ver la factura">#${marca(c.numero) || '—'}</button>
+          <span class="lc-est">${c.pagada ? 'Pagado' : 'Pendiente'}</span>
+          <span class="lc-monto">${c.amount || !c.compartido ? invFmt(c.amount) : '<small>(en otra línea)</small>'}</span>
+        </div>`).join('');
+      return `<details class="lc-grupo"${abrir ? ' open' : ''}>
+        <summary><span class="lc-sub">${marca(g.sub)}</span>
+          <span class="lc-sum">${lotesUnicos(g.filas)} lote(s) · <b>${invFmt(gTot)}</b>${gPend ? ` · <em>${invFmt(gPend)} pend.</em>` : ''}</span></summary>
+        <div class="lc-filas">${filas}</div>
+      </details>`;
+    }).join('');
+    $('cobros-lista').querySelectorAll('.lc-fact').forEach((b) => b.addEventListener('click', () => {
+      const inv = invDocs.find((i) => i.id === b.dataset.id); if (inv) invMostrarVista(inv);
+    }));
   }
   $('cobros-buscar').addEventListener('input', debounce(invRenderCobros, 160));
+  ['cobros-f-sub', 'cobros-f-anio'].forEach((id) => $(id).addEventListener('change', invRenderCobros));
+  document.querySelectorAll('#cobros-estados [data-est]').forEach((b) => b.addEventListener('click', () => {
+    lcEstado = b.dataset.est;
+    document.querySelectorAll('#cobros-estados [data-est]').forEach((x) => x.classList.toggle('on', x === b));
+    invRenderCobros();
+  }));
+  $('cobros-limpiar').addEventListener('click', () => {
+    $('cobros-buscar').value = ''; $('cobros-f-sub').value = ''; $('cobros-f-anio').value = ''; lcEstado = 'todas';
+    document.querySelectorAll('#cobros-estados [data-est]').forEach((x) => x.classList.toggle('on', x.dataset.est === 'todas'));
+    invRenderCobros();
+  });
 
   // ---- Listas de Facturas: Colonias, Clientes y Trabajos (editables) ----
   async function glPreguntarFacturas(n, que, viejo, nuevo) {

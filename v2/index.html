@@ -52,7 +52,7 @@
   <meta name="apple-mobile-web-app-title" content="GH Prueba">
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
   <link rel="icon" href="icon-192.png?v=2">
-  <link rel="stylesheet" href="app.css?v=gh-manager-v217-prueba">
+  <link rel="stylesheet" href="app.css?v=gh-manager-v218-prueba">
 </head>
 <body>
 
@@ -1239,6 +1239,7 @@
   <div class="inv-subnav">
     <button class="inv-subtab active" data-i18n="nueva_factura" data-sub="nueva">+ Nueva Factura</button>
     <button class="inv-subtab" data-i18n="guardadas" data-sub="guardadas">Guardadas</button>
+    <button class="inv-subtab" data-i18n="lotes_cobrados" data-sub="cobros">Lotes cobrados</button>
     <button class="inv-subtab" data-sub="clientes">Clientes</button>
     <button class="inv-subtab" data-sub="trabajos">Trabajos</button>
     <button class="inv-subtab" data-sub="colonias">Colonias</button>
@@ -1440,23 +1441,25 @@
     </div>
   </div>
 
-  <!-- Cobros por casa -->
+  <!-- Lotes cobrados: todos los lotes y subdivisiones de todas las facturas -->
   <div class="inv-subpanel" id="inv-sub-cobros">
     <div class="gc-card">
-      <p class="gc-card-title" data-i18n="cobros_por_casa">Cobros por casa</p>
-      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:16px;">Cada trabajo de todas tus facturas aparece aquí como un cobro individual. Se llena solo cuando guardas una factura. Busca por Job #, colonia o lote.</p>
-      <div style="margin-bottom:16px;">
-        <input type="text" id="cobros-buscar" placeholder="Buscar por Job #, colonia, lote o trabajo…"
-          style="width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:#fff;color:var(--ink);">
-        <p id="cobros-info" style="font-size:11.5px;color:var(--muted);margin-top:6px;"></p>
+      <p class="gc-card-title" data-i18n="lotes_cobrados">Lotes cobrados</p>
+      <p class="gh-ayuda" style="font-size:13px;color:var(--muted);margin-bottom:14px;">Todos los lotes que has cobrado, agrupados por subdivisión. Se llena solo con tus facturas guardadas. Busca por subdivisión, lote, trabajo o # de factura (ej. <b>Briley 45</b>).</p>
+      <input type="search" id="cobros-buscar" class="lc-buscar" placeholder="Buscar subdivisión, lote, trabajo o factura…" autocomplete="off">
+      <div class="inv-filtros lc-filtros">
+        <div class="gc-field"><label>Subdivisión</label><select id="cobros-f-sub"><option value="">Todas</option></select></div>
+        <div class="gc-field"><label>Año</label><select id="cobros-f-anio"><option value="">Todos</option></select></div>
       </div>
-      <div class="gc-empty" id="cobros-empty" style="display:none;">No hay cobros aún. Guarda una factura para verlos aquí.</div>
-      <div style="overflow-x:auto;">
-        <table class="inv-list-t" id="cobros-tbl" style="display:none;">
-          <thead><tr><th class="r">Tons</th><th data-i18n="h_colonia_lote">Colonia / Lote</th><th data-i18n="h_trabajo">Trabajo</th><th data-i18n="h_factura">Factura</th><th data-i18n="h_cliente">Cliente</th><th class="r" data-i18n="h_monto">Monto</th></tr></thead>
-          <tbody id="cobros-tbody"></tbody>
-        </table>
+      <div class="inv-estados" id="cobros-estados">
+        <button type="button" class="on" data-est="todas">Todos</button>
+        <button type="button" data-est="pendientes">Pendientes</button>
+        <button type="button" data-est="pagadas">Pagados</button>
+        <button type="button" class="inv-f-limpiar" id="cobros-limpiar" style="display:none;">✕ Limpiar</button>
       </div>
+      <p id="cobros-info" class="inv-resumen"></p>
+      <div class="gc-empty" id="cobros-empty" style="display:none;">No hay lotes cobrados todavía. Guarda una factura para verlos aquí.</div>
+      <div id="cobros-lista" class="lc-lista"></div>
     </div>
   </div>
   <!-- Clientes -->
@@ -1716,8 +1719,8 @@
 <div id="print-area"></div>
 
 <script src="vendor/supabase-2.117.1.min.js"></script>
-<script src="supabase-storage.js?v=gh-manager-v217-prueba"></script>
+<script src="supabase-storage.js?v=gh-manager-v218-prueba"></script>
 <script src="browser-storage.js"></script>
-<script src="app.js?v=gh-manager-v217-prueba"></script>
+<script src="app.js?v=gh-manager-v218-prueba"></script>
 </body>
 </html>
