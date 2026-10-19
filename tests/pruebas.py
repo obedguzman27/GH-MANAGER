@@ -617,5 +617,28 @@ def papeles_pdf_se_guardan(p, c):
     }""")
     assert r == [['[Seguro] poliza.pdf'], ['[ID] lic.pdf']], r
 
+@prueba
+def cheque_ajuste_por_parte(p, c):
+    pg = c.pagina()
+    tab(pg, 'payroll'); pg.wait_for_timeout(900)
+    pg.fill('#chq-a', 'Pedro Lopez'); pg.fill('#chq-monto', '450'); pg.fill('#chq-memo', 'WORK')
+    def posiciones():
+        pg.click('#chq-btn-prueba'); pg.wait_for_timeout(900)
+        r = pg.evaluate("""() => { const d = document.getElementById('gh-print-frame').contentDocument;
+          const out = {}; d.querySelectorAll('.f, .talon').forEach((e, i) => { out[e.className + i] = [e.style.left, e.style.top]; });
+          document.getElementById('gh-print-frame').remove(); return out; }""")
+        return r
+    antes = posiciones()
+    pg.evaluate("() => document.querySelector('.pay-plegable').open = true")
+    pg.fill('#chq-ajustes-partes input[data-aj="a"][data-eje="y"]', '-7')
+    pg.fill('#chq-ajustes-partes input[data-aj="talon2"][data-eje="x"]', '2')
+    pg.click('#chq-btn-guardar-ajuste'); pg.wait_for_timeout(700)
+    despues = posiciones()
+    cambiados = sorted(k for k in antes if antes[k] != despues[k])
+    assert len(cambiados) == 2, (cambiados, antes, despues)
+    cfg = valor(None, '__gh-cheques-cfg')
+    assert cfg['ajustes']['a']['y'] == -7 and cfg['ajustes']['talon2']['x'] == 2, cfg
+    c.errores.clear()
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

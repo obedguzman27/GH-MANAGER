@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v222';
+  window.GH_APP_VERSION = 'v223';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -10361,6 +10361,26 @@
     }
   };
   const chqFormato = () => CHQ_FORMATOS[chqCfg.posicion] || CHQ_FORMATOS.medio;
+  // Ajuste por separado de cada parte (mm, + = derecha / abajo), además del "mover todo"
+  const CHQ_PARTES = [['fecha', 'Fecha'], ['monto', 'Cantidad ($)'], ['letras', 'Cantidad en letras'], ['a', 'Nombre (a quién)'], ['memo', 'Memo'], ['talon1', 'Talón de arriba'], ['talon2', 'Talón de abajo']];
+  const chqAj = (k) => { const a = (chqCfg.ajustes || {})[k] || {}; return { x: (Number(a.x) || 0) / 25.4, y: (Number(a.y) || 0) / 25.4 }; };
+  function chqRenderAjustes() {
+    const cont = $('chq-ajustes-partes'); if (!cont) return;
+    const aj = chqCfg.ajustes || {};
+    cont.innerHTML = CHQ_PARTES.map(([k, nom]) => `<div class="chq-aj-fila"><span>${nom}</span>
+      <label>→ <input type="number" step="0.5" inputmode="decimal" data-aj="${k}" data-eje="x" value="${Number((aj[k] || {}).x) || 0}"></label>
+      <label>↓ <input type="number" step="0.5" inputmode="decimal" data-aj="${k}" data-eje="y" value="${Number((aj[k] || {}).y) || 0}"></label></div>`).join('');
+    cont.querySelectorAll('input').forEach((i) => i.addEventListener('change', chqLeerAjustes));
+  }
+  function chqLeerAjustes() {
+    const aj = {};
+    document.querySelectorAll('#chq-ajustes-partes input').forEach((i) => {
+      const v = parseFloat(i.value) || 0;
+      if (!aj[i.dataset.aj]) aj[i.dataset.aj] = { x: 0, y: 0 };
+      aj[i.dataset.aj][i.dataset.eje] = v;
+    });
+    chqCfg.ajustes = aj;
+  }
   let chqLista = [];
   let chqCfg = { siguiente: 2000, offX: 0, offY: 0, talones: 'si', posicion: 'medio' };
   let chqCargado = false;
@@ -10683,6 +10703,7 @@
     $('chq-off-y').value = chqCfg.offY || 0;
     $('chq-talones').value = chqCfg.talones || 'si';
     $('chq-posicion').value = CHQ_FORMATOS[chqCfg.posicion] ? chqCfg.posicion : 'medio';
+    chqRenderAjustes();
     chqActualizarLetras();
     chqRenderLista();
   }
@@ -10943,7 +10964,7 @@
     const f = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     return `${f(r.inicio)} – ${f(r.fin)}`;
   }
-  function chqTalonHTML(c, top, titulo, alto) {
+  function chqTalonHTML(c, top, titulo, alto, dx) {
     const pagos = chqPagosDeCheque(c);
     const gan = Array.isArray(c.ganancias) ? c.ganancias : [];
     const baseDe = (n) => n.base || n._baseNombre || '';
@@ -10981,7 +11002,7 @@
       const titGan = gan.length ? `<tr><td><strong>Partnership profit (after expenses)</strong></td><td class="r"></td></tr>` : '';
       detalle = `<table class="t-det multi">${tit}${filas.join('')}${titGan}${filasGan.join('')}</table>`;
     }
-    return `<div class="talon" style="top:${top}in;height:${alto}in;">
+    return `<div class="talon" style="top:${top}in;height:${alto}in;left:${(0.5 + (dx || 0)).toFixed(3)}in;">
       <div class="t-head"><span>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</span><span>${titulo} · Check #${escapeHtml(String(c.numero))}</span></div>
       <table class="t-main">
         <tr><td class="k">Date</td><td>${escapeHtml(chqFechaUS(c.fecha))}</td></tr>
@@ -11000,7 +11021,7 @@
     const dy = (Number(chqCfg.offY) || 0) / 25.4;
     const F = chqFormato();
     const P = (k) => ({ x: F.pos[k].x, y: F.pos[k].y + F.cheque });   // en la hoja
-    const pos = (k) => `left:${(P(k).x + dx).toFixed(3)}in;top:${(P(k).y + dy).toFixed(3)}in;`;
+    const pos = (k) => `left:${(P(k).x + dx + chqAj(k).x).toFixed(3)}in;top:${(P(k).y + dy + chqAj(k).y).toFixed(3)}in;`;
     const letras = chqEnLetras(c.monto);
     const relleno = '*'.repeat(Math.max(3, 78 - letras.length));
     const talones = chqCfg.talones !== 'no';
@@ -11041,7 +11062,7 @@
   <div class="f letras" style="${pos('letras')}">${escapeHtml(letras)} ${relleno}</div>
   <div class="f" style="${pos('a')}">${escapeHtml(c.a)}</div>
   ${c.memo ? `<div class="f memo" style="${pos('memo')}">${escapeHtml(c.memo)}</div>` : ''}
-  ${talones ? chqTalonHTML(c, F.talones[0].top + dy, (chqPagosDeCheque(c).length > 1 || (c.ganancias && c.ganancias.length)) ? 'Payee copy' : 'Employee copy', F.talones[0].alto) + chqTalonHTML(c, F.talones[1].top + dy, 'Company copy', F.talones[1].alto) : ''}
+  ${talones ? chqTalonHTML(c, F.talones[0].top + dy + chqAj('talon1').y, (chqPagosDeCheque(c).length > 1 || (c.ganancias && c.ganancias.length)) ? 'Payee copy' : 'Employee copy', F.talones[0].alto, dx + chqAj('talon1').x) + chqTalonHTML(c, F.talones[1].top + dy + chqAj('talon2').y, 'Company copy', F.talones[1].alto, dx + chqAj('talon2').x) : ''}
 </div>
 <script>
   // Si el talón no cabe en su espacio, se achica la letra poco a poco hasta que quepa
@@ -11190,6 +11211,7 @@
     chqCfg.offY = parseFloat($('chq-off-y').value) || 0;
     chqCfg.talones = $('chq-talones').value;
     chqCfg.posicion = $('chq-posicion').value;
+    chqLeerAjustes();
     try { await chqGuardarCfg(); toast('Ajuste guardado'); } catch (e) { toast('No se pudo guardar', 'error'); }
   });
   ['chq-off-x', 'chq-off-y', 'chq-talones', 'chq-posicion'].forEach((id) => $(id).addEventListener('change', () => {

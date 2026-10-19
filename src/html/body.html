@@ -1008,8 +1008,8 @@
         <summary>Ajuste de impresión</summary>
         <div style="padding-top:12px;">
           <div class="pay-grid3">
-            <div class="gc-field"><label>Mover → derecha (mm)</label><input type="number" id="chq-off-x" step="0.5" value="0"></div>
-            <div class="gc-field"><label>Mover ↓ abajo (mm)</label><input type="number" id="chq-off-y" step="0.5" value="0"></div>
+            <div class="gc-field"><label>Mover todo → derecha (mm)</label><input type="number" id="chq-off-x" step="0.5" value="0"></div>
+            <div class="gc-field"><label>Mover todo ↓ abajo (mm)</label><input type="number" id="chq-off-y" step="0.5" value="0"></div>
             <div class="gc-field"><label>Papel de cheques</label>
               <select id="chq-posicion"><option value="medio">Cheque en medio (M/P CHECK)</option><option value="arriba">Cheque arriba</option></select>
             </div>
@@ -1017,6 +1017,8 @@
               <select id="chq-talones"><option value="si">Imprimir los 2 talones</option><option value="no">Solo el cheque</option></select>
             </div>
           </div>
+          <p class="chq-aj-tit">Mover cada parte por separado (mm) — <b>→</b> + derecha / − izquierda · <b>↓</b> + abajo / − arriba</p>
+          <div id="chq-ajustes-partes" class="chq-aj"></div>
           <div class="pay-btns"><button type="button" class="gc-action-btn" id="chq-btn-guardar-ajuste">Guardar ajuste</button></div>
         </div>
       </details>
