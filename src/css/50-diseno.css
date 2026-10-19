@@ -133,7 +133,7 @@ body { font-size: 15px; }
 .gc-card-title::before { width: 4px; height: 16px; border-radius: 2px; background: var(--accent); }
 
 /* ---------- Formularios ---------- */
-.gc-field label, .gc-label { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.gc-field label { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
 #gc-app input[type="text"], #gc-app input[type="number"], #gc-app input[type="date"], #gc-app input[type="search"],
 #gc-app input[type="email"], #gc-app input[type="tel"], #gc-app input[type="password"], #gc-app select, #gc-app textarea {
   border-color: var(--border); border-radius: var(--r-sm); color: var(--ink);
@@ -147,7 +147,7 @@ body { font-size: 15px; }
 .gc-action-btn { border-radius: var(--r-sm); font-weight: 600; border-color: var(--border); }
 
 /* ---------- Navegación interna: pastillas que se deslizan ---------- */
-.inv-subnav, .pln-subnav, .nom-subnav, .pay-subnav, .aj-subnav, .doc-subnav {
+.inv-subnav, .pln-subnav {
   display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
   scrollbar-width: none; border-bottom: 0 !important; padding: 2px 0 10px !important; margin-bottom: 8px !important;
   background: transparent !important;
@@ -388,9 +388,6 @@ body.nom-pend:has(#panel-nomina.active) .gh-fab { display: none !important; }
 .cs-tipos { flex-wrap: wrap; }
 .cs-lote-guardado { display: none; font-size: 13px; color: var(--teal-dk); margin: -4px 0 10px; }
 .cs-lote-guardado.on { display: block; }
-.csl-opciones { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; font-size: 14px; }
-.csl-opciones label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--ink); }
-.csl-opciones input { width: 18px; height: 18px; accent-color: var(--accent); }
 .csl-lista { display: flex; flex-direction: column; gap: 8px; }
 .csl-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--surface-2); }
 .csl-fila.on { border-color: var(--accent); background: var(--accent-bg); }
@@ -401,8 +398,6 @@ body.nom-pend:has(#panel-nomina.active) .gh-fab { display: none !important; }
 .csl-tag { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface-3); color: var(--muted-soft); text-decoration: line-through; }
 .csl-tag.si { background: var(--teal-bg); color: var(--teal-dk); text-decoration: none; }
 .csl-acc { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-.csl-barra { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; font-size: 14px; color: var(--muted); }
-.csl-barra button:disabled { opacity: .5; }
 
 /* Visor: imprimir hojas y factura de un lote */
 .vz-imp-lista { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
@@ -413,12 +408,6 @@ body.nom-pend:has(#panel-nomina.active) .gh-fab { display: none !important; }
 .vz-imp-buscar { width: 100%; height: 46px; padding: 0 14px; font: 500 16px var(--font-ui); border: 1.5px solid var(--border); border-radius: 12px; background: var(--card); color: var(--ink); }
 
 /* Factura → Completion Sheets */
-.inv-cs-op { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 11px 13px;
-  border: 1.5px dashed var(--border); border-radius: 10px; cursor: pointer; background: var(--surface, #fff); }
-.inv-cs-op:has(input:checked) { border-style: solid; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, transparent); }
-.inv-cs-op input { width: 18px; height: 18px; margin-top: 1px; flex: none; accent-color: var(--accent); }
-.inv-cs-op span { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
-.inv-cs-op small { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
 .vz-imp-acc { display: flex; gap: 6px; flex-shrink: 0; }
 .vz-imp-fila button.vz-imp-fac { background: var(--surface); color: var(--accent-dk, var(--accent)); border: 1.5px solid var(--accent); }
 .vz-imp-fila button:disabled { opacity: .4; cursor: default; }

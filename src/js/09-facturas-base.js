@@ -23,8 +23,6 @@
     'Coil cleaning','Refrigerant recharge','Fan motor replacement'
   ];
   const invFmt = n => { const v = Math.round((Number(n) || 0) * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
-  // Días en inglés para la columna DAY de la factura (el invoice siempre se ve en inglés)
-  const INV_DIAS_SEMANA = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   // Fecha en números para los documentos (MM/DD/YYYY), nunca en letras
   // Fecha con guiones para la columna DATE de la factura: 09-19-2026
   function invFechaGuion(fechaISO) {
@@ -38,11 +36,5 @@
     const p = String(fechaISO).slice(0, 10).split('-');
     if (p.length !== 3) return fechaISO;
     return `${p[1]}/${p[2]}/${p[0]}`;
-  }
-  function invDiaDeFecha(fechaISO) {
-    if (!fechaISO) return '';
-    const [y, m, d] = fechaISO.split('-').map(Number);
-    const dow = new Date(y, m - 1, d).getDay(); // 0=domingo
-    return dow === 0 ? 'Sunday' : INV_DIAS_SEMANA[dow - 1];
   }
 

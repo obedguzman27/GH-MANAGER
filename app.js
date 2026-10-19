@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v219';
+  window.GH_APP_VERSION = 'v220';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -96,7 +96,6 @@
   const KEY_CAT_INGRESO = 'catIngresos';
   const KEY_INVOICES = 'invoicesGuardados';
   let TASA_TAXAS = 0.10;   // configurable en Ajustes → Avanzado → Socios
-  const BONO_CRA = 0.10;
 
   // ---- Aviso de conexión (la app depende de internet para guardar en la nube) ----
   function actualizarBannerConexion() {
@@ -563,11 +562,6 @@
     document.querySelectorAll('.socio-mitad').forEach((e) => { e.textContent = cfgSocioMitad; });
   }
 
-  // ============================================================
-  // RECORDATORIOS — avisan al abrir la app (no son notificaciones
-  // push reales: solo se muestran si la app está abierta).
-  // ============================================================
-  const fmtDia = (iso) => { const [y, m, d] = iso.split('-'); return `${d}/${m}`; };
 
   const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
@@ -3177,11 +3171,6 @@
     });
   }
 
-  // (Ya no se usa directamente — se dejó por compatibilidad. Redirige al
-  //  método que sí funciona en el iPhone instalado.)
-  function imprimirContenido(htmlCuerpo, titulo) {
-    ghImprimirEnVentana(htmlCuerpo, titulo);
-  }
 
   function ghConstruirHTMLDescargaReparto() {
     const cuerpo = construirHTMLInvoice(invoiceEnVista);
@@ -4556,7 +4545,6 @@
     cerrar_sesion: {es:'Cerrar sesión',en:'Log out'},
     clientes: {es:'Clientes',en:'Clients'},
     cobrado: {es:'Cobrado',en:'Collected'},
-    cobros_por_casa: {es:'Cobros por casa',en:'Collections by house'},
     lotes_cobrados: {es:'Lotes cobrados',en:'Billed lots'},
     colonias: {es:'Colonias',en:'Subdivisions'},
     colonias_subdivisions: {es:'Colonias / Subdivisions',en:'Subdivisions'},
@@ -4566,7 +4554,6 @@
     crear: {es:'+ Crear',en:'+ Create'},
     csv: {es:'⬇ CSV',en:'⬇ CSV'},
     cuanto_lleva_ganando_una_persona: {es:'Cuánto lleva ganando una persona',en:'How much a person has earned'},
-    datos_de_la_factura_y_recibos: {es:'Datos de la factura y recibos',en:'Invoice & receipt details'},
     descargar: {es:'⬇ Descargar',en:'⬇ Download'},
     descargar_excel_completo: {es:'Descargar Excel completo',en:'Download full Excel'},
     descargar_reporte_en_pdf: {es:'Descargar reporte en PDF',en:'Download PDF report'},
@@ -4576,8 +4563,6 @@
     descripciones_de_trabajo: {es:'Descripciones de Trabajo',en:'Job descriptions'},
     desde_opcional: {es:'Desde (opcional)',en:'From (optional)'},
     direccion: {es:'Dirección',en:'Address'},
-    direccion_aparece_en_la_factura: {es:'Dirección (aparece en la factura)',en:'Address (shows on invoice)'},
-    direccion_opcional_aparece_en_la_factura: {es:'Dirección (opcional — aparece en la factura)',en:'Address (optional — shows on invoice)'},
     editar: {es:'Editar',en:'Edit'},
     editar_2: {es:'✎ Editar',en:'✎ Edit'},
     editar_semana: {es:'Editar semana',en:'Edit week'},
@@ -4600,7 +4585,6 @@
     guardar: {es:'Guardar',en:'Save'},
     guardar_cambios: {es:'Guardar cambios',en:'Save changes'},
     guardar_cambios_de_la_semana: {es:'Guardar cambios de la semana',en:'Save week changes'},
-    guardar_datos_de_factura: {es:'Guardar datos de factura',en:'Save invoice details'},
     guardar_factura: {es:'Guardar Factura',en:'Save Invoice'},
     guardar_invoice: {es:'Guardar invoice',en:'Save invoice'},
     guardar_movimiento: {es:'Guardar movimiento',en:'Save transaction'},
@@ -4629,7 +4613,6 @@
     nombre_de_la_nueva_base_de_datos: {es:'Nombre de la nueva base de datos',en:'New database name'},
     nombre_de_la_nueva_categoria: {es:'Nombre de la nueva categoría',en:'New category name'},
     nombre_del_trabajador: {es:'Nombre del trabajador',en:'Worker name'},
-    nombre_en_la_factura_recibos: {es:'Nombre en la factura / recibos',en:'Name on invoice / receipts'},
     nombre_s: {es:'Nombre(s)',en:'First name(s)'},
     nomina: {es:'Nómina',en:'Payroll'},
     notas: {es:'Notas',en:'Notes'},
@@ -4671,7 +4654,6 @@
     sumar: {es:'+ Sumar',en:'+ Add'},
     tax: {es:'Tax %',en:'Tax %'},
     telefono: {es:'Teléfono',en:'Phone'},
-    tendencia_ultimas_semanas: {es:'Tendencia — últimas semanas',en:'Trend — last few weeks'},
     tipo: {es:'Tipo',en:'Type'},
     todo_el_tiempo: {es:'Todo el tiempo',en:'All time'},
     todos: {es:'Todos',en:'All'},
@@ -4689,81 +4671,11 @@
     ver_recibo: {es:'Ver recibo',en:'View receipt'},
     visor_solo_lectura: {es:'Visor (solo lectura)',en:'Viewer (read-only)'},
     vista_previa: {es:'Vista previa',en:'Preview'},
-    t_agrega_al_menos_un_trabajo: {es:'Agrega al menos un trabajo',en:'Add at least one job'},
-    t_agrega_un_numero_de_factura: {es:'Agrega un número de factura',en:'Add an invoice number'},
-    t_ahi_esta: {es:'Ahí está ',en:'There it is: '},
-    t_base_de_datos_creada: {es:'Base de datos creada ✓',en:'Database created ✓'},
-    t_base_de_datos_quitada_de_la_lista: {es:'Base de datos quitada de la lista',en:'Database removed from the list'},
-    t_cambiando: {es:'Cambiando…',en:'Switching…'},
-    t_cambios_guardados: {es:'Cambios guardados ✓',en:'Changes saved ✓'},
-    t_categoria_agregada: {es:'Categoría agregada ✓',en:'Category added ✓'},
-    t_cliente_agregado: {es:'Cliente agregado ✓',en:'Client added ✓'},
-    t_cliente_eliminado: {es:'Cliente eliminado',en:'Client deleted'},
-    t_colonia_agregada: {es:'Colonia agregada ✓',en:'Subdivision added ✓'},
-    t_colonia_eliminada: {es:'Colonia eliminada',en:'Subdivision deleted'},
-    t_color_de_acento_actualizado: {es:'Color de acento actualizado ✓',en:'Accent color updated ✓'},
-    t_conexion_restablecida: {es:'Conexión restablecida ✓',en:'Connection restored ✓'},
-    t_datos_de_factura_guardados: {es:'Datos de factura guardados ✓',en:'Invoice details saved ✓'},
-    t_debe_haber_al_menos_un_socio: {es:'Debe haber al menos un socio',en:'There must be at least one partner'},
-    t_descripcion_agregada: {es:'Descripción agregada ✓',en:'Description added ✓'},
-    t_descripcion_eliminada: {es:'Descripción eliminada',en:'Description deleted'},
-    t_editando: {es:'Editando ',en:'Editing '},
-    t_editando_movimiento_cambia_los_datos_y_g: {es:'Editando movimiento — cambia los datos y guarda',en:'Editing transaction — change the details and save'},
-    t_el_pin_debe_tener_de_4_a_8_numeros: {es:'El PIN debe tener de 4 a 8 números.',en:'The PIN must be 4 to 8 digits.'},
-    t_empleado_guardado: {es:'Empleado guardado ✓',en:'Employee saved ✓'},
-    t_error_al_subir: {es:'Error al subir: ',en:'Upload error: '},
-    t_escribe_el_nombre_de_todos_los_socios: {es:'Escribe el nombre de todos los socios',en:'Enter every partner\'s name'},
-    t_escribe_un_nombre_para_la_base_de_datos: {es:'Escribe un nombre para la base de datos',en:'Enter a name for the database'},
-    t_escribe_un_sueldo_valido: {es:'Escribe un sueldo válido',en:'Enter a valid pay rate'},
-    t_este_dispositivo_no_tiene_face_id_touch_: {es:'Este dispositivo no tiene Face ID/Touch ID disponible.',en:'This device does not have Face ID/Touch ID available.'},
-    t_este_navegador_no_soporta_face_id_touch_: {es:'Este navegador no soporta Face ID/Touch ID para apps web.',en:'This browser does not support Face ID/Touch ID for web apps.'},
-    t_este_navegador_no_soporta_compartir_dire: {es:'Este navegador no soporta compartir directo — usa el botón Descargar.',en:'This browser does not support direct sharing — use the Download button.'},
-    t_excel_descargado: {es:'Excel descargado ✓',en:'Excel downloaded ✓'},
-    t_face_id_activado_en_este_telefono: {es:'Face ID activado en este teléfono ✓',en:'Face ID turned on for this phone ✓'},
-    t_factura_eliminada: {es:'Factura eliminada',en:'Invoice deleted'},
-    t_guarda_primero_los_datos_del_empleado_an: {es:'Guarda primero los datos del empleado antes de subir documentos.',en:'Save the employee\'s details first before uploading documents.'},
-    t_invoice_eliminado: {es:'Invoice eliminado',en:'Invoice deleted'},
-    t_invoice_guardado_y_archivado_en_registro: {es:'Invoice guardado y archivado en Registro ✓',en:'Invoice saved and filed under Log ✓'},
-    t_invoice_reabierto_edita_los_movimientos_: {es:'Invoice reabierto — edita los movimientos y vuelve a guardarlo',en:'Invoice reopened — edit the transactions and save it again'},
-    t_logo_actualizado: {es:'Logo actualizado ✓',en:'Logo updated ✓'},
-    t_logo_de_guzman_hvac_restaurado: {es:'Logo de la factura quitado',en:'Invoice logo removed'},
-    t_movimiento_eliminado: {es:'Movimiento eliminado',en:'Transaction deleted'},
-    t_movimiento_repetido_con_la_fecha_de_hoy_: {es:'Movimiento repetido con la fecha de hoy — revisa el monto y guarda',en:'Transaction repeated with today\'s date — check the amount and save'},
-    t_no_hay_movimientos_para_guardar: {es:'No hay movimientos para guardar',en:'No transactions to save'},
-    t_no_se_pudo_abrir_para_compartir_usa_desc: {es:'No se pudo abrir para compartir — usa Descargar.',en:'Could not open to share — use Download.'},
-    t_no_se_pudo_activar_face_id_intenta_de_nu: {es:'No se pudo activar Face ID — intenta de nuevo.',en:'Could not turn on Face ID — try again.'},
-    t_no_se_pudo_cambiar: {es:'No se pudo cambiar: ',en:'Could not switch: '},
-    t_no_se_pudo_cargar_el_generador_de_excel_: {es:'No se pudo cargar el generador de Excel. Revisa tu conexión e intenta de nuevo.',en:'Could not load the Excel generator. Check your connection and try again.'},
-    t_no_se_pudo_completar_una_accion_problema: {es:'No se pudo completar una acción (problema de conexión o datos). Intenta de nuevo.',en:'Could not complete an action (connection or data issue). Try again.'},
-    t_no_se_pudo_crear_puede_que_tu_usuario_no: {es:'No se pudo crear. Puede que tu usuario no sea admin en Supabase. Detalle: ',en:'Could not create it. Your user may not be an admin in Supabase. Detail: '},
-    t_no_se_pudo_guardar: {es:'No se pudo guardar: ',en:'Could not save: '},
-    t_ocurrio_un_error_inesperado_si_algo_no_s: {es:'Ocurrió un error inesperado. Si algo no se guardó, inténtalo de nuevo.',en:'An unexpected error occurred. If something did not save, try again.'},
-    t_pin_guardado: {es:'PIN guardado ✓',en:'PIN saved ✓'},
-    t_pago_eliminado: {es:'Pago eliminado',en:'Payment deleted'},
-    t_para_abrir_pdfs_usa_la_app_de_escritorio: {es:'Para abrir PDFs usa la app de escritorio.',en:'To open PDFs, use the desktop app.'},
-    t_para_guardar_pdfs_en_la_app_usa_la_app_d: {es:'Para guardar PDFs en la app usa la app de escritorio (Electron).',en:'To save PDFs in the app, use the desktop app (Electron).'},
-    t_para_subir_pdfs_usa_la_app_de_escritorio: {es:'Para subir PDFs usa la app de escritorio (Electron).',en:'To upload PDFs, use the desktop app (Electron).'},
-    t_primero_activa_face_id_o_guarda_un_pin_p: {es:'Primero activa Face ID o guarda un PIN, para no quedar fuera de la app.',en:'First turn on Face ID or save a PIN, so you never get locked out.'},
-    t_respaldo_completo_descargado: {es:'Respaldo completo descargado ✓',en:'Full backup downloaded ✓'},
-    t_respaldo_restaurado_todo_actualizado: {es:'Respaldo restaurado ✓ — todo actualizado',en:'Backup restored ✓ — everything is up to date'},
-    t_se_perdio_la_conexion_a_internet: {es:'Se perdió la conexión a internet',en:'Internet connection lost'},
-    t_socios_guardados: {es:'Socios guardados ✓',en:'Partners saved ✓'},
-    t_solo_funciona_con_sesion_en_la_nube: {es:'Solo funciona con sesión en la nube',en:'Only works when signed in to the cloud'},
-    t_sueldo_actualizado: {es:'Sueldo actualizado ✓',en:'Pay rate updated ✓'},
-    t_trabajador_agregado: {es:'Trabajador agregado ✓',en:'Worker added ✓'},
-    t_trabajador_marcado_como_inactivo: {es:'Trabajador marcado como inactivo',en:'Worker marked inactive'},
-    t_ya_esta_en_la_lista_de_esta_semana: {es:'Ya está en la lista de esta semana',en:'Already on this week\'s list'},
-    t_ya_estas_en_esa_base_de_datos: {es:'Ya estás en esa base de datos',en:'You are already on that database'},
-    t_ya_existe: {es:'Ya existe',en:'Already exists'},
-    t_ya_existe_una_base_de_datos_con_ese_nomb: {es:'Ya existe una base de datos con ese nombre',en:'A database with that name already exists'},
     h_ajustar_sueldo: {es:'Ajustar sueldo',en:'Adjust pay'},
     h_cliente: {es:'Cliente',en:'Client'},
-    h_colonia_lote: {es:'Colonia / Lote',en:'Subdivision / Lot'},
-    h_concepto: {es:'Concepto',en:'Concept'},
     h_dia: {es:'Día',en:'Day'},
     h_dias: {es:'Días',en:'Days'},
     h_dias_trabajados: {es:'Días trabajados',en:'Days worked'},
-    h_factura: {es:'Factura',en:'Invoice'},
     h_fechas_trabajadas: {es:'Fechas trabajadas',en:'Dates worked'},
     h_ganado: {es:'Ganado',en:'Earned'},
     h_gastos: {es:'Gastos',en:'Expenses'},
@@ -4779,19 +4691,15 @@
     h_sueldo: {es:'Sueldo',en:'Pay'},
     h_sueldo_por_dia: {es:'Sueldo por día',en:'Pay per day'},
     h_sueldo_dia: {es:'Sueldo/día',en:'Pay/day'},
-    h_tax_guzman: {es:'Tax Guzman',en:'Guzman Tax'},
     h_tax_total: {es:'Tax total',en:'Total tax'},
     h_taxas: {es:'Taxas',en:'Taxes'},
     h_taxas_10: {es:'Taxas (10%)',en:'Taxes (10%)'},
     h_taxas_restantes: {es:'Taxas Restantes',en:'Remaining Taxes'},
     h_total: {es:'Total',en:'Total'},
-    h_trabajo: {es:'Trabajo',en:'Job'},
     cal_calendario: {es:'📅 Calendario',en:'📅 Calendar'},
     cal_calendario_de_trabajos: {es:'Calendario de trabajos',en:'Work calendar'},
-    cal_calendario_tab: {es:'Calendario',en:'Calendar'},
     cal_nuevo_sitio: {es:'Es un sitio nuevo — limpiar estos datos',en:'This is a new site — clear these fields'},
     cal_work_performed: {es:'Work Performed',en:'Work Performed'},
-    planos_tab: {es:'Planos',en:'Plans'},
     pln_planos_titulo: {es:'Planos',en:'Plans'},
     pln_agregar_plano: {es:'+ Agregar plano',en:'+ Add plan'},
     pln_nombre_del_plano: {es:'Nombre del plano',en:'Plan name'},
@@ -4804,20 +4712,12 @@
     pln_etapa: {es:'Etapa',en:'Stage'},
     documentacion: {es:'Documentación',en:'Documents'},
     pln_editar_o_borrar_planos: {es:'Editar o borrar planos',en:'Edit or delete plans'},
-    t_escribe_el_nombre_del_plano: {es:'Escribe el nombre del plano',en:'Enter the plan name'},
-    t_plano_guardado: {es:'Plano guardado ✓',en:'Plan saved ✓'},
     t_borrar_este_plano: {es:'¿Borrar este plano?',en:'Delete this plan?'},
-    cal_hora_opcional: {es:'Hora (opcional)',en:'Time (optional)'},
-    cal_direccion_desc: {es:'Dirección / Descripción del trabajo',en:'Address / Job description'},
     cal_exportar_semana: {es:'📅 Exportar semana a Calendario',en:'📅 Export week to Calendar'},
     cal_nuevo_trabajo: {es:'Nuevo trabajo',en:'New job'},
     cal_editar_trabajo: {es:'Editar trabajo',en:'Edit job'},
     cal_sin_trabajos: {es:'Sin trabajos agendados',en:'No jobs scheduled'},
     cal_sin_cliente: {es:'(sin cliente)',en:'(no client)'},
-    t_trabajo_guardado: {es:'Trabajo guardado ✓',en:'Job saved ✓'},
-    t_no_hay_trabajos_exportar: {es:'No hay trabajos para exportar',en:'No jobs to export'},
-    t_escribe_una_fecha: {es:'Escribe una fecha',en:'Enter a date'},
-    t_borrar_trabajo_agendado: {es:'¿Borrar este trabajo agendado?',en:'Delete this scheduled job?'}
   };
   const IDIOMA_KEY = 'gh-idioma';
 
@@ -5641,8 +5541,6 @@
     'Coil cleaning','Refrigerant recharge','Fan motor replacement'
   ];
   const invFmt = n => { const v = Math.round((Number(n) || 0) * 100) / 100; return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
-  // Días en inglés para la columna DAY de la factura (el invoice siempre se ve en inglés)
-  const INV_DIAS_SEMANA = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   // Fecha en números para los documentos (MM/DD/YYYY), nunca en letras
   // Fecha con guiones para la columna DATE de la factura: 09-19-2026
   function invFechaGuion(fechaISO) {
@@ -5656,12 +5554,6 @@
     const p = String(fechaISO).slice(0, 10).split('-');
     if (p.length !== 3) return fechaISO;
     return `${p[1]}/${p[2]}/${p[0]}`;
-  }
-  function invDiaDeFecha(fechaISO) {
-    if (!fechaISO) return '';
-    const [y, m, d] = fechaISO.split('-').map(Number);
-    const dow = new Date(y, m - 1, d).getDay(); // 0=domingo
-    return dow === 0 ? 'Sunday' : INV_DIAS_SEMANA[dow - 1];
   }
 
 // ---- 10-calendario.js ----
@@ -7791,13 +7683,6 @@
     Promise.all([cslCargar(true), cslCargarFacturas()]).then(cslRender).catch(() => {});
   }));
 
-  // Factura guardada → imprimir la factura con las hojas de sus lotes
-  async function cslImprimirFacturaConHojas(inv) {
-    await cslCargar(true);
-    const claves = Object.keys(cslDatos).filter((k) => (inv.items || []).some((it) => cslCoincide(k, it.location)));
-    if (!claves.length) toast('Esta factura no tiene completion sheets guardadas; se imprime sola', 'info', 3500);
-    window.GH_IMPRIMIR_HOJAS({ facturas: [inv], entradas: claves.map((k) => cslDatos[k]), doble: true, titulo: `Invoice ${inv.numero || ''} + hojas` });
-  }
 
   // Datos de la compañía para que el visor pueda imprimir la factura
   // (nombre, dirección, logo y colores; nada de socios ni dinero)
@@ -7874,11 +7759,6 @@
     });
   }
 
-  function invColOpts(sel = '') {
-    return ['<option value="" data-i18n="seleccionar">— Seleccionar —</option>',
-      ...invColonias.map(c => `<option value="${escapeHtml(c)}"${c===sel?' selected':''}>${escapeHtml(c)}</option>`)
-    ].join('');
-  }
 
   function invRefreshSelects() {
     document.querySelectorAll('.dl-colonias-row').forEach(d => {
@@ -9262,14 +9142,6 @@
   $('nom-grid-btn-add').addEventListener('click', nomGridAgregarTrabajador);
   $('nom-grid-buscar').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); nomGridAgregarTrabajador(); } });
 
-  // Nombre completo del día con fecha: "Lunes 4 de Agosto de 2026"
-  function nomFechaCompleta(fechaStr) {
-    const d = new Date(fechaStr + 'T00:00:00');
-    if (isNaN(d)) return fechaStr;
-    const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
-  }
 
   // ---- Guardar cambios de la semana (crea/actualiza/quita pagos de todos los trabajadores a la vez) ----
   $('nom-grid-guardar').addEventListener('click', () => nomGuardarSemana());
@@ -9880,12 +9752,10 @@
     return nomCargaPromesa;
   }
 
+
   // ====================================================================
   // RECIBO SEMANAL
   // ====================================================================
-  const RECIBOS_KEY = 'gh-recibos-semanales';
-  let nomCopias = [];
-
   // Día abreviado con número: "Lun 4"
   function nomDiaCorto(fechaStr) {
     const d = new Date(fechaStr + 'T00:00:00');
@@ -11780,37 +11650,10 @@
     d.textContent = str == null ? '' : String(str);
     return d.innerHTML;
   }
-  function fmtVisor(n) {
-    return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
   // (Este script es aparte: la versión de la app principal no se ve desde aquí)
   function ghFechaLocal(d) {
     d = d || new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  }
-  function diaCortoVisor(fechaStr) {
-    const d = new Date(fechaStr + 'T00:00:00');
-    if (isNaN(d)) return fechaStr;
-    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    return `${dias[d.getDay()]} ${d.getDate()}`;
-  }
-  function weekKeyVisor(fechaStr) {
-    const d = new Date(fechaStr + 'T00:00:00');
-    if (isNaN(d)) return '';
-    const day = (d.getDay() + 6) % 7;
-    const lunes = new Date(d); lunes.setDate(d.getDate() - day);
-    return ghFechaLocal(lunes);
-  }
-  function weekRangoVisor(weekKey) {
-    const lunes = new Date(weekKey + 'T00:00:00');
-    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
-    return { inicio: weekKey, fin: ghFechaLocal(domingo) };
-  }
-  function fechaCortaVisor(fechaStr) {
-    const d = new Date(fechaStr + 'T00:00:00');
-    if (isNaN(d)) return fechaStr;
-    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
   }
 
   async function aplicarModoVisorMultiCuenta() {
@@ -12010,7 +11853,6 @@
   const CHK_DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const CHK_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const CHK_MAX_ATRAS = 13;   // se puede corregir hasta 2 semanas atrás
-  function chkNombre(e) { return ((e && e.apellido) ? (e.nombre + ' ' + e.apellido) : ((e && e.nombre) || '')).trim(); }
   function chkSumarDias(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return ghFechaLocal(d); }
   function chkHora(isoTs) {
     const d = new Date(isoTs); if (isNaN(d)) return '';

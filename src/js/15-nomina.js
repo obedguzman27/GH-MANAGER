@@ -357,14 +357,6 @@
   $('nom-grid-btn-add').addEventListener('click', nomGridAgregarTrabajador);
   $('nom-grid-buscar').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); nomGridAgregarTrabajador(); } });
 
-  // Nombre completo del día con fecha: "Lunes 4 de Agosto de 2026"
-  function nomFechaCompleta(fechaStr) {
-    const d = new Date(fechaStr + 'T00:00:00');
-    if (isNaN(d)) return fechaStr;
-    const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    return `${dias[d.getDay()]} ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
-  }
 
   // ---- Guardar cambios de la semana (crea/actualiza/quita pagos de todos los trabajadores a la vez) ----
   $('nom-grid-guardar').addEventListener('click', () => nomGuardarSemana());
@@ -975,12 +967,10 @@
     return nomCargaPromesa;
   }
 
+
   // ====================================================================
   // RECIBO SEMANAL
   // ====================================================================
-  const RECIBOS_KEY = 'gh-recibos-semanales';
-  let nomCopias = [];
-
   // Día abreviado con número: "Lun 4"
   function nomDiaCorto(fechaStr) {
     const d = new Date(fechaStr + 'T00:00:00');

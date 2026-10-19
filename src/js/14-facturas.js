@@ -59,11 +59,6 @@
     });
   }
 
-  function invColOpts(sel = '') {
-    return ['<option value="" data-i18n="seleccionar">— Seleccionar —</option>',
-      ...invColonias.map(c => `<option value="${escapeHtml(c)}"${c===sel?' selected':''}>${escapeHtml(c)}</option>`)
-    ].join('');
-  }
 
   function invRefreshSelects() {
     document.querySelectorAll('.dl-colonias-row').forEach(d => {

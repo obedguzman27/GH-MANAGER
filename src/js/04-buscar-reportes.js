@@ -585,11 +585,6 @@
     });
   }
 
-  // (Ya no se usa directamente — se dejó por compatibilidad. Redirige al
-  //  método que sí funciona en el iPhone instalado.)
-  function imprimirContenido(htmlCuerpo, titulo) {
-    ghImprimirEnVentana(htmlCuerpo, titulo);
-  }
 
   function ghConstruirHTMLDescargaReparto() {
     const cuerpo = construirHTMLInvoice(invoiceEnVista);

@@ -3,7 +3,6 @@
   const KEY_CAT_INGRESO = 'catIngresos';
   const KEY_INVOICES = 'invoicesGuardados';
   let TASA_TAXAS = 0.10;   // configurable en Ajustes → Avanzado → Socios
-  const BONO_CRA = 0.10;
 
   // ---- Aviso de conexión (la app depende de internet para guardar en la nube) ----
   function actualizarBannerConexion() {
@@ -470,11 +469,6 @@
     document.querySelectorAll('.socio-mitad').forEach((e) => { e.textContent = cfgSocioMitad; });
   }
 
-  // ============================================================
-  // RECORDATORIOS — avisan al abrir la app (no son notificaciones
-  // push reales: solo se muestran si la app está abierta).
-  // ============================================================
-  const fmtDia = (iso) => { const [y, m, d] = iso.split('-'); return `${d}/${m}`; };
 
   const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 

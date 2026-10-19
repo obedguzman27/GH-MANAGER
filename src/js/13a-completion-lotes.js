@@ -281,13 +281,6 @@
     Promise.all([cslCargar(true), cslCargarFacturas()]).then(cslRender).catch(() => {});
   }));
 
-  // Factura guardada → imprimir la factura con las hojas de sus lotes
-  async function cslImprimirFacturaConHojas(inv) {
-    await cslCargar(true);
-    const claves = Object.keys(cslDatos).filter((k) => (inv.items || []).some((it) => cslCoincide(k, it.location)));
-    if (!claves.length) toast('Esta factura no tiene completion sheets guardadas; se imprime sola', 'info', 3500);
-    window.GH_IMPRIMIR_HOJAS({ facturas: [inv], entradas: claves.map((k) => cslDatos[k]), doble: true, titulo: `Invoice ${inv.numero || ''} + hojas` });
-  }
 
   // Datos de la compañía para que el visor pueda imprimir la factura
   // (nombre, dirección, logo y colores; nada de socios ni dinero)

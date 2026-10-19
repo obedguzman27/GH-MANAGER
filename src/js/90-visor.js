@@ -53,37 +53,10 @@
     d.textContent = str == null ? '' : String(str);
     return d.innerHTML;
   }
-  function fmtVisor(n) {
-    return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
   // (Este script es aparte: la versión de la app principal no se ve desde aquí)
   function ghFechaLocal(d) {
     d = d || new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  }
-  function diaCortoVisor(fechaStr) {
-    const d = new Date(fechaStr + 'T00:00:00');
-    if (isNaN(d)) return fechaStr;
-    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    return `${dias[d.getDay()]} ${d.getDate()}`;
-  }
-  function weekKeyVisor(fechaStr) {
-    const d = new Date(fechaStr + 'T00:00:00');
-    if (isNaN(d)) return '';
-    const day = (d.getDay() + 6) % 7;
-    const lunes = new Date(d); lunes.setDate(d.getDate() - day);
-    return ghFechaLocal(lunes);
-  }
-  function weekRangoVisor(weekKey) {
-    const lunes = new Date(weekKey + 'T00:00:00');
-    const domingo = new Date(lunes); domingo.setDate(lunes.getDate() + 6);
-    return { inicio: weekKey, fin: ghFechaLocal(domingo) };
-  }
-  function fechaCortaVisor(fechaStr) {
-    const d = new Date(fechaStr + 'T00:00:00');
-    if (isNaN(d)) return fechaStr;
-    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
   }
 
   async function aplicarModoVisorMultiCuenta() {
@@ -283,7 +256,6 @@
   const CHK_DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const CHK_MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const CHK_MAX_ATRAS = 13;   // se puede corregir hasta 2 semanas atrás
-  function chkNombre(e) { return ((e && e.apellido) ? (e.nombre + ' ' + e.apellido) : ((e && e.nombre) || '')).trim(); }
   function chkSumarDias(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return ghFechaLocal(d); }
   function chkHora(isoTs) {
     const d = new Date(isoTs); if (isNaN(d)) return '';
