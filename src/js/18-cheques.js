@@ -688,7 +688,7 @@
       detalle = `<table class="t-det multi">${tit}${filas.join('')}${titGan}${filasGan.join('')}</table>`;
     }
     return `<div class="talon" style="top:${top}in;height:${alto}in;left:${(0.5 + (dx || 0)).toFixed(3)}in;">
-      <div class="t-head"><span>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</span><span>${titulo} · Check #${escapeHtml(String(c.numero))}</span></div>
+      <div class="t-head"><span>${titulo}</span></div>
       <table class="t-main">
         <tr><td class="k">Date</td><td>${escapeHtml(chqFechaUS(c.fecha))}</td></tr>
         <tr><td class="k">Paid to</td><td>${escapeHtml(c.a)}</td></tr>

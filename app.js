@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v224';
+  window.GH_APP_VERSION = 'v225';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -11006,7 +11006,7 @@
       detalle = `<table class="t-det multi">${tit}${filas.join('')}${titGan}${filasGan.join('')}</table>`;
     }
     return `<div class="talon" style="top:${top}in;height:${alto}in;left:${(0.5 + (dx || 0)).toFixed(3)}in;">
-      <div class="t-head"><span>${escapeHtml(cfgFacturaNombre || 'GUZMAN HVAC')}</span><span>${titulo} · Check #${escapeHtml(String(c.numero))}</span></div>
+      <div class="t-head"><span>${titulo}</span></div>
       <table class="t-main">
         <tr><td class="k">Date</td><td>${escapeHtml(chqFechaUS(c.fecha))}</td></tr>
         <tr><td class="k">Paid to</td><td>${escapeHtml(c.a)}</td></tr>
