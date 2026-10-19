@@ -662,8 +662,8 @@ def talones_no_se_pasan(p, c):
         return { top: r.top / 96, bot: r.bottom / 96, left: r.left / 96, right: r.right / 96, cabe: t.scrollHeight <= t.clientHeight + 1 }; }); }""")
     assert len(info) == 2, info
     a, b = info
-    assert a['top'] >= 0.29 and a['bot'] <= 3.39 and a['cabe'], a
-    assert b['top'] >= 7.11 and b['bot'] <= 10.51 and b['cabe'], b
+    assert a['top'] >= 0.29 and a['bot'] <= 3.11 and a['cabe'], a
+    assert b['top'] >= 7.11 and b['bot'] <= 10.31 and b['cabe'], b
     for t in info: assert t['left'] >= 0.19 and t['right'] <= 8.31, t
     c.errores.clear()
 

@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v226 · prueba';
+  window.GH_APP_VERSION = 'v227 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -10343,9 +10343,10 @@
         memo:   { x: 0.80, y: 2.55 }
       },
       // talones: debajo del nombre que ya viene impreso arriba de cada uno
-      talones: [{ top: 0.55, alto: 2.75 }, { top: 7.45, alto: 3.0 }],
+      talones: [{ top: 0.45, alto: 2.5 }, { top: 7.45, alto: 2.85 }],
       // espacio del papel que le toca a cada talón (nunca se pasa de ahí)
-      zonas: [{ ini: 0.3, fin: 3.38 }, { ini: 7.12, fin: 10.5 }],
+      // con margen de 1/4" porque algunas impresoras bajan la hoja unos milímetros
+      zonas: [{ ini: 0.3, fin: 3.1 }, { ini: 7.12, fin: 10.3 }],
       guias: [{ top: 0, alto: 3.5, txt: 'Stub 1' }, { top: 3.5, alto: 3.5, txt: 'Check 8½" x 3½" — TEST PRINT, NOT A CHECK' }, { top: 7, alto: 4, txt: 'Stub 2' }]
     },
     // Cheque arriba (el formato que usaba la app antes)
