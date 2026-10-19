@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v225 · prueba';
+  window.GH_APP_VERSION = 'v226 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -11079,7 +11079,7 @@
   <div class="f letras" style="${pos('letras')}">${escapeHtml(letras)} ${relleno}</div>
   <div class="f" style="${pos('a')}">${escapeHtml(c.a)}</div>
   ${c.memo ? `<div class="f memo" style="${pos('memo')}">${escapeHtml(c.memo)}</div>` : ''}
-  ${talones ? chqTalonHTML(c, T[0].top, (chqPagosDeCheque(c).length > 1 || (c.ganancias && c.ganancias.length)) ? 'Payee copy' : 'Employee copy', T[0].alto, T[0].x) + chqTalonHTML(c, T[1].top, 'Company copy', T[1].alto, T[1].x) : ''}
+  ${talones ? chqTalonHTML(c, T[0].top, 'Company copy', T[0].alto, T[0].x) + chqTalonHTML(c, T[1].top, (chqPagosDeCheque(c).length > 1 || (c.ganancias && c.ganancias.length)) ? 'Payee copy' : 'Employee copy', T[1].alto, T[1].x) : ''}
 </div>
 <script>
   // Si el talón no cabe en su espacio, se achica la letra poco a poco hasta que quepa
