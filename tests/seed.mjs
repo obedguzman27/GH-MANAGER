@@ -37,7 +37,7 @@ poner('__cuenta::u-admin', null); D['__cuenta::u-admin'].valor = 'prueba';
 poner('__cuenta::u-visor', null); D['__cuenta::u-visor'].valor = 'prueba';
 poner('__visor_cuentas::u-visor', ['prueba']); D['__visor_cuentas::u-visor'].valor = JSON.stringify(['prueba']);
 poner('__cuentas_lista', [{ codigo: 'prueba', nombre: 'Base de prueba' }, { codigo: 'otra', nombre: 'Otra base' }]);
-poner(P + 'kontaly-config', { socios: [{ id: 'socio-1', nombre: 'CRA HVAC', bonoPct: 10 }], socioBonus: 'CRA HVAC', socioMitad: 'GUZMAN HVAC',
+poner(P + 'gh-config', { socios: [{ id: 'socio-1', nombre: 'CRA HVAC', bonoPct: 10 }], socioBonus: 'CRA HVAC', socioMitad: 'GUZMAN HVAC',
   facturaNombre: 'GUZMAN HVAC', facturaDireccion: '500 Demo Rd, Nashville, TN', facturaSigueSocio: false, sociosMigrados: true,
   logoDataUrl: '', facturaColor: 'clasico', logoEnApp: false, ultimoCliente: 'Airtron', ultimoClienteDir: '123 Main St', tasaTaxas: 0.1 });
 poner(P + 'catGastos', ['Gas', 'Home Depot', 'Material', 'Nómina', 'Herramientas']);

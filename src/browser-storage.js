@@ -1,14 +1,8 @@
-// Reemplazo de window.electronAPI para cuando la app corre en el navegador
-// (iPhone / cualquier PC sin la versión de escritorio).
-// Guarda los PDFs dentro del propio dispositivo usando IndexedDB.
-// NOTA: esto es almacenamiento LOCAL al teléfono/navegador. Cuando se conecte
-// el backend en la nube (Fase 2), estas funciones se reemplazarán para que
-// los documentos también se sincronicen entre dispositivos.
+// Archivos PDF (papeles importantes y documentos de empleados).
+// Se guardan dentro del propio dispositivo usando IndexedDB (no en la nube).
+// La base 'guzman-hvac-archivos' NO se renombra: ahí están los PDFs ya guardados.
 
 (function () {
-  // Si ya existe window.electronAPI (estamos en la app de Windows), no hacer nada.
-  if (window.electronAPI) return;
-
   const DB_NAME = 'guzman-hvac-archivos';
   const STORE = 'archivos';
 
@@ -74,11 +68,10 @@
     });
   }
 
-  window.electronAPI = {
+  window.ghArchivos = {
     // Documentos de empleados
     guardarDocumentoBuffer: ({ trabajadorId, nombreArchivo, buffer }) =>
       guardarArchivo(`docs/${trabajadorId}/${nombreArchivo}`, nombreArchivo, buffer),
-    guardarDocumento: async () => ({ ok: false }), // requiere ruta de archivo local (solo Windows)
     listarDocumentos: (id) => listarArchivos(`docs/${id}/`),
     abrirDocumento: ({ trabajadorId, nombreArchivo }) => abrirArchivo(`docs/${trabajadorId}/${nombreArchivo}`),
     eliminarDocumento: ({ trabajadorId, nombreArchivo }) => eliminarArchivo(`docs/${trabajadorId}/${nombreArchivo}`),
@@ -86,7 +79,6 @@
     // Papeles importantes
     papelesListar: () => listarArchivos('papeles/'),
     papelesSubirBuffer: ({ nombreArchivo, buffer }) => guardarArchivo(`papeles/${nombreArchivo}`, nombreArchivo, buffer),
-    papelesSubir: async () => ({ ok: false }), // requiere ruta de archivo local (solo Windows)
     papelesAbrir: (nombreArchivo) => abrirArchivo(`papeles/${nombreArchivo}`),
     papelesEliminar: (nombreArchivo) => eliminarArchivo(`papeles/${nombreArchivo}`)
   };

@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v220 · prueba';
+  window.GH_APP_VERSION = 'v221 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -363,7 +363,23 @@
   // la lista (1, 2 o más); el ajuste manual (Movimientos → Ajuste) siempre
   // es del SEGUNDO socio de la lista. bonoPct = porcentaje de bono (0-100),
   // 0 significa que ese socio no recibe bono.
-  const CFG_KEY = 'kontaly-config';
+  const CFG_KEY = 'gh-config';
+  // Nombres viejos (de cuando la app se llamaba Kontaly). Al leer, si el nombre
+  // nuevo todavía no existe, se copia lo del viejo al nuevo. El viejo se queda
+  // como respaldo en la base de datos: no se borra nada.
+  const GH_NOMBRES_VIEJOS = { 'gh-config': 'kontaly-config', 'gh-accent': 'kontaly-accent' };
+  window.GH_NOMBRES_VIEJOS = GH_NOMBRES_VIEJOS;
+  async function ghLeerConNombreViejo(key) {
+    try { return await window.storage.get(key); }
+    catch (e) {
+      const viejo = GH_NOMBRES_VIEJOS[key];
+      if (!viejo || !e || e.message !== 'not found' || e.sinSenal) throw e;   // sin señal: no se toca nada
+      const r = await window.storage.get(viejo);   // si tampoco existe, avisa 'not found' igual que antes
+      if (r && r.value != null) { try { await window.storage.set(key, r.value); } catch (e2) {} }
+      return r;
+    }
+  }
+  window.GH_LEER_CON_NOMBRE_VIEJO = ghLeerConNombreViejo;
   // De fábrica NO hay socios: los que tengas vienen de tu configuración en la
   // nube. (Antes venían 2 de ejemplo y, si la nube tardaba en contestar, se
   // guardaban encima de los tuyos — por eso "regresaba" un socio borrado.)
@@ -396,7 +412,7 @@
     let sinSenal = false;
     for (let intento = 0; intento < 3; intento++) {
       try {
-        const r = await window.storage.get(CFG_KEY);
+        const r = await ghLeerConNombreViejo(CFG_KEY);
         const c = JSON.parse(r.value);
         if (c && typeof c === 'object') {
           try { localStorage.setItem(cfgCacheKey(), r.value); } catch (e) {}
@@ -3689,7 +3705,7 @@
         $('status-restaurar').textContent = 'Respaldo restaurado — todos los datos (registro, facturas y nómina) ya están actualizados.';
         toast('Respaldo restaurado ✓ — todo actualizado', 'success', 4000);
         $('input-restaurar-respaldo').value = '';
-        // Devolver el foco del teclado a la ventana (Electron lo pierde tras el selector)
+        // Devolver el foco del teclado a la ventana (se pierde tras el selector)
         setTimeout(() => { try { window.focus(); document.body.focus(); } catch(e){} }, 60);
       } catch (err) {
         $('status-restaurar').textContent = 'No se pudo leer el archivo: ' + (err && err.message ? err.message : 'error desconocido');
@@ -3734,13 +3750,7 @@
     lista.innerHTML = '';
     filtros.innerHTML = '';
 
-    if (!esElectron) {
-      $('papeles-web-note').style.display = '';
-      $('btn-subir-papel').style.display = 'none';
-      return;
-    }
-
-    const archivos = await window.electronAPI.papelesListar();
+    const archivos = await window.ghArchivos.papelesListar();
     const parsed = archivos.map(f => ({ archivo: f, ...parsearPapel(f) }));
 
     // Categorías que existen
@@ -3783,11 +3793,11 @@
           <button class="gc-del" data-archivo="${escapeHtml(p.archivo)}">✕</button>
         `;
         item.querySelector('.gc-action-btn').addEventListener('click', async () => {
-          await window.electronAPI.papelesAbrir(p.archivo);
+          await window.ghArchivos.papelesAbrir(p.archivo);
         });
         item.querySelector('.gc-del').addEventListener('click', async () => {
           if (!await gcConfirm(`¿Borrar "${p.nombre}"?`, { okText: 'Borrar', danger: true })) return;
-          await window.electronAPI.papelesEliminar(p.archivo);
+          await window.ghArchivos.papelesEliminar(p.archivo);
           renderPapeles();
         });
         docList.appendChild(item);
@@ -3797,7 +3807,7 @@
     });
   }
 
-  // ---- Subida de papeles via <input file> (funciona en Electron y navegador) ----
+  // ---- Subida de papeles via <input file> ----
   const _inputPapel = document.createElement('input');
   _inputPapel.type = 'file'; _inputPapel.accept = '.pdf';
   _inputPapel.style.display = 'none';
@@ -3816,13 +3826,7 @@
     const nombreFinal = `[${cat.replace(/[/\\:*?"<>|]/g, '-')}] ${nombreBase}`;
     try {
       const buffer = Array.from(new Uint8Array(await file.arrayBuffer()));
-      if (window.electronAPI?.papelesSubirBuffer) {
-        await window.electronAPI.papelesSubirBuffer({ nombreArchivo: nombreFinal, buffer });
-      } else if (window.electronAPI?.papelesSubir && file.path) {
-        await window.electronAPI.papelesSubir({ nombreArchivo: nombreFinal, rutaOrigen: file.path });
-      } else {
-        toast('Para guardar PDFs en la app usa la app de escritorio (Electron).', 'info', 3500); return;
-      }
+      await window.ghArchivos.papelesSubirBuffer({ nombreArchivo: nombreFinal, buffer });
       papelesFiltroActual = cat;
       renderPapeles();
     } catch(e) { toast('Error al subir: ' + e.message, 'error', 4000); }
@@ -4753,7 +4757,7 @@
   });
 
   // ---- Apariencia: color de acento (guardado por base de datos/cuenta) ----
-  const ACCENT_KEY = 'kontaly-accent';
+  const ACCENT_KEY = 'gh-accent';
   function aplicarAcento(nombre) {
     if (nombre === 'cobre') document.documentElement.removeAttribute('data-accent');
     else document.documentElement.setAttribute('data-accent', nombre);
@@ -4771,7 +4775,7 @@
   async function initAcentoPorCuenta() {
     if (typeof window.GH_ESPERAR_SESION === 'function') { try { await window.GH_ESPERAR_SESION(); } catch (e) {} }
     let guardado = 'cobre';
-    try { const r = await window.storage.get(ACCENT_KEY); guardado = JSON.parse(r.value) || 'cobre'; } catch (e) {}
+    try { const r = await ghLeerConNombreViejo(ACCENT_KEY); guardado = JSON.parse(r.value) || 'cobre'; } catch (e) {}
     aplicarAcento(guardado);
     try { localStorage.setItem('gh-accent-ultimo', guardado); } catch (e) {}
   }
@@ -4791,7 +4795,7 @@
   // SEGURIDAD: bloqueo con Face ID / PIN (local a este teléfono —
   // no usa window.storage porque una credencial de Face ID no tiene
   // sentido fuera del dispositivo donde se creó; así tampoco afecta
-  // a la versión de escritorio ni a otros teléfonos).
+  // a otros teléfonos).
   // Expuesto en window.GH_APPLOCK_* para que el script de "control de
   // acceso" al final del archivo pueda usarlo antes de revelar la app.
   // ============================================================
@@ -5094,7 +5098,7 @@
   (function initCuenta() {
     if (typeof window.GH_ESPERAR_SESION !== 'function') {
       const card = $('aj-card-cuenta');
-      if (card) card.style.display = 'none'; // versión de escritorio / sin login: no aplica
+      if (card) card.style.display = 'none'; // sin login: no aplica
       return;
     }
     window.GH_ESPERAR_SESION().then(() => {
@@ -5169,8 +5173,6 @@
     const n = emp.nombre || '??';
     return (n[0] + (n[1] || '')).toUpperCase();
   }
-
-  const esElectron = !!(window.electronAPI);
 
   // ---- Storage empleados ----
   async function saveEmpleados() {
@@ -5297,14 +5299,7 @@
     $('emp-etab-docs').style.display = 'none';
 
     // Docs UI
-    if (esElectron) {
-      $('docs-electron-ui').style.display = '';
-      $('docs-web-note').style.display = 'none';
-      if (id) cargarDocumentos(id);
-    } else {
-      $('docs-electron-ui').style.display = 'none';
-      $('docs-web-note').style.display = '';
-    }
+    if (id) cargarDocumentos(id);
 
     $('emp-modal').style.display = 'flex';
   }
@@ -5436,7 +5431,7 @@
       tab.classList.add('active');
       $('emp-etab-info').style.display = tab.dataset.etab === 'info' ? '' : 'none';
       $('emp-etab-docs').style.display = tab.dataset.etab === 'docs' ? '' : 'none';
-      if (tab.dataset.etab === 'docs' && esElectron && empIdActual) cargarDocumentos(empIdActual);
+      if (tab.dataset.etab === 'docs' && empIdActual) cargarDocumentos(empIdActual);
     });
   });
 
@@ -5445,10 +5440,9 @@
   $('emp-modal').addEventListener('click', (e) => { if (e.target === $('emp-modal')) $('emp-modal').style.display = 'none'; });
   $('btn-nuevo-empleado').addEventListener('click', () => abrirModalEmpleado(null));
 
-  // ---- DOCUMENTOS (solo Electron) ----
+  // ---- DOCUMENTOS (PDFs guardados en este dispositivo) ----
   async function cargarDocumentos(empId) {
-    if (!esElectron) return;
-    const docs = await window.electronAPI.listarDocumentos(empId);
+    const docs = await window.ghArchivos.listarDocumentos(empId);
     const list = $('doc-list');
     list.innerHTML = '';
     if (docs.length === 0) {
@@ -5470,15 +5464,11 @@
         <button class="gc-del" data-doc="${escapeHtml(doc)}">✕</button>
       `;
       item.querySelector('.gc-action-btn').addEventListener('click', async () => {
-        if (window.electronAPI?.abrirDocumento) {
-          await window.electronAPI.abrirDocumento({ trabajadorId: empIdActual, nombreArchivo: doc });
-        } else { toast('Para abrir PDFs usa la app de escritorio.', 'info', 3500); }
+        await window.ghArchivos.abrirDocumento({ trabajadorId: empIdActual, nombreArchivo: doc });
       });
       item.querySelector('.gc-del').addEventListener('click', async () => {
         if (!await gcConfirm('¿Borrar este documento?', { okText: 'Borrar', danger: true })) return;
-        if (window.electronAPI?.eliminarDocumento) {
-          await window.electronAPI.eliminarDocumento({ trabajadorId: empIdActual, nombreArchivo: doc });
-        }
+        await window.ghArchivos.eliminarDocumento({ trabajadorId: empIdActual, nombreArchivo: doc });
         cargarDocumentos(empIdActual);
       });
       list.appendChild(item);
@@ -5504,13 +5494,7 @@
     const nombreFinal = `[${cat.replace(/[/\\:*?"<>|]/g, '-')}] ${nombreBase}`;
     try {
       const buffer = Array.from(new Uint8Array(await file.arrayBuffer()));
-      if (window.electronAPI?.guardarDocumentoBuffer) {
-        await window.electronAPI.guardarDocumentoBuffer({ trabajadorId: empIdActual, nombreArchivo: nombreFinal, buffer });
-      } else if (window.electronAPI?.guardarDocumento && file.path) {
-        await window.electronAPI.guardarDocumento({ trabajadorId: empIdActual, nombreArchivo: nombreFinal, rutaOrigen: file.path });
-      } else {
-        toast('Para subir PDFs usa la app de escritorio (Electron).', 'info', 3500); return;
-      }
+      await window.ghArchivos.guardarDocumentoBuffer({ trabajadorId: empIdActual, nombreArchivo: nombreFinal, buffer });
       cargarDocumentos(empIdActual);
     } catch(e) { toast('Error al subir: ' + e.message, 'error', 4000); }
   });
@@ -10497,7 +10481,7 @@
     if (!chqBasesInfo.some((c) => c.codigo === actual)) chqBasesInfo.unshift({ codigo: actual, nombre: 'Esta base' });
     const leer = async (codigo, key) => { try { const v = await window.GH_LEER_DE_CUENTA(codigo, key); return v ? JSON.parse(v) : null; } catch (e) { return null; } };
     await Promise.all(cuentas.filter((c) => c.codigo !== actual).map(async (c) => {
-      const [docs, emps, cfg, invs] = await Promise.all([leer(c.codigo, 'gh-nomina'), leer(c.codigo, 'empleados'), leer(c.codigo, 'kontaly-config'), leer(c.codigo, KEY_INVOICES)]);
+      const [docs, emps, cfg, invs] = await Promise.all([leer(c.codigo, 'gh-nomina'), leer(c.codigo, 'empleados'), leer(c.codigo, 'gh-config').then((v) => v || leer(c.codigo, 'kontaly-config')), leer(c.codigo, KEY_INVOICES)]);
       if (Array.isArray(invs)) invs.forEach((inv) => chqAgregarGanancias(inv, c.codigo, c.nombre, 'guardado'));
       if (!Array.isArray(docs) || !docs.length) return;
       const ctx = {

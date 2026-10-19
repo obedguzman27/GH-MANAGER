@@ -1103,7 +1103,7 @@
         $('status-restaurar').textContent = 'Respaldo restaurado — todos los datos (registro, facturas y nómina) ya están actualizados.';
         toast('Respaldo restaurado ✓ — todo actualizado', 'success', 4000);
         $('input-restaurar-respaldo').value = '';
-        // Devolver el foco del teclado a la ventana (Electron lo pierde tras el selector)
+        // Devolver el foco del teclado a la ventana (se pierde tras el selector)
         setTimeout(() => { try { window.focus(); document.body.focus(); } catch(e){} }, 60);
       } catch (err) {
         $('status-restaurar').textContent = 'No se pudo leer el archivo: ' + (err && err.message ? err.message : 'error desconocido');

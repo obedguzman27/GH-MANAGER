@@ -16,8 +16,6 @@
     return (n[0] + (n[1] || '')).toUpperCase();
   }
 
-  const esElectron = !!(window.electronAPI);
-
   // ---- Storage empleados ----
   async function saveEmpleados() {
     try {
@@ -143,14 +141,7 @@
     $('emp-etab-docs').style.display = 'none';
 
     // Docs UI
-    if (esElectron) {
-      $('docs-electron-ui').style.display = '';
-      $('docs-web-note').style.display = 'none';
-      if (id) cargarDocumentos(id);
-    } else {
-      $('docs-electron-ui').style.display = 'none';
-      $('docs-web-note').style.display = '';
-    }
+    if (id) cargarDocumentos(id);
 
     $('emp-modal').style.display = 'flex';
   }
@@ -282,7 +273,7 @@
       tab.classList.add('active');
       $('emp-etab-info').style.display = tab.dataset.etab === 'info' ? '' : 'none';
       $('emp-etab-docs').style.display = tab.dataset.etab === 'docs' ? '' : 'none';
-      if (tab.dataset.etab === 'docs' && esElectron && empIdActual) cargarDocumentos(empIdActual);
+      if (tab.dataset.etab === 'docs' && empIdActual) cargarDocumentos(empIdActual);
     });
   });
 
@@ -291,10 +282,9 @@
   $('emp-modal').addEventListener('click', (e) => { if (e.target === $('emp-modal')) $('emp-modal').style.display = 'none'; });
   $('btn-nuevo-empleado').addEventListener('click', () => abrirModalEmpleado(null));
 
-  // ---- DOCUMENTOS (solo Electron) ----
+  // ---- DOCUMENTOS (PDFs guardados en este dispositivo) ----
   async function cargarDocumentos(empId) {
-    if (!esElectron) return;
-    const docs = await window.electronAPI.listarDocumentos(empId);
+    const docs = await window.ghArchivos.listarDocumentos(empId);
     const list = $('doc-list');
     list.innerHTML = '';
     if (docs.length === 0) {
@@ -316,15 +306,11 @@
         <button class="gc-del" data-doc="${escapeHtml(doc)}">✕</button>
       `;
       item.querySelector('.gc-action-btn').addEventListener('click', async () => {
-        if (window.electronAPI?.abrirDocumento) {
-          await window.electronAPI.abrirDocumento({ trabajadorId: empIdActual, nombreArchivo: doc });
-        } else { toast('Para abrir PDFs usa la app de escritorio.', 'info', 3500); }
+        await window.ghArchivos.abrirDocumento({ trabajadorId: empIdActual, nombreArchivo: doc });
       });
       item.querySelector('.gc-del').addEventListener('click', async () => {
         if (!await gcConfirm('¿Borrar este documento?', { okText: 'Borrar', danger: true })) return;
-        if (window.electronAPI?.eliminarDocumento) {
-          await window.electronAPI.eliminarDocumento({ trabajadorId: empIdActual, nombreArchivo: doc });
-        }
+        await window.ghArchivos.eliminarDocumento({ trabajadorId: empIdActual, nombreArchivo: doc });
         cargarDocumentos(empIdActual);
       });
       list.appendChild(item);
@@ -350,13 +336,7 @@
     const nombreFinal = `[${cat.replace(/[/\\:*?"<>|]/g, '-')}] ${nombreBase}`;
     try {
       const buffer = Array.from(new Uint8Array(await file.arrayBuffer()));
-      if (window.electronAPI?.guardarDocumentoBuffer) {
-        await window.electronAPI.guardarDocumentoBuffer({ trabajadorId: empIdActual, nombreArchivo: nombreFinal, buffer });
-      } else if (window.electronAPI?.guardarDocumento && file.path) {
-        await window.electronAPI.guardarDocumento({ trabajadorId: empIdActual, nombreArchivo: nombreFinal, rutaOrigen: file.path });
-      } else {
-        toast('Para subir PDFs usa la app de escritorio (Electron).', 'info', 3500); return;
-      }
+      await window.ghArchivos.guardarDocumentoBuffer({ trabajadorId: empIdActual, nombreArchivo: nombreFinal, buffer });
       cargarDocumentos(empIdActual);
     } catch(e) { toast('Error al subir: ' + e.message, 'error', 4000); }
   });

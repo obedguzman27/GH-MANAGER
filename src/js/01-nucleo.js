@@ -270,7 +270,23 @@
   // la lista (1, 2 o más); el ajuste manual (Movimientos → Ajuste) siempre
   // es del SEGUNDO socio de la lista. bonoPct = porcentaje de bono (0-100),
   // 0 significa que ese socio no recibe bono.
-  const CFG_KEY = 'kontaly-config';
+  const CFG_KEY = 'gh-config';
+  // Nombres viejos (de cuando la app se llamaba Kontaly). Al leer, si el nombre
+  // nuevo todavía no existe, se copia lo del viejo al nuevo. El viejo se queda
+  // como respaldo en la base de datos: no se borra nada.
+  const GH_NOMBRES_VIEJOS = { 'gh-config': 'kontaly-config', 'gh-accent': 'kontaly-accent' };
+  window.GH_NOMBRES_VIEJOS = GH_NOMBRES_VIEJOS;
+  async function ghLeerConNombreViejo(key) {
+    try { return await window.storage.get(key); }
+    catch (e) {
+      const viejo = GH_NOMBRES_VIEJOS[key];
+      if (!viejo || !e || e.message !== 'not found' || e.sinSenal) throw e;   // sin señal: no se toca nada
+      const r = await window.storage.get(viejo);   // si tampoco existe, avisa 'not found' igual que antes
+      if (r && r.value != null) { try { await window.storage.set(key, r.value); } catch (e2) {} }
+      return r;
+    }
+  }
+  window.GH_LEER_CON_NOMBRE_VIEJO = ghLeerConNombreViejo;
   // De fábrica NO hay socios: los que tengas vienen de tu configuración en la
   // nube. (Antes venían 2 de ejemplo y, si la nube tardaba en contestar, se
   // guardaban encima de los tuyos — por eso "regresaba" un socio borrado.)
@@ -303,7 +319,7 @@
     let sinSenal = false;
     for (let intento = 0; intento < 3; intento++) {
       try {
-        const r = await window.storage.get(CFG_KEY);
+        const r = await ghLeerConNombreViejo(CFG_KEY);
         const c = JSON.parse(r.value);
         if (c && typeof c === 'object') {
           try { localStorage.setItem(cfgCacheKey(), r.value); } catch (e) {}

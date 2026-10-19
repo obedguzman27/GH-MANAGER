@@ -2,7 +2,7 @@
   // SEGURIDAD: bloqueo con Face ID / PIN (local a este teléfono —
   // no usa window.storage porque una credencial de Face ID no tiene
   // sentido fuera del dispositivo donde se creó; así tampoco afecta
-  // a la versión de escritorio ni a otros teléfonos).
+  // a otros teléfonos).
   // Expuesto en window.GH_APPLOCK_* para que el script de "control de
   // acceso" al final del archivo pueda usarlo antes de revelar la app.
   // ============================================================
@@ -305,7 +305,7 @@
   (function initCuenta() {
     if (typeof window.GH_ESPERAR_SESION !== 'function') {
       const card = $('aj-card-cuenta');
-      if (card) card.style.display = 'none'; // versión de escritorio / sin login: no aplica
+      if (card) card.style.display = 'none'; // sin login: no aplica
       return;
     }
     window.GH_ESPERAR_SESION().then(() => {

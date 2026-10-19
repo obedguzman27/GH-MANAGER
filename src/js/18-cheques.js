@@ -163,7 +163,7 @@
     if (!chqBasesInfo.some((c) => c.codigo === actual)) chqBasesInfo.unshift({ codigo: actual, nombre: 'Esta base' });
     const leer = async (codigo, key) => { try { const v = await window.GH_LEER_DE_CUENTA(codigo, key); return v ? JSON.parse(v) : null; } catch (e) { return null; } };
     await Promise.all(cuentas.filter((c) => c.codigo !== actual).map(async (c) => {
-      const [docs, emps, cfg, invs] = await Promise.all([leer(c.codigo, 'gh-nomina'), leer(c.codigo, 'empleados'), leer(c.codigo, 'kontaly-config'), leer(c.codigo, KEY_INVOICES)]);
+      const [docs, emps, cfg, invs] = await Promise.all([leer(c.codigo, 'gh-nomina'), leer(c.codigo, 'empleados'), leer(c.codigo, 'gh-config').then((v) => v || leer(c.codigo, 'kontaly-config')), leer(c.codigo, KEY_INVOICES)]);
       if (Array.isArray(invs)) invs.forEach((inv) => chqAgregarGanancias(inv, c.codigo, c.nombre, 'guardado'));
       if (!Array.isArray(docs) || !docs.length) return;
       const ctx = {

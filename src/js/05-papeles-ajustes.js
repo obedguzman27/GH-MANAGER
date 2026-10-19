@@ -15,13 +15,7 @@
     lista.innerHTML = '';
     filtros.innerHTML = '';
 
-    if (!esElectron) {
-      $('papeles-web-note').style.display = '';
-      $('btn-subir-papel').style.display = 'none';
-      return;
-    }
-
-    const archivos = await window.electronAPI.papelesListar();
+    const archivos = await window.ghArchivos.papelesListar();
     const parsed = archivos.map(f => ({ archivo: f, ...parsearPapel(f) }));
 
     // Categorías que existen
@@ -64,11 +58,11 @@
           <button class="gc-del" data-archivo="${escapeHtml(p.archivo)}">✕</button>
         `;
         item.querySelector('.gc-action-btn').addEventListener('click', async () => {
-          await window.electronAPI.papelesAbrir(p.archivo);
+          await window.ghArchivos.papelesAbrir(p.archivo);
         });
         item.querySelector('.gc-del').addEventListener('click', async () => {
           if (!await gcConfirm(`¿Borrar "${p.nombre}"?`, { okText: 'Borrar', danger: true })) return;
-          await window.electronAPI.papelesEliminar(p.archivo);
+          await window.ghArchivos.papelesEliminar(p.archivo);
           renderPapeles();
         });
         docList.appendChild(item);
@@ -78,7 +72,7 @@
     });
   }
 
-  // ---- Subida de papeles via <input file> (funciona en Electron y navegador) ----
+  // ---- Subida de papeles via <input file> ----
   const _inputPapel = document.createElement('input');
   _inputPapel.type = 'file'; _inputPapel.accept = '.pdf';
   _inputPapel.style.display = 'none';
@@ -97,13 +91,7 @@
     const nombreFinal = `[${cat.replace(/[/\\:*?"<>|]/g, '-')}] ${nombreBase}`;
     try {
       const buffer = Array.from(new Uint8Array(await file.arrayBuffer()));
-      if (window.electronAPI?.papelesSubirBuffer) {
-        await window.electronAPI.papelesSubirBuffer({ nombreArchivo: nombreFinal, buffer });
-      } else if (window.electronAPI?.papelesSubir && file.path) {
-        await window.electronAPI.papelesSubir({ nombreArchivo: nombreFinal, rutaOrigen: file.path });
-      } else {
-        toast('Para guardar PDFs en la app usa la app de escritorio (Electron).', 'info', 3500); return;
-      }
+      await window.ghArchivos.papelesSubirBuffer({ nombreArchivo: nombreFinal, buffer });
       papelesFiltroActual = cat;
       renderPapeles();
     } catch(e) { toast('Error al subir: ' + e.message, 'error', 4000); }

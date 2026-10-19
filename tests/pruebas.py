@@ -594,5 +594,28 @@ def lotes_cobrados_y_buscador(p, c):
     pg.click('#cobros-lista .lc-fact >> nth=0'); pg.wait_for_timeout(400)
     assert pg.is_visible('#inv-ov')
 
+@prueba
+def nombre_viejo_kontaly_se_pasa_solo(p, c):
+    d = db(); da = d['datos_app']
+    da['c:prueba::kontaly-config'] = dict(da.pop('c:prueba::gh-config'), clave='c:prueba::kontaly-config')
+    da['c:prueba::kontaly-accent'] = {'clave': 'c:prueba::kontaly-accent', 'valor': '"azul"', 'actualizado_por': 'u-admin', 'actualizado_en': '2026-10-01T12:00:00.000+00:00'}
+    poner_db(d)
+    pg = c.pagina(); pg.wait_for_timeout(1500)
+    nuevo = valor(None, 'c:prueba::gh-config'); viejo = valor(None, 'c:prueba::kontaly-config')
+    assert nuevo and nuevo['socios'][0]['nombre'] == 'CRA HVAC', nuevo
+    assert viejo == nuevo, 'el viejo se queda igual como respaldo'
+    assert valor(None, 'c:prueba::gh-accent') == 'azul'
+    assert pg.evaluate("document.documentElement.getAttribute('data-accent')") == 'azul'
+
+@prueba
+def papeles_pdf_se_guardan(p, c):
+    pg = c.pagina()
+    r = pg.evaluate("""async () => {
+      await window.ghArchivos.papelesSubirBuffer({ nombreArchivo: '[Seguro] poliza.pdf', buffer: [37,80,68,70] });
+      await window.ghArchivos.guardarDocumentoBuffer({ trabajadorId: 'e1', nombreArchivo: '[ID] lic.pdf', buffer: [1,2] });
+      return [await window.ghArchivos.papelesListar(), await window.ghArchivos.listarDocumentos('e1')];
+    }""")
+    assert r == [['[Seguro] poliza.pdf'], ['[ID] lic.pdf']], r
+
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

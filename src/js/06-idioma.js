@@ -247,7 +247,7 @@
   });
 
   // ---- Apariencia: color de acento (guardado por base de datos/cuenta) ----
-  const ACCENT_KEY = 'kontaly-accent';
+  const ACCENT_KEY = 'gh-accent';
   function aplicarAcento(nombre) {
     if (nombre === 'cobre') document.documentElement.removeAttribute('data-accent');
     else document.documentElement.setAttribute('data-accent', nombre);
@@ -265,7 +265,7 @@
   async function initAcentoPorCuenta() {
     if (typeof window.GH_ESPERAR_SESION === 'function') { try { await window.GH_ESPERAR_SESION(); } catch (e) {} }
     let guardado = 'cobre';
-    try { const r = await window.storage.get(ACCENT_KEY); guardado = JSON.parse(r.value) || 'cobre'; } catch (e) {}
+    try { const r = await ghLeerConNombreViejo(ACCENT_KEY); guardado = JSON.parse(r.value) || 'cobre'; } catch (e) {}
     aplicarAcento(guardado);
     try { localStorage.setItem('gh-accent-ultimo', guardado); } catch (e) {}
   }
