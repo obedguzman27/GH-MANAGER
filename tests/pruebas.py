@@ -573,20 +573,26 @@ def lotes_cobrados_y_buscador(p, c):
     pg = c.pagina()
     tab(pg, 'facturas', 'cobros')
     pg.wait_for_selector('#cobros-lista .lc-grupo')
-    subs = pg.eval_on_selector_all('#cobros-lista .lc-sub', 'es => es.map(e => e.textContent.trim())')
-    assert subs == ['Oak Hills', 'River Bend'], subs
+    lotes = pg.eval_on_selector_all('#cobros-lista .lc-grupo > summary .lc-sub', 'es => es.map(e => e.textContent.trim())')
+    assert lotes == ['Oak Hills Lot 12', 'Oak Hills Lot 14', 'River Bend Lot 3'], lotes
+    assert pg.eval_on_selector_all('#cobros-lista .lc-grupo[open]', 'es => es.length') == 0
     info = pg.inner_text('#cobros-info')
     assert '3 lote(s)' in info and '2 subdivisi' in info, info
+    pg.click('#cobros-lista .lc-grupo >> nth=0 >> summary'); pg.wait_for_timeout(200)
+    assert pg.eval_on_selector_all('#cobros-lista .lc-grupo:nth-child(1) .lc-fila', 'es => es.length') == 4
+    foto(pg, 'lotes-cobrados')
     pg.fill('#cobros-buscar', 'oak 14'); pg.wait_for_timeout(400)
-    filas = pg.eval_on_selector_all('#cobros-lista .lc-fila .lc-lote', 'es => es.map(e => e.textContent.trim())')
-    assert filas and set(filas) == {'Lot 14'}, filas
+    lotes = pg.eval_on_selector_all('#cobros-lista .lc-grupo > summary .lc-sub', 'es => es.map(e => e.textContent.trim())')
+    assert lotes == ['Oak Hills Lot 14'], lotes
+    assert pg.eval_on_selector_all('#cobros-lista .lc-grupo[open]', 'es => es.length') == 1
     foto(pg, 'lotes-cobrados-busqueda')
     pg.click('#cobros-limpiar'); pg.wait_for_timeout(300)
     pg.click('#cobros-estados [data-est="pendientes"]'); pg.wait_for_timeout(300)
-    assert 'Pendiente' in pg.inner_text('#cobros-lista') and 'Pagado' not in pg.inner_text('#cobros-lista')
-    pg.click('#cobros-lista .lc-fact'); pg.wait_for_timeout(400)
+    pg.click('#cobros-lista .lc-grupo >> nth=0 >> summary'); pg.wait_for_timeout(200)
+    t = pg.inner_text('#cobros-lista .lc-grupo >> nth=0')
+    assert 'Pendiente' in t and 'Pagado' not in t, t
+    pg.click('#cobros-lista .lc-fact >> nth=0'); pg.wait_for_timeout(400)
     assert pg.is_visible('#inv-ov')
-    foto(pg, 'lotes-cobrados')
 
 if __name__ == '__main__':
     sys.exit(1 if correr(sys.argv[1:] or list(PRUEBAS)) else 0)

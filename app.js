@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v218';
+  window.GH_APP_VERSION = 'v219';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -8681,23 +8681,31 @@
       });
       return h;
     };
-    const abrir = buscar || fSub || lista.length <= 3;
-    $('cobros-lista').innerHTML = lista.map((g) => {
-      g.filas.sort((a, b) => lcNumOrd(a.lote) - lcNumOrd(b.lote) || String(a.lote).localeCompare(String(b.lote)) || (a.fecha || '').localeCompare(b.fecha || ''));
-      const gTot = g.filas.reduce((t, c) => t + c.amount, 0);
-      const gPend = g.filas.filter((c) => !c.pagada).reduce((t, c) => t + c.amount, 0);
-      const filas = g.filas.map((c) => `
+    // Una sola línea por colonia + lote; al tocarla se abren todos sus cobros
+    const lotes = new Map();
+    filtrados.forEach((c) => {
+      const k = c.subK + '|' + (c.lote ? glNorm(c.lote) : '?' + c.numero + '|' + glNorm(c.work));
+      if (!lotes.has(k)) lotes.set(k, { sub: c.sub, lote: c.lote, filas: [] });
+      lotes.get(k).filas.push(c);
+    });
+    const lotesLista = [...lotes.values()].sort((a, b) => a.sub.localeCompare(b.sub) || lcNumOrd(a.lote) - lcNumOrd(b.lote) || String(a.lote).localeCompare(String(b.lote)));
+    const abrir = lotesLista.length === 1;
+    $('cobros-lista').innerHTML = lotesLista.map((l) => {
+      l.filas.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+      const lTot = l.filas.reduce((t, c) => t + c.amount, 0);
+      const lPend = l.filas.filter((c) => !c.pagada).reduce((t, c) => t + c.amount, 0);
+      const filas = l.filas.map((c) => `
         <div class="lc-fila${c.pagada ? '' : ' pend'}">
-          <span class="lc-lote">${c.lote ? 'Lot ' + escapeHtml(c.lote) : '—'}</span>
-          <span class="lc-trab">${marca(c.work) || '—'}${c.tons ? ` <small>· ${escapeHtml(c.tons)} ton</small>` : ''}</span>
           <span class="lc-fecha">${invFechaNum(c.fecha) || '—'}</span>
-          <button type="button" class="lc-fact" data-id="${escapeHtml(c.id)}" title="Ver la factura">#${marca(c.numero) || '—'}</button>
-          <span class="lc-est">${c.pagada ? 'Pagado' : 'Pendiente'}</span>
+          <span class="lc-trab">${marca(c.work) || '—'}${c.tons ? ` <small>· ${escapeHtml(c.tons)} ton</small>` : ''}</span>
           <span class="lc-monto">${c.amount || !c.compartido ? invFmt(c.amount) : '<small>(en otra línea)</small>'}</span>
+          <button type="button" class="lc-fact" data-id="${escapeHtml(c.id)}" title="Ver la factura">#${marca(c.numero) || '—'}</button>
+          <span class="lc-cli">${escapeHtml(c.cliente || '')}</span>
+          <span class="lc-est">${c.pagada ? 'Pagado' : 'Pendiente'}</span>
         </div>`).join('');
       return `<details class="lc-grupo"${abrir ? ' open' : ''}>
-        <summary><span class="lc-sub">${marca(g.sub)}</span>
-          <span class="lc-sum">${lotesUnicos(g.filas)} lote(s) · <b>${invFmt(gTot)}</b>${gPend ? ` · <em>${invFmt(gPend)} pend.</em>` : ''}</span></summary>
+        <summary><span class="lc-sub">${marca(l.sub)}${l.lote ? ` <span class="lc-lote">Lot ${escapeHtml(l.lote)}</span>` : ''}</span>
+          <span class="lc-sum">${l.filas.length} cobro(s) · <b>${invFmt(lTot)}</b>${lPend ? ` · <em>${invFmt(lPend)} pend.</em>` : ''}</span></summary>
         <div class="lc-filas">${filas}</div>
       </details>`;
     }).join('');
