@@ -24,7 +24,9 @@ const js = '// GH Manager — generado por build.mjs desde src/js. No editar a m
   arranque.map((f) => `// ---- ${f} ----\n` + leer(path.join(jsDir, f))).join('') +
   '(function () {\n' + app.map((f) => `// ---- ${f} ----\n` + leer(path.join(jsDir, f))).join('') + '})();\n' +
   '(function () {\n' + acceso.map((f) => `// ---- ${f} ----\n` + leer(path.join(jsDir, f))).join('') + '})();\n';
-const cssFiles = fs.readdirSync('src/css').filter((f) => f.endsWith('.css')).sort();
+// El rediseño (70-*.css) entra solo en la versión de prueba hasta que se apruebe.
+const soloPrueba = (f) => f.startsWith('70-');
+const cssFiles = fs.readdirSync('src/css').filter((f) => f.endsWith('.css') && (destino === 'v2' || !soloPrueba(f))).sort();
 const css = cssFiles.map((f) => `/* ---- ${f} ---- */\n` + leer(path.join('src/css', f))).join('\n');
 
 let head = leer('src/html/head.html');
@@ -33,7 +35,8 @@ if (destino === 'v2') {
     .replace('content="GH Manager">', 'content="GH Prueba">');
 }
 const body = leer('src/html/body.html');
-const html = sub(head.replace('</head>', '  <link rel="stylesheet" href="app.css?v=__CACHE__">\n</head>')) +
+const fuentePrueba = destino === 'v2' ? '  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">\n' : '';
+const html = sub(head.replace('</head>', fuentePrueba + '  <link rel="stylesheet" href="app.css?v=__CACHE__">\n</head>')) +
   body +
   '<script src="vendor/supabase-2.117.1.min.js"></script>\n' +
   '<script src="supabase-storage.js?v=' + sub('__CACHE__') + '"></script>\n' +

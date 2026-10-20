@@ -1,0 +1,276 @@
+/* =====================================================================
+   GH MANAGER — REDISEÑO "BANCO" (claro) + "PRO OSCURO" (oscuro)
+   Solo entra en la versión de prueba (build.mjs lo filtra para la raíz).
+   Únicamente presentación: no cambia IDs, clases ni lógica.
+   Ideas:
+   - Menos cajas: tarjetas sin borde, con sombra suave; lo de adentro
+     se separa con líneas finas en lugar de cajas dentro de cajas.
+   - Las secciones de arriba ya no se esconden de lado: se acomodan
+     en un control segmentado que se ve completo.
+   - Números grandes y limpios (Inter con cifras tabulares).
+   ===================================================================== */
+
+:root {
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-num: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --bg: #F3F5F8;
+  --card: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-2: #F3F5F8;
+  --surface-3: #E9EDF2;
+  --track: #E9EDF2;
+  --border: #DCE2E9;
+  --border-soft: #ECEFF3;
+  --hairline: transparent;
+  --ink: #0F1724;
+  --muted: #5D6878;
+  --muted-soft: #8B95A3;
+
+  --navy: #0F1B2B;
+  --navy2: #16263A;
+  --navy3: #1E324A;
+  --dock: #FFFFFF;
+
+  --copper: #E8671E;
+  --copper-dk: #C2540F;
+  --copper-bg: #FDEEE4;
+  --accent: #E8671E;
+  --accent-dk: #C2540F;
+  --accent-bg: #FDEEE4;
+  --teal: #1C6FE0;
+  --teal-dk: #1558B8;
+  --teal-bg: #E6F0FD;
+  --ember: #D63E2A;
+  --ember-bg: #FCE9E6;
+  --gold: #9A6B00;
+  --gold-bg: #FBF1D9;
+
+  --shadow-sm: 0 1px 2px rgba(15,23,36,.04), 0 2px 10px -4px rgba(15,23,36,.06);
+  --shadow: 0 1px 2px rgba(15,23,36,.05), 0 10px 30px -12px rgba(15,23,36,.16);
+  --shadow-lg: 0 24px 60px -20px rgba(15,23,36,.35);
+  --r: 20px;
+  --r-sm: 12px;
+  --r-lg: 24px;
+}
+
+@media screen {
+  :root[data-tema="oscuro"] {
+    --bg: #0A0D11;
+    --card: #13181F;
+    --surface: #13181F;
+    --surface-2: #1A2029;
+    --surface-3: #222A35;
+    --track: #222A35;
+    --border: #2A3340;
+    --border-soft: #1F2630;
+    --ink: #EEF2F6;
+    --muted: #9AA5B4;
+    --muted-soft: #6C7787;
+    --navy: #2E3A4B; --navy2: #344254; --navy3: #3B4A5E;  /* se usa como "seleccionado" con letra blanca */
+    --dock: #0E1217;
+    --copper: #FF7A2F; --copper-dk: #FF9A5E; --copper-bg: rgba(255,122,47,.14);
+    --accent: #FF7A2F; --accent-dk: #FF9A5E; --accent-bg: rgba(255,122,47,.14);
+    --teal: #5EA2FF; --teal-dk: #8BBCFF; --teal-bg: rgba(94,162,255,.14);
+    --ember: #FF6B57; --ember-bg: rgba(255,107,87,.14);
+    --gold: #F0C060; --gold-bg: rgba(240,192,96,.13);
+    --shadow-sm: 0 0 0 1px rgba(255,255,255,.04);
+    --shadow: 0 0 0 1px rgba(255,255,255,.05), 0 12px 30px -14px rgba(0,0,0,.7);
+  }
+}
+
+/* ---------- Letra ---------- */
+html, body, #gc-app, #gc-app button, #gc-app input, #gc-app select, #gc-app textarea,
+.gc-confirm-overlay, .gc-confirm-overlay button, .emp-modal, .emp-modal button, .emp-modal input, .emp-modal select, .gh-login {
+  font-family: var(--font-ui) !important;
+}
+#gc-app [style*="Zilla Slab"], #gc-app [style*="Plus Jakarta"], #gc-app [style*="IBM Plex Mono"] { font-family: var(--font-num) !important; }
+body { -webkit-font-smoothing: antialiased; letter-spacing: -.005em; }
+.num, .gc-num, .gh-tile-val, .inv-tot-v, .pay-row-amt, td.r, td.num, strong, b { font-variant-numeric: tabular-nums; }
+
+/* ---------- Encabezado ---------- */
+.gc-header {
+  background: color-mix(in srgb, var(--bg) 88%, transparent) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(16px); backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid var(--border-soft) !important; box-shadow: none !important;
+}
+.gc-company { color: var(--ink) !important; font: 800 19px var(--font-ui) !important; letter-spacing: -.02em !important; }
+#app-version-badge { color: var(--muted-soft) !important; }
+.gc-logo-badge { box-shadow: 0 0 0 1px var(--border) !important; }
+.gh-sync { border-color: var(--border) !important; color: var(--muted) !important; background: var(--card) !important; }
+.gh-tema-btn { border-color: var(--border) !important; color: var(--ink) !important; background: var(--card) !important; }
+.gh-tema-btn:hover { background: var(--surface-2) !important; }
+
+/* ---------- Tarjetas: sin bordes, sombra suave ---------- */
+.gc-card, .gc-chart-card {
+  border: 0 !important; border-radius: var(--r) !important; box-shadow: var(--shadow-sm) !important;
+}
+.gc-card:hover { box-shadow: var(--shadow-sm) !important; }
+.gc-card-title { font: 700 17px var(--font-ui) !important; letter-spacing: -.02em !important; color: var(--ink) !important; }
+.gc-card-title::before { display: none !important; }
+
+/* Cajas dentro de tarjetas: pasan a ser filas con línea fina */
+.gc-card .gc-card { box-shadow: none !important; background: var(--surface-2) !important; border-radius: 16px !important; }
+.csl-fila, .vz-imp-fila {
+  background: transparent !important; border: 0 !important; border-bottom: 1px solid var(--border-soft) !important;
+  border-radius: 0 !important; padding: 12px 2px !important;
+}
+.csl-fila.on { background: var(--accent-bg) !important; border-radius: 12px !important; padding: 12px 10px !important; }
+.nom-resumen-sem { background: var(--surface-2) !important; border: 0 !important; border-radius: 16px !important; }
+.nom-resumen-sem strong { font: 800 24px var(--font-num) !important; letter-spacing: -.02em; }
+
+/* ---------- Campos: rellenos, sin marco ---------- */
+#gc-app input[type="text"], #gc-app input[type="number"], #gc-app input[type="date"], #gc-app input[type="search"],
+#gc-app input[type="email"], #gc-app input[type="tel"], #gc-app input[type="password"], #gc-app select, #gc-app textarea,
+.emp-modal input, .emp-modal select, .emp-modal textarea {
+  background-color: var(--surface-2) !important; border: 1.5px solid transparent !important; border-radius: 12px !important;
+  color: var(--ink) !important; box-shadow: none !important;
+}
+.gc-card .gc-card input[type="text"], .gc-card .gc-card input[type="number"], .gc-card .gc-card select { background-color: var(--card) !important; }
+#gc-app input:focus, #gc-app select:focus, #gc-app textarea:focus, .emp-modal input:focus {
+  background-color: var(--card) !important; border-color: var(--accent) !important; box-shadow: 0 0 0 4px var(--accent-bg) !important;
+}
+#gc-app input::placeholder, #gc-app textarea::placeholder { color: var(--muted-soft) !important; }
+.gc-field label { font: 600 13px var(--font-ui) !important; color: var(--muted) !important; text-transform: none !important; letter-spacing: 0 !important; }
+
+/* ---------- Botones ---------- */
+.gc-save-btn {
+  background: var(--accent) !important; color: #fff !important; border: 0 !important; border-radius: 14px !important;
+  font: 700 15px var(--font-ui) !important; letter-spacing: -.01em !important;
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--accent) 70%, transparent) !important;
+}
+.gc-save-btn:hover { background: var(--accent-dk) !important; }
+.gc-save-btn:active, .gc-action-btn:active { transform: scale(.97); }
+/* Botones secundarios: suaves, sin marco (menos "cajas") */
+.gc-action-btn {
+  background: var(--surface-2) !important; color: var(--ink) !important; border: 0 !important;
+  border-radius: 12px !important; font-weight: 600 !important; box-shadow: none !important;
+}
+.gc-action-btn:hover { background: var(--surface-3) !important; color: var(--ink) !important; }
+.gc-card .gc-card .gc-action-btn { background: var(--card) !important; }
+.gc-action-btn.sel, .papeles-filtros .gc-action-btn.sel { background: var(--ink) !important; color: var(--card) !important; }
+.gc-del { color: var(--muted-soft) !important; border-radius: 10px !important; }
+.gc-del:hover { color: var(--ember) !important; background: var(--ember-bg) !important; }
+
+/* ---------- Secciones de arriba: control segmentado, todo a la vista ---------- */
+.inv-subnav, .pln-subnav {
+  display: flex !important; flex-wrap: wrap !important; overflow: visible !important; gap: 4px !important;
+  background: var(--surface-3) !important; border-radius: 16px !important; padding: 4px !important;
+  margin: 0 0 16px !important; border: 0 !important;
+  -webkit-mask-image: none !important; mask-image: none !important;
+}
+.inv-subtab, .nom-subtab, .aj-subtab, .mov-subtab, .doc-subtab, .pln-subtab {
+  flex: 1 1 auto !important; text-align: center; justify-content: center;
+  border: 0 !important; border-radius: 12px !important; background: transparent !important;
+  color: var(--muted) !important; padding: 9px 12px !important; font: 600 14px var(--font-ui) !important;
+  margin: 0 !important; box-shadow: none !important; white-space: nowrap;
+}
+.inv-subtab:first-child, .nom-subtab:first-child, .aj-subtab:first-child, .mov-subtab:first-child, .doc-subtab:first-child, .pln-subtab:first-child { margin-left: 0 !important; }
+.inv-subtab.active, .nom-subtab.active, .aj-subtab.active, .mov-subtab.active, .doc-subtab.active, .pln-subtab.active {
+  background: var(--card) !important; color: var(--ink) !important; box-shadow: 0 1px 3px rgba(15,23,36,.12) !important;
+}
+:root[data-tema="oscuro"] .inv-subtab.active, :root[data-tema="oscuro"] .nom-subtab.active, :root[data-tema="oscuro"] .aj-subtab.active,
+:root[data-tema="oscuro"] .mov-subtab.active, :root[data-tema="oscuro"] .doc-subtab.active, :root[data-tema="oscuro"] .pln-subtab.active {
+  background: var(--surface-2) !important; color: var(--accent-dk) !important; box-shadow: inset 0 0 0 1px var(--border) !important;
+}
+.pay-seg { background: var(--surface-3) !important; border: 0 !important; border-radius: 16px !important; padding: 4px !important; }
+.pay-seg .pay-subtab { border: 0 !important; border-radius: 12px !important; background: transparent !important; color: var(--muted) !important; }
+.pay-seg .pay-subtab.active { background: var(--card) !important; color: var(--ink) !important; box-shadow: 0 1px 3px rgba(15,23,36,.12) !important; }
+:root[data-tema="oscuro"] .pay-seg .pay-subtab.active { background: var(--surface-2) !important; color: var(--accent-dk) !important; box-shadow: inset 0 0 0 1px var(--border) !important; }
+
+/* ---------- Resumen de Principal: tarjeta tipo banco ---------- */
+.gh-hero, .vz-hero, #panel-payroll .pay-hero {
+  background: radial-gradient(120% 90% at 100% 0%, #24456B 0%, transparent 55%), linear-gradient(160deg, #0F1B2B 0%, #132338 100%) !important;
+  border: 0 !important; border-radius: var(--r-lg) !important; box-shadow: var(--shadow) !important; color: #fff;
+}
+:root[data-tema="oscuro"] .gh-hero, :root[data-tema="oscuro"] .vz-hero, :root[data-tema="oscuro"] #panel-payroll .pay-hero {
+  background: radial-gradient(120% 90% at 100% 0%, rgba(255,122,47,.16) 0%, transparent 55%), linear-gradient(160deg, #161C24 0%, #12171E 100%) !important;
+  border: 1px solid #222A35 !important; box-shadow: none !important;
+}
+.gh-hero-saludo { font: 800 28px var(--font-ui) !important; letter-spacing: -.03em !important; }
+.gh-tile { background: rgba(255,255,255,.06) !important; border: 0 !important; border-radius: 16px !important; }
+.gh-tile.alerta { box-shadow: inset 0 0 0 1.5px rgba(255,160,100,.55) !important; }
+.gh-tile-lbl { font: 600 12.5px var(--font-ui) !important; color: rgba(255,255,255,.72) !important; }
+.gh-tile-val { font: 800 28px var(--font-num) !important; letter-spacing: -.03em !important; }
+#panel-payroll .pay-hero [class*="kpi"], #panel-payroll .pay-hero .pay-kpi { background: rgba(255,255,255,.06) !important; border: 0 !important; border-radius: 16px !important; }
+
+/* ---------- Pastillas de filtro y días de nómina ---------- */
+.bq-chips button { border: 0 !important; background: var(--surface-2) !important; color: var(--ink) !important; font-weight: 600 !important; }
+.bq-chips button.on { background: var(--ink) !important; color: var(--card) !important; }
+.bq-chips .bq-limpia { background: transparent !important; color: var(--muted) !important; box-shadow: inset 0 0 0 1.5px var(--border) !important; }
+.nom-grid-dia { border-radius: 12px !important; border-color: transparent !important; }
+.nom-grid-dia:not([style*="background:var(--navy)"]) { background: var(--card) !important; color: var(--ink) !important; }
+.nom-grid-dia[style*="background:var(--navy)"] { background: var(--accent) !important; color: #fff !important; }
+
+/* ---------- Tablas y listas ---------- */
+.inv-list-t th, .gc-ledger th, .inv-tbl th { font: 600 12px var(--font-ui) !important; color: var(--muted) !important; text-transform: none !important; letter-spacing: 0 !important; }
+.gc-ledger td, .inv-list-t td { border-color: var(--border-soft) !important; }
+
+/* ---------- Diálogos, avisos y modales ---------- */
+.gc-confirm-box, .emp-modal > div, .cal-modal > div { border-radius: var(--r-lg) !important; border: 0 !important; box-shadow: var(--shadow-lg) !important; }
+.gc-toast-item { border-radius: 14px !important; font-family: var(--font-ui) !important; }
+
+/* ---------- Botón + ---------- */
+.gh-fab {
+  background: var(--accent) !important; border-radius: 20px !important; border: 0 !important;
+  box-shadow: 0 12px 28px -10px color-mix(in srgb, var(--accent) 80%, transparent) !important;
+}
+
+/* ---------- Inicio de sesión ---------- */
+.gh-login { background: radial-gradient(120% 70% at 100% 0%, #24456B, transparent 60%), #0F1B2B !important; }
+.gh-login-card { border-radius: 24px !important; box-shadow: var(--shadow-lg); }
+.gh-login-titulo { font: 800 24px var(--font-ui) !important; letter-spacing: -.02em; }
+.gh-login-campo input { background: #F3F5F8 !important; border: 1.5px solid transparent !important; border-radius: 12px !important; }
+.gh-login-campo input:focus { background: #fff !important; border-color: #E8671E !important; box-shadow: 0 0 0 4px #FDEEE4 !important; }
+.gh-login-btn { background: #E8671E !important; border-radius: 14px !important; }
+
+/* =====================================================================
+   TELÉFONO
+   ===================================================================== */
+@media (max-width: 860px) {
+  .gc-body { padding-top: 16px !important; }
+  .gc-card { padding: 20px 16px !important; margin-bottom: 14px !important; }
+  .inv-subnav, .pln-subnav { margin-left: 0 !important; margin-right: 0 !important; padding: 4px !important; }
+
+  /* Barra de abajo clara (oscura en modo oscuro), con pastilla en la activa */
+  .gc-nav {
+    background: color-mix(in srgb, var(--dock) 92%, transparent) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px);
+    border-top: 1px solid var(--border-soft) !important;
+  }
+  .gc-tab { color: var(--muted-soft) !important; font: 600 11px var(--font-ui) !important; }
+  .gc-tab.active, .gc-tab.active:hover { color: var(--ink) !important; }
+  .gc-tab.active svg { color: var(--accent) !important; }
+  .gc-tab.active::before { display: none !important; }
+  .gc-tab svg { padding: 3px 14px; border-radius: 999px; box-sizing: content-box; transition: background .18s; }
+  .gc-tab.active svg { background: var(--accent-bg); }
+
+  /* Trabajadores: filas limpias en lugar de cajas con borde */
+  #trab-nom-tbl tbody { gap: 0 !important; }
+  #trab-nom-tbl tbody tr {
+    background: transparent !important; border: 0 !important; border-bottom: 1px solid var(--border-soft) !important;
+    border-radius: 0 !important; box-shadow: none !important; padding: 14px 0 !important;
+  }
+  #trab-nom-tbl tbody tr:last-child { border-bottom: 0 !important; }
+
+  /* Facturas: cada línea como tarjeta suave */
+  .inv-tbl tbody tr { background: var(--surface-2) !important; border: 0 !important; border-radius: 16px !important; }
+  .inv-tbl tbody td input { background-color: var(--card) !important; border: 1.5px solid transparent !important; }
+
+  .nom-guardar-barra.pendiente { border: 0 !important; box-shadow: var(--shadow), inset 0 0 0 1.5px var(--accent) !important; border-radius: 18px !important; }
+}
+
+/* =====================================================================
+   COMPUTADORA
+   ===================================================================== */
+@media (min-width: 1000px) {
+  .gc-nav { background: var(--card) !important; border-right: 1px solid var(--border-soft) !important; }
+  .gc-tab { color: var(--muted) !important; border-radius: 12px !important; }
+  .gc-tab.active { background: var(--accent-bg) !important; color: var(--accent-dk) !important; }
+}
+
+/* Botón corto de "Guardar semana" en teléfonos angostos (respeta el truco de 50-diseno) */
+@media (max-width: 420px) {
+  .nom-guardar-barra.pendiente #nom-grid-guardar { font-size: 0 !important; }
+  .nom-guardar-barra.pendiente #nom-grid-guardar::after { font: 700 15px var(--font-ui); }
+}
