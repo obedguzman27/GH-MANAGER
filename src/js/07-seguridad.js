@@ -342,7 +342,7 @@
           const nueva2 = $('aj-clave-nueva2').value;
           msg.style.color = 'var(--ember)';
           if (!actual || !nueva || !nueva2) { msg.textContent = 'Llena los tres campos.'; return; }
-          if (nueva.length < 6) { msg.textContent = 'La nueva debe tener al menos 6 caracteres.'; return; }
+          if (nueva.length < 8) { msg.textContent = 'La nueva debe tener al menos 8 caracteres.'; return; }
           if (!(/[a-zA-Z]/.test(nueva) && /[0-9]/.test(nueva))) { msg.textContent = 'La nueva debe tener letras y números.'; return; }
           if (nueva !== nueva2) { msg.textContent = 'Las dos contraseñas nuevas no coinciden.'; return; }
           if (nueva === actual) { msg.textContent = 'La nueva no puede ser igual a la actual.'; return; }

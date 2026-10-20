@@ -43,7 +43,7 @@
     Object.entries(grupos).forEach(([cat, docs]) => {
       const seccion = document.createElement('div');
       seccion.style.marginBottom = '24px';
-      seccion.innerHTML = `<p style="font-family:'Zilla Slab',serif;font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;">${cat}</p>`;
+      seccion.innerHTML = `<p style="font-family:'Zilla Slab',serif;font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;">${escapeHtml(cat)}</p>`;
       const docList = document.createElement('div');
       docList.className = 'doc-list';
       docs.forEach(p => {

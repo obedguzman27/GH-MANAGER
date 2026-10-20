@@ -1,7 +1,7 @@
 // GH Manager — generado por build.mjs desde src/js. No editar a mano.
 // ---- 00-arranque.js ----
   // Versión visible de la app (build.mjs pone el número).
-  window.GH_APP_VERSION = 'v227 · prueba';
+  window.GH_APP_VERSION = 'v228 · prueba';
 
   // ---- Service worker (instalación PWA + abrir sin internet) ----
   // La versión nueva NO se instala sola a media tarea (antes la app se
@@ -3057,7 +3057,7 @@
           return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`; })()
       : '';
     return `
-      <h1>${cfgFacturaNombre}</h1>
+      <h1>${escapeHtml(cfgFacturaNombre)}</h1>
       ${cfgFacturaDireccion ? `<div class="ps-addr">${escapeHtml(cfgFacturaDireccion)}</div>` : ''}
       <div class="ps-badge">${escapeHtml(inv.label || '')}${guardadoNum ? ' · guardado el ' + guardadoNum : ''}</div>
 
@@ -3778,7 +3778,7 @@
     Object.entries(grupos).forEach(([cat, docs]) => {
       const seccion = document.createElement('div');
       seccion.style.marginBottom = '24px';
-      seccion.innerHTML = `<p style="font-family:'Zilla Slab',serif;font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;">${cat}</p>`;
+      seccion.innerHTML = `<p style="font-family:'Zilla Slab',serif;font-weight:600;font-size:14px;color:var(--ink);margin-bottom:10px;">${escapeHtml(cat)}</p>`;
       const docList = document.createElement('div');
       docList.className = 'doc-list';
       docs.forEach(p => {
@@ -5135,7 +5135,7 @@
           const nueva2 = $('aj-clave-nueva2').value;
           msg.style.color = 'var(--ember)';
           if (!actual || !nueva || !nueva2) { msg.textContent = 'Llena los tres campos.'; return; }
-          if (nueva.length < 6) { msg.textContent = 'La nueva debe tener al menos 6 caracteres.'; return; }
+          if (nueva.length < 8) { msg.textContent = 'La nueva debe tener al menos 8 caracteres.'; return; }
           if (!(/[a-zA-Z]/.test(nueva) && /[0-9]/.test(nueva))) { msg.textContent = 'La nueva debe tener letras y números.'; return; }
           if (nueva !== nueva2) { msg.textContent = 'Las dos contraseñas nuevas no coinciden.'; return; }
           if (nueva === actual) { msg.textContent = 'La nueva no puede ser igual a la actual.'; return; }
@@ -5315,7 +5315,7 @@
           <div style="font-size:13px;color:#555;">${escapeHtml(emp.rol||'')} · <span style="color:${emp.estado==='activo'?'#2E8B84':'#C2622E'};font-weight:600;">${emp.estado==='activo'?'Activo':'Inactivo'}</span></div>
         </div>
         <div style="margin-left:auto;text-align:right;">
-          <div style="font-size:11px;color:#888;">${cfgFacturaNombre}</div>
+          <div style="font-size:11px;color:#888;">${escapeHtml(cfgFacturaNombre)}</div>
         </div>
       </div>
       <table style="width:100%;border-collapse:collapse;">
@@ -11839,7 +11839,7 @@
         <button type="button" class="vz-aj-fila" id="visor-btn-cambiar-clave"><span>Cambiar contraseña</span><i>›</i></button>
         <div id="visor-cambiar-clave-form" class="vz-clave" style="display:none;">
           <div class="gc-field"><label>Contraseña actual</label><input type="password" id="visor-clave-actual" autocomplete="current-password"></div>
-          <div class="gc-field"><label>Contraseña nueva</label><input type="password" id="visor-clave-nueva" autocomplete="new-password"><small>Al menos 6 caracteres, con letras y números.</small></div>
+          <div class="gc-field"><label>Contraseña nueva</label><input type="password" id="visor-clave-nueva" autocomplete="new-password"><small>Al menos 8 caracteres, con letras y números.</small></div>
           <div class="gc-field"><label>Repite la nueva</label><input type="password" id="visor-clave-nueva2" autocomplete="new-password"></div>
           <div id="visor-clave-msg" class="vz-clave-msg"></div>
           <div class="vz-clave-btns"><button type="button" class="vz-add-cancel" id="visor-btn-cancelar-clave">Cancelar</button><button type="button" class="vz-add-ok" id="visor-btn-guardar-clave">Guardar</button></div>
@@ -11869,7 +11869,7 @@
         const nueva2 = panelAjustes.querySelector('#visor-clave-nueva2').value;
         vMsg.style.color = 'var(--ember)';
         if (!actual || !nueva || !nueva2) { vMsg.textContent = 'Llena los tres campos.'; return; }
-        if (nueva.length < 6) { vMsg.textContent = 'La nueva debe tener al menos 6 caracteres.'; return; }
+        if (nueva.length < 8) { vMsg.textContent = 'La nueva debe tener al menos 8 caracteres.'; return; }
         if (!(/[a-zA-Z]/.test(nueva) && /[0-9]/.test(nueva))) { vMsg.textContent = 'La nueva debe tener letras y números.'; return; }
         if (nueva !== nueva2) { vMsg.textContent = 'Las dos contraseñas nuevas no coinciden.'; return; }
         if (nueva === actual) { vMsg.textContent = 'La nueva no puede ser igual a la actual.'; return; }

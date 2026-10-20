@@ -157,7 +157,7 @@
           <div style="font-size:13px;color:#555;">${escapeHtml(emp.rol||'')} · <span style="color:${emp.estado==='activo'?'#2E8B84':'#C2622E'};font-weight:600;">${emp.estado==='activo'?'Activo':'Inactivo'}</span></div>
         </div>
         <div style="margin-left:auto;text-align:right;">
-          <div style="font-size:11px;color:#888;">${cfgFacturaNombre}</div>
+          <div style="font-size:11px;color:#888;">${escapeHtml(cfgFacturaNombre)}</div>
         </div>
       </div>
       <table style="width:100%;border-collapse:collapse;">

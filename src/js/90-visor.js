@@ -170,7 +170,7 @@
         <button type="button" class="vz-aj-fila" id="visor-btn-cambiar-clave"><span>Cambiar contraseña</span><i>›</i></button>
         <div id="visor-cambiar-clave-form" class="vz-clave" style="display:none;">
           <div class="gc-field"><label>Contraseña actual</label><input type="password" id="visor-clave-actual" autocomplete="current-password"></div>
-          <div class="gc-field"><label>Contraseña nueva</label><input type="password" id="visor-clave-nueva" autocomplete="new-password"><small>Al menos 6 caracteres, con letras y números.</small></div>
+          <div class="gc-field"><label>Contraseña nueva</label><input type="password" id="visor-clave-nueva" autocomplete="new-password"><small>Al menos 8 caracteres, con letras y números.</small></div>
           <div class="gc-field"><label>Repite la nueva</label><input type="password" id="visor-clave-nueva2" autocomplete="new-password"></div>
           <div id="visor-clave-msg" class="vz-clave-msg"></div>
           <div class="vz-clave-btns"><button type="button" class="vz-add-cancel" id="visor-btn-cancelar-clave">Cancelar</button><button type="button" class="vz-add-ok" id="visor-btn-guardar-clave">Guardar</button></div>
@@ -200,7 +200,7 @@
         const nueva2 = panelAjustes.querySelector('#visor-clave-nueva2').value;
         vMsg.style.color = 'var(--ember)';
         if (!actual || !nueva || !nueva2) { vMsg.textContent = 'Llena los tres campos.'; return; }
-        if (nueva.length < 6) { vMsg.textContent = 'La nueva debe tener al menos 6 caracteres.'; return; }
+        if (nueva.length < 8) { vMsg.textContent = 'La nueva debe tener al menos 8 caracteres.'; return; }
         if (!(/[a-zA-Z]/.test(nueva) && /[0-9]/.test(nueva))) { vMsg.textContent = 'La nueva debe tener letras y números.'; return; }
         if (nueva !== nueva2) { vMsg.textContent = 'Las dos contraseñas nuevas no coinciden.'; return; }
         if (nueva === actual) { vMsg.textContent = 'La nueva no puede ser igual a la actual.'; return; }

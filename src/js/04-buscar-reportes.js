@@ -455,7 +455,7 @@
           return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`; })()
       : '';
     return `
-      <h1>${cfgFacturaNombre}</h1>
+      <h1>${escapeHtml(cfgFacturaNombre)}</h1>
       ${cfgFacturaDireccion ? `<div class="ps-addr">${escapeHtml(cfgFacturaDireccion)}</div>` : ''}
       <div class="ps-badge">${escapeHtml(inv.label || '')}${guardadoNum ? ' · guardado el ' + guardadoNum : ''}</div>
 

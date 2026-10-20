@@ -114,7 +114,7 @@
             <input id="gh-usuario-input" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text"></label>
           <label class="gh-login-campo"><span>Contraseña</span>
             <input id="gh-clave-input" name="password" type="password" autocomplete="current-password"></label>
-          <div id="gh-clave-pista" class="gh-login-pista" style="display:none;">Al menos 6 caracteres, con letras y números.</div>
+          <div id="gh-clave-pista" class="gh-login-pista" style="display:none;">Al menos 8 caracteres, con letras y números.</div>
           <div id="gh-login-error" class="gh-login-error" role="alert"></div>
           <button id="gh-login-btn" type="submit" class="gh-login-btn">Entrar</button>
         </form>
@@ -146,7 +146,7 @@
       const errorDiv = document.getElementById('gh-login-error');
       const listo = (txt) => { errorDiv.textContent = txt || ''; btn.disabled = false; btn.textContent = modoRegistro ? 'Crear cuenta' : 'Entrar'; };
       if (!usuario || !clave) return listo('Escribe tu usuario y contraseña.');
-      if (clave.length < 6) return listo('La contraseña debe tener al menos 6 caracteres.');
+      if (clave.length < (modoRegistro ? 8 : 6)) return listo(modoRegistro ? 'La contraseña debe tener al menos 8 caracteres.' : 'La contraseña debe tener al menos 6 caracteres.');
       if (modoRegistro && !(/[a-zA-Z]/.test(clave) && /[0-9]/.test(clave))) return listo('La contraseña debe tener letras y números.');
       btn.disabled = true; btn.textContent = modoRegistro ? 'Creando…' : 'Entrando…';
       errorDiv.textContent = '';
